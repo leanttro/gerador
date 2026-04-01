@@ -1,271 +1,376 @@
-import os
-import json
-import time
-import requests
-import threading
-import glob
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from groq import Groq
-from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
-from PIL import Image
-from werkzeug.utils import secure_filename
-
-app = Flask(__name__)
-
-# Configurações de Ambiente
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
-UPLOAD_FOLDER = 'uploads'
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-groq_client = Groq(api_key=GROQ_API_KEY)
-
-# TRAVA DE SEGURANÇA: Só permite um processamento por vez
-process_lock = threading.Lock()
-
-# Estado global para o progresso
-progress_status = {"step": "Ocioso", "remaining": 0}
-
-def cleanup_old_files():
-    """Deleta arquivos temporários para economizar espaço no servidor"""
-    patterns = ['*.mp3', '*.jpg', '*.png', 'final_video.mp4']
-    for pattern in patterns:
-        files = glob.glob(pattern)
-        for f in files:
-            try:
-                os.remove(f)
-                print(f"Limpeza: {f} removido.")
-            except Exception as e:
-                print(f"Erro na limpeza: {e}")
-    
-    # Limpa pasta de uploads (logos)
-    logos = glob.glob(os.path.join(UPLOAD_FOLDER, "*"))
-    for l in logos:
-        try:
-            os.remove(l)
-        except:
-            pass
-
-def get_dimensions(ratio):
-    """Retorna as dimensões baseadas no formato escolhido"""
-    if ratio == "16:9":
-        return (1280, 720)
-    elif ratio == "9:16":
-        return (720, 1280)
-    elif ratio == "1:1":
-        return (1024, 1024)
-    elif ratio == "4:5":
-        return (1080, 1350)
-    else:
-        return (1024, 1024)
-
-def apply_logo(image_path, logo_path):
-    """Aplica o logo sobre a imagem gerada utilizando Pillow"""
-    if not logo_path or not os.path.exists(logo_path):
-        return image_path
-    
-    try:
-        base_image = Image.open(image_path).convert("RGBA")
-        logo = Image.open(logo_path).convert("RGBA")
-        
-        base_w, base_h = base_image.size
-        logo_w, logo_h = logo.size
-        
-        # Redimensiona o logo para 15% da largura da imagem
-        new_logo_w = int(base_w * 0.15)
-        new_logo_h = int(logo_h * (new_logo_w / logo_w))
-        logo = logo.resize((new_logo_w, new_logo_h), Image.Resampling.LANCZOS)
-        
-        # Posiciona no canto inferior direito (margem de 20px)
-        pos_x = base_w - new_logo_w - 20
-        pos_y = base_h - new_logo_h - 20
-        
-        base_image.paste(logo, (pos_x, pos_y), logo)
-        rgb_image = base_image.convert("RGB")
-        rgb_image.save(image_path)
-        return image_path
-    except Exception as e:
-        print(f"Erro ao aplicar logo: {e}")
-        return image_path
-
-def generate_script_and_prompts(niche):
-    prompt = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave script contendo o texto falado e a chave prompts contendo uma lista de 4 prompts em ingles detalhados para gerar imagens em IA."
-    
-    models = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "gemma2-9b-it"
-    ]
-    
-    for model in models:
-        try:
-            response = groq_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=model,
-                response_format={"type": "json_object"}
-            )
-            return json.loads(response.choices[0].message.content)
-        except Exception as e:
-            print(f"Falha no modelo {model}: {e}")
-            continue
-            
-    raise Exception("Todos os modelos do Groq falharam.")
-
-def generate_audio(text, filename="output_audio.mp3"):
-    safe_text = text.replace('"', '').replace("'", "")
-    command = f'edge-tts --text "{safe_text}" --voice pt-BR-AntonioNeural --write-media {filename}'
-    os.system(command)
-    return filename
-
-def generate_images_pollinations(prompts, width, height, logo_path):
-    downloaded_files = []
-    for index, prompt in enumerate(prompts):
-        global progress_status
-        progress_status["remaining"] = 30 - (index * 5)
-        
-        encoded_prompt = requests.utils.quote(prompt)
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={int(time.time()) + index}"
-        
-        img_data = requests.get(image_url).content
-        img_filename = f"image_{index}.jpg"
-        
-        with open(img_filename, "wb") as handler:
-            handler.write(img_data)
-        
-        apply_logo(img_filename, logo_path)
-        downloaded_files.append(img_filename)
-        
-    return downloaded_files
-
-def generate_images_leonardo(prompts, width, height, logo_path):
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "authorization": f"Bearer {LEONARDO_API_KEY}"
-    }
-    
-    downloaded_files = []
-    for index, prompt in enumerate(prompts):
-        global progress_status
-        progress_status["remaining"] = 40 - (index * 8)
-        
-        payload = {
-            "height": height,
-            "width": width,
-            "prompt": prompt,
-            "modelId": "6bef9f1b-29cb-40c7-b9df-32b51c1f67d3",
-            "num_images": 1
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor Dark (Atualizado)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d0d0d;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
         }
-        
-        create_res = requests.post("https://cloud.leonardo.ai/api/rest/v1/generations", json=payload, headers=headers)
-        generation_id = create_res.json().get("sdGenerationJob", {}).get("generationId")
-        
-        if not generation_id:
-            continue
-            
-        status = "PENDING"
-        while status != "COMPLETE":
-            time.sleep(3)
-            get_res = requests.get(f"https://cloud.leonardo.ai/api/rest/v1/generations/{generation_id}", headers=headers)
-            data = get_res.json()
-            status = data.get("generations_by_pk", {}).get("status")
-            
-        image_url = data["generations_by_pk"]["generated_images"][0]["url"]
-        img_data = requests.get(image_url).content
-        img_filename = f"image_{index}.jpg"
-        
-        with open(img_filename, "wb") as handler:
-            handler.write(img_data)
-            
-        apply_logo(img_filename, logo_path)
-        downloaded_files.append(img_filename)
-        
-    return downloaded_files
+        .container {
+            background-color: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 100%;
+            max-width: 480px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #00ffcc;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            background-color: #333;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        textarea {
+            resize: vertical;
+            height: 60px;
+        }
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            background-color: #00ffcc;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        .btn-action:hover {
+            background-color: #00b38f;
+        }
+        .btn-action:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #444;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        #phrasesContainer {
+            margin-top: 20px;
+            display: none;
+            text-align: left;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
+        .phrases-list input {
+            margin-bottom: 5px;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #00ffcc;
+            min-height: 20px;
+        }
+        #timer {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        #resultContainer {
+            margin-top: 30px;
+            display: none;
+            width: 100%;
+        }
+        #mediaOutput video, #mediaOutput img {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #00ffcc;
+            margin-bottom: 10px;
+        }
+        .carousel-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .download-link {
+            display: block;
+            margin-top: 15px;
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/status')
-def get_status():
-    return jsonify(progress_status)
-
-@app.route('/download/<filename>')
-def download_file(filename):
-    return send_from_directory(os.getcwd(), filename)
-
-@app.route('/generate', methods=['POST'])
-def generate_video():
-    global progress_status
-    if not process_lock.acquire(blocking=False):
-        return jsonify({"success": False, "error": "O motor já está processando um ativo."}), 429
-    
-    try:
-        # Pega dados do Form (necessário para Upload de arquivo)
-        niche = request.form.get('niche')
-        mode = request.form.get('mode', 'video')
-        provider = request.form.get('provider', 'pollinations')
-        ratio = request.form.get('ratio', '9:16')
+    <div class="container">
+        <h1>Painel de Controle</h1>
         
-        if not niche:
-            return jsonify({"success": False, "error": "Nicho ausente"}), 400
+        <div class="input-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label>Nicho do Canal</label>
+                <button type="button" class="btn-secondary" id="btnSuggest" onclick="fetchPhrases()">Sugerir Frases</button>
+            </div>
+            <input type="text" id="niche" placeholder="Ex: Curiosidades Históricas">
+        </div>
 
-        cleanup_old_files()
-        
-        # Salva logo se houver
-        logo_path = None
-        if 'logo' in request.files:
-            logo_file = request.files['logo']
-            if logo_file.filename != '':
-                filename = secure_filename(logo_file.filename)
-                logo_path = os.path.join(UPLOAD_FOLDER, filename)
-                logo_file.save(logo_path)
+        <div id="phrasesContainer">
+            <label style="color: #fff; margin-bottom: 10px;">FRASES SUGERIDAS (Selecione/Edite)</label>
+            <div class="phrases-list">
+                <input type="text" id="phrase1" placeholder="Frase para imagem 1">
+                <input type="text" id="phrase2" placeholder="Frase para imagem 2">
+                <input type="text" id="phrase3" placeholder="Frase para imagem 3">
+                <input type="text" id="phrase4" placeholder="Frase para imagem 4">
+            </div>
+        </div>
 
-        width, height = get_dimensions(ratio)
-            
-        progress_status = {"step": "Criando Roteiro e Prompts...", "remaining": 50}
-        content = generate_script_and_prompts(niche)
-        script = content.get("script")
-        prompts = content.get("prompts")
+        <div class="input-group">
+            <label>O que gerar?</label>
+            <select id="mode">
+                <option value="video">Vídeo Completo</option>
+                <option value="carrossel">Carrossel de Imagens</option>
+                <option value="image">Apenas Imagens (Individuais)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Estilo Visual (Fundo)</label>
+            <select id="background_style">
+                <option value="clean">Clean</option>
+                <option value="minimalista">Minimalista</option>
+                <option value="moderno">Moderno</option>
+                <option value="corporativo">Corporativo</option>
+                <option value="vibrante">Vibrante</option>
+            </select>
+        </div>
+
+        <div class="input-group" style="display: flex; align-items: center;">
+            <input type="checkbox" id="use_real_people" style="width: auto; margin-right: 10px;">
+            <label style="margin-bottom: 0;">Incluir Pessoas Reais (Estilo Profissional/Canva)</label>
+        </div>
+
+        <div class="input-group">
+            <label>Provedor de Imagem</label>
+            <select id="provider">
+                <option value="pollinations">Pollinations (Grátis)</option>
+                <option value="leonardo">Leonardo.ai (Pago)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Formato (Ratio)</label>
+            <select id="ratio">
+                <option value="9:16">9:16 (Shorts/TikTok)</option>
+                <option value="16:9">16:9 (YouTube)</option>
+                <option value="1:1">1:1 (Instagram)</option>
+                <option value="4:5">4:5 (Post)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Contexto Adicional (Telefone, Endereço, Nome da Empresa...)</label>
+            <textarea id="context" placeholder="Deixe em branco para não usar contextoo."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>Sua Logo (PNG)</label>
+            <input type="file" id="logo" accept="image/*">
+        </div>
+
+        <button id="btnGenerate" class="btn-action" onclick="startProcess()">Executar Motor e Gerar Mídia</button>
         
-        if provider == "leonardo":
-            progress_status = {"step": "Gerando Imagens (Leonardo)...", "remaining": 45}
-            image_paths = generate_images_leonardo(prompts, width, height, logo_path)
-        else:
-            progress_status = {"step": "Gerando Imagens (Pollinations)...", "remaining": 35}
-            image_paths = generate_images_pollinations(prompts, width, height, logo_path)
-        
-        if mode == "video":
-            progress_status = {"step": "Gerando Áudio...", "remaining": 20}
-            audio_path = generate_audio(script)
-            
-            progress_status = {"step": "Compilando Vídeo Final...", "remaining": 15}
-            audio = AudioFileClip(audio_path)
-            duration_per_image = audio.duration / len(image_paths)
-            
-            clips = []
-            for img in image_paths:
-                clip = ImageClip(img).set_duration(duration_per_image)
-                clips.append(clip)
+        <div id="status"></div>
+        <div id="timer" style="display:none">Tempo estimado: <span id="sec">0</span>s</div>
+
+        <div id="resultContainer">
+            <div id="mediaOutput"></div>
+            <a id="downloadLink" class="download-link" href="#" download>Baixar Arquivo Final</a>
+        </div>
+    </div>
+
+    <script>
+        let pollInterval;
+
+        async function updateStatus() {
+            try {
+                const res = await fetch('/status');
+                const data = await res.json();
+                document.getElementById('status').innerText = data.step;
+                document.getElementById('sec').innerText = data.remaining;
                 
-            video = concatenate_videoclips(clips, method="compose")
-            video = video.set_audio(audio)
-            video.write_videofile("final_video.mp4", fps=24, codec="libx264", audio_codec="aac", threads=1)
-            
-            progress_status = {"step": "Concluído", "remaining": 0}
-            return jsonify({"success": True, "file": "final_video.mp4", "type": "video"})
-        else:
-            progress_status = {"step": "Concluído", "remaining": 0}
-            # Se for apenas imagem, retorna a primeira ou zip (aqui retorna a primeira para simplificar)
-            return jsonify({"success": True, "file": image_paths[0], "type": "image"})
-        
-    except Exception as e:
-        progress_status = {"step": "Erro fatal", "remaining": 0}
-        return jsonify({"success": False, "error": str(e)}), 500
-    finally:
-        process_lock.release()
+                if (data.step === "Concluído" || data.step.includes("Erro")) {
+                    clearInterval(pollInterval);
+                    document.getElementById('timer').style.display = 'none';
+                }
+            } catch (e) {}
+        }
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+        async function fetchPhrases() {
+            const niche = document.getElementById('niche').value;
+            const btnSuggest = document.getElementById('btnSuggest');
+            const statusDiv = document.getElementById('status');
+            const phrasesContainer = document.getElementById('phrasesContainer');
+
+            if (!niche) {
+                statusDiv.innerText = 'Preencha o nicho primeiro';
+                return;
+            }
+
+            btnSuggest.disabled = true;
+            statusDiv.innerText = 'Buscando sugestões da IA...';
+
+            try {
+                const response = await fetch('/suggest-phrases', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ niche: niche })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    for (let i = 0; i < 4; i++) {
+                        document.getElementById(`phrase${i+1}`).value = result.phrases[i] || '';
+                    }
+                    phrasesContainer.style.display = 'block';
+                    statusDiv.innerText = 'Sugestões carregadas. Você pode editá-las agora.';
+                } else {
+                    statusDiv.innerText = 'Falha ao buscar sugestões: ' + result.error;
+                }
+            } catch (error) {
+                statusDiv.innerText = 'Erro na requisição das frases.';
+            } finally {
+                btnSuggest.disabled = false;
+            }
+        }
+
+        async function startProcess() {
+            const niche = document.getElementById('niche').value;
+            const logoFile = document.getElementById('logo').files[0];
+            const mode = document.getElementById('mode').value;
+            const provider = document.getElementById('provider').value;
+            const ratio = document.getElementById('ratio').value;
+            const backgroundStyle = document.getElementById('background_style').value;
+            const useRealPeople = document.getElementById('use_real_people').checked;
+            const context = document.getElementById('context').value;
+            
+            const statusDiv = document.getElementById('status');
+            const btn = document.getElementById('btnGenerate');
+            const resultContainer = document.getElementById('resultContainer');
+            const mediaOutput = document.getElementById('mediaOutput');
+            const downloadLink = document.getElementById('downloadLink');
+
+            // Captura as frases editadas
+            const phrases = [];
+            if (document.getElementById('phrasesContainer').style.display !== 'none') {
+                for (let i = 1; i <= 4; i++) {
+                    const phrase = document.getElementById(`phrase${i}`).value;
+                    if (phrase) phrases.push(phrase);
+                }
+            }
+
+            if (!niche) {
+                statusDiv.innerText = 'Preencha o nicho primeiro';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('niche', niche);
+            formData.append('mode', mode);
+            formData.append('provider', provider);
+            formData.append('ratio', ratio);
+            formData.append('background_style', backgroundStyle);
+            formData.append('use_real_people', useRealPeople);
+            formData.append('context', context);
+            formData.append('phrases', JSON.stringify(phrases));
+            if (logoFile) formData.append('logo', logoFile);
+
+            statusDiv.innerText = 'Iniciando motores e compilando...';
+            btn.disabled = true;
+            resultContainer.style.display = 'none';
+            mediaOutput.innerHTML = '';
+            document.getElementById('timer').style.display = 'block';
+
+            pollInterval = setInterval(updateStatus, 1000);
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDiv.innerText = 'Pronto! Mídia gerada com sucesso.';
+                    
+                    if (result.type === 'video') {
+                        const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
+                        mediaOutput.innerHTML = `<video id="vPlayer" controls><source src="${fileUrl}" type="video/mp4"></video>`;
+                        document.getElementById('vPlayer').load();
+                        downloadLink.href = fileUrl;
+                        downloadLink.innerText = 'Baixar Vídeo Final';
+                    } else if (result.type === 'carrossel') {
+                        let html = '<div class="carousel-gallery">';
+                        result.files.forEach(file => {
+                            const fileUrl = '/download/' + file + '?t=' + new Date().getTime();
+                            html += `<img src="${fileUrl}">`;
+                        });
+                        html += '</div>';
+                        mediaOutput.innerHTML = html;
+                        downloadLink.href = '#';
+                        downloadLink.innerText = 'Baixe as imagens individualmente clicando nelas (ou implemente ZIP).';
+                        downloadLink.style.cursor = 'default';
+                        downloadLink.onclick = (e) => e.preventDefault();
+                    } else {
+                        const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
+                        mediaOutput.innerHTML = `<img src="${fileUrl}">`;
+                        downloadLink.href = fileUrl;
+                        downloadLink.innerText = 'Baixar Imagem Final';
+                    }
+
+                    resultContainer.style.display = 'block';
+                } else {
+                    statusDiv.innerText = 'Falha: ' + result.error;
+                }
+            } catch (error) {
+                statusDiv.innerText = 'Erro na requisição.';
+            } finally {
+                btn.disabled = false;
+                clearInterval(pollInterval);
+            }
+        }
+    </script>
+</body>
+</html>
