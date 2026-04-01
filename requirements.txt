@@ -3,3 +3,4 @@ groq
 requests
 moviepy==1.0.3
 edge-tts
+pillow
