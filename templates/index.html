@@ -24,23 +24,33 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             text-align: center;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
         }
         h1 {
             font-size: 24px;
             margin-bottom: 20px;
             color: #00ffcc;
         }
-        input {
-            width: 90%;
-            padding: 15px;
-            margin-bottom: 20px;
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
             border: none;
             border-radius: 6px;
             background-color: #333;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             outline: none;
+            box-sizing: border-box;
         }
         button {
             width: 100%;
@@ -53,6 +63,7 @@
             font-size: 16px;
             cursor: pointer;
             transition: 0.3s;
+            margin-top: 10px;
         }
         button:hover {
             background-color: #00b38f;
@@ -65,15 +76,20 @@
         #status {
             margin-top: 20px;
             font-size: 14px;
-            color: #aaaaaa;
+            color: #00ffcc;
             min-height: 20px;
+        }
+        #timer {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
         #videoContainer {
             margin-top: 30px;
             display: none;
             width: 100%;
         }
-        video {
+        video, img {
             width: 100%;
             border-radius: 8px;
             border: 2px solid #00ffcc;
@@ -91,67 +107,134 @@
 
     <div class="container">
         <h1>Painel de Controle</h1>
-        <input type="text" id="niche" placeholder="Defina o nicho do canal">
+        
+        <div class="input-group">
+            <label>Nicho do Canal</label>
+            <input type="text" id="niche" placeholder="Ex: Curiosidades Históricas">
+        </div>
+
+        <div class="input-group">
+            <label>O que gerar?</label>
+            <select id="mode">
+                <option value="video">Vídeo Completo</option>
+                <option value="image">Apenas Imagens</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Provedor de Imagem</label>
+            <select id="provider">
+                <option value="pollinations">Pollinations (Grátis)</option>
+                <option value="leonardo">Leonardo.ai (Pago)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Formato (Ratio)</label>
+            <select id="ratio">
+                <option value="9:16">9:16 (Shorts/TikTok)</option>
+                <option value="16:9">16:9 (YouTube)</option>
+                <option value="1:1">1:1 (Instagram)</option>
+                <option value="4:5">4:5 (Post)</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Sua Logo (PNG)</label>
+            <input type="file" id="logo" accept="image/*">
+        </div>
+
         <button id="btnGenerate" onclick="startProcess()">Executar Motor</button>
+        
         <div id="status"></div>
+        <div id="timer" style="display:none">Tempo estimado: <span id="sec">0</span>s</div>
 
         <div id="videoContainer">
-            <video id="videoPlayer" controls>
-                <source id="videoSource" src="" type="video/mp4">
-                Seu navegador não suporta vídeos.
-            </video>
-            <a id="downloadLink" class="download-link" href="#" download>Baixar Vídeo Final</a>
+            <div id="mediaOutput"></div>
+            <a id="downloadLink" class="download-link" href="#" download>Baixar Arquivo Final</a>
         </div>
     </div>
 
     <script>
+        let pollInterval;
+
+        async function updateStatus() {
+            try {
+                const res = await fetch('/status');
+                const data = await res.json();
+                document.getElementById('status').innerText = data.step;
+                document.getElementById('sec').innerText = data.remaining;
+                
+                if (data.step === "Concluído" || data.step.includes("Erro")) {
+                    clearInterval(pollInterval);
+                    document.getElementById('timer').style.display = 'none';
+                }
+            } catch (e) {}
+        }
+
         async function startProcess() {
             const niche = document.getElementById('niche').value;
+            const logoFile = document.getElementById('logo').files[0];
+            const mode = document.getElementById('mode').value;
+            const provider = document.getElementById('provider').value;
+            const ratio = document.getElementById('ratio').value;
+            
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('btnGenerate');
             const videoContainer = document.getElementById('videoContainer');
-            const videoPlayer = document.getElementById('videoPlayer');
-            const videoSource = document.getElementById('videoSource');
+            const mediaOutput = document.getElementById('mediaOutput');
             const downloadLink = document.getElementById('downloadLink');
-            
+
             if (!niche) {
                 statusDiv.innerText = 'Preencha o nicho primeiro';
                 return;
             }
 
-            statusDiv.innerText = 'Construindo o ativo digital, aguarde...';
+            const formData = new FormData();
+            formData.append('niche', niche);
+            formData.append('mode', mode);
+            formData.append('provider', provider);
+            formData.append('ratio', ratio);
+            if (logoFile) formData.append('logo', logoFile);
+
+            statusDiv.innerText = 'Iniciando motores...';
             btn.disabled = true;
             videoContainer.style.display = 'none';
+            document.getElementById('timer').style.display = 'block';
+
+            pollInterval = setInterval(updateStatus, 1000);
 
             try {
                 const response = await fetch('/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ niche })
+                    body: formData
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    statusDiv.innerText = 'Pronto! Vídeo renderizado.';
+                    statusDiv.innerText = 'Pronto! Renderização concluída.';
+                    const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
                     
-                    // Atualiza o player e o link de download
-                    const videoUrl = '/download/' + result.file + '?t=' + new Date().getTime();
-                    videoSource.src = videoUrl;
-                    downloadLink.href = videoUrl;
-                    
+                    if (result.type === 'video') {
+                        mediaOutput.innerHTML = `<video id="vPlayer" controls><source src="${fileUrl}" type="video/mp4"></video>`;
+                        document.getElementById('vPlayer').load();
+                    } else {
+                        mediaOutput.innerHTML = `<img src="${fileUrl}">`;
+                    }
+
+                    downloadLink.href = fileUrl;
                     videoContainer.style.display = 'block';
-                    videoPlayer.load();
                 } else {
                     statusDiv.innerText = 'Falha: ' + result.error;
                 }
             } catch (error) {
-                statusDiv.innerText = 'Erro de rede ou tempo limite atingido. Verifique os logs no Dokploy.';
+                statusDiv.innerText = 'Erro na requisição.';
             } finally {
                 btn.disabled = false;
+                clearInterval(pollInterval);
             }
         }
     </script>
-
 </body>
 </html>
