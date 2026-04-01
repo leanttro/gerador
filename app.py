@@ -2,7 +2,7 @@ import os
 import json
 import time
 import requests
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from groq import Groq
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 
@@ -16,13 +16,26 @@ groq_client = Groq(api_key=GROQ_API_KEY)
 def generate_script_and_prompts(niche):
     prompt = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave script contendo o texto falado e a chave prompts contendo uma lista de 4 prompts em ingles detalhados para gerar imagens em IA."
     
-    response = groq_client.chat.completions.create(
-        messages=[{"role": "user", "content": prompt}],
-        model="llama-3.3-70b-versatile",
-        response_format={"type": "json_object"}
-    )
+    models = [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "gemma2-9b-it",
+        "mixtral-8x7b-32768"
+    ]
     
-    return json.loads(response.choices[0].message.content)
+    for model in models:
+        try:
+            response = groq_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model=model,
+                response_format={"type": "json_object"}
+            )
+            return json.loads(response.choices[0].message.content)
+        except Exception as e:
+            print(f"Falha no modelo {model}: {e}")
+            continue
+            
+    raise Exception("Todos os modelos tentados falharam")
 
 def generate_audio(text, filename="output_audio.mp3"):
     safe_text = text.replace('"', '').replace("'", "")
@@ -90,6 +103,10 @@ def compile_video(audio_file, image_files, output_filename="final_video.mp4"):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_from_directory(os.getcwd(), filename)
 
 @app.route('/generate', methods=['POST'])
 def generate_video():
