@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor Dark</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0d0d0d;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1a1a1a;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #00ffcc;
+        }
+        input {
+            width: 90%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #333;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            background-color: #00ffcc;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #00b38f;
+        }
+        button:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaaaaa;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Painel de Controle</h1>
+        <input type="text" id="niche" placeholder="Defina o nicho do canal">
+        <button id="btnGenerate" onclick="startProcess()">Executar Motor</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function startProcess() {
+            const niche = document.getElementById('niche').value;
+            const statusDiv = document.getElementById('status');
+            const btn = document.getElementById('btnGenerate');
+            
+            if (!niche) {
+                statusDiv.innerText = 'Preencha o nicho primeiro';
+                return;
+            }
+
+            statusDiv.innerText = 'Construindo o ativo digital aguarde';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ niche })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDiv.innerText = 'Pronto Arquivo renderizado como ' + result.file;
+                } else {
+                    statusDiv.innerText = 'Falha ' + result.error;
+                }
+            } catch (error) {
+                statusDiv.innerText = 'Erro de rede ou tempo limite atingido';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+</html>
