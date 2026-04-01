@@ -18,7 +18,7 @@ def generate_script_and_prompts(niche):
     
     response = groq_client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="llama3-70b-8192",
+        model="mixtral-8x7b-32768",
         response_format={"type": "json_object"}
     )
     
