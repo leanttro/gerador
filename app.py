@@ -14,11 +14,11 @@ LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 def generate_script_and_prompts(niche):
-    prompt = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave 'script' contendo o texto falado e a chave 'prompts' contendo uma lista de 4 prompts em ingles detalhados para gerar imagens em IA."
+    prompt = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave script contendo o texto falado e a chave prompts contendo uma lista de 4 prompts em ingles detalhados para gerar imagens em IA."
     
     response = groq_client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
-        model="mixtral-8x7b-32768",
+        model="llama-3.3-70b-versatile",
         response_format={"type": "json_object"}
     )
     
