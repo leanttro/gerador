@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Dark - Profissional</title>
+    <title>Motor Dark (Atualizado)</title>
     <style>
-        /* mantido o estilo original, apenas adicionado novos campos */
         body {
             font-family: Arial, sans-serif;
             background-color: #0d0d0d;
@@ -25,7 +24,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             text-align: center;
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
         }
         h1 {
             font-size: 24px;
@@ -55,9 +54,9 @@
         }
         textarea {
             resize: vertical;
-            min-height: 60px;
+            height: 60px;
         }
-        button {
+        .btn-action {
             width: 100%;
             padding: 15px;
             border: none;
@@ -70,13 +69,31 @@
             transition: 0.3s;
             margin-top: 10px;
         }
-        button:hover {
+        .btn-action:hover {
             background-color: #00b38f;
         }
-        button:disabled {
+        .btn-action:disabled {
             background-color: #555;
             color: #888;
             cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #444;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        #phrasesContainer {
+            margin-top: 20px;
+            display: none;
+            text-align: left;
+            border-top: 1px solid #333;
+            padding-top: 15px;
+        }
+        .phrases-list input {
+            margin-bottom: 5px;
         }
         #status {
             margin-top: 20px;
@@ -89,15 +106,21 @@
             color: #888;
             margin-top: 5px;
         }
-        #videoContainer {
+        #resultContainer {
             margin-top: 30px;
             display: none;
             width: 100%;
         }
-        video, img {
+        #mediaOutput video, #mediaOutput img {
             width: 100%;
             border-radius: 8px;
             border: 2px solid #00ffcc;
+            margin-bottom: 10px;
+        }
+        .carousel-gallery {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
         .download-link {
             display: block;
@@ -105,78 +128,63 @@
             color: #00ffcc;
             text-decoration: none;
             font-weight: bold;
-        }
-        .phrases-panel {
-            background-color: #222;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            display: none;
-            text-align: left;
-        }
-        .phrase-item {
-            margin-bottom: 10px;
-            padding: 8px;
-            background: #2c2c2c;
-            border-radius: 4px;
-        }
-        .phrase-item input {
-            width: 100%;
-            background: #3a3a3a;
-            border: none;
-            padding: 8px;
-            color: white;
-            border-radius: 4px;
-        }
-        .checkbox-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-top: 5px;
-        }
-        .checkbox-group label {
-            display: inline;
-            margin-left: 5px;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h1>Painel de Controle Pro</h1>
+        <h1>Painel de Controle</h1>
         
         <div class="input-group">
-            <label>Nicho do Canal</label>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label>Nicho do Canal</label>
+                <button type="button" class="btn-secondary" id="btnSuggest" onclick="fetchPhrases()">Sugerir Frases</button>
+            </div>
             <input type="text" id="niche" placeholder="Ex: Curiosidades Históricas">
         </div>
 
-        <div class="input-group">
-            <label>Estilo Visual</label>
-            <select id="visualStyle">
-                <option value="clean, minimalista, cores suaves">Clean & Minimalista</option>
-                <option value="moderno, cores vibrantes, design contemporâneo">Moderno</option>
-                <option value="realista, pessoas reais, ambientes naturais">Realista com pessoas</option>
-            </select>
+        <div id="phrasesContainer">
+            <label style="color: #fff; margin-bottom: 10px;">FRASES SUGERIDAS (Selecione/Edite)</label>
+            <div class="phrases-list">
+                <input type="text" id="phrase1" placeholder="Frase para imagem 1">
+                <input type="text" id="phrase2" placeholder="Frase para imagem 2">
+                <input type="text" id="phrase3" placeholder="Frase para imagem 3">
+                <input type="text" id="phrase4" placeholder="Frase para imagem 4">
+            </div>
         </div>
 
         <div class="input-group">
-            <label>Texto adicional (telefone, endereço, empresa)</label>
-            <textarea id="customText" placeholder="Ex: (11) 99999-9999 | contato@empresa.com"></textarea>
-        </div>
-
-        <div class="input-group">
-            <label>Modo de Geração</label>
+            <label>O que gerar?</label>
             <select id="mode">
                 <option value="video">Vídeo Completo</option>
-                <option value="carousel">Carrossel de Imagens</option>
-                <option value="image">Apenas Imagens (sem frases)</option>
+                <option value="carrossel">Carrossel de Imagens</option>
+                <option value="image">Apenas Imagens (Individuais)</option>
             </select>
+        </div>
+
+        <div class="input-group">
+            <label>Estilo Visual (Fundo)</label>
+            <select id="background_style">
+                <option value="clean">Clean</option>
+                <option value="minimalista">Minimalista</option>
+                <option value="moderno">Moderno</option>
+                <option value="corporativo">Corporativo</option>
+                <option value="vibrante">Vibrante</option>
+            </select>
+        </div>
+
+        <div class="input-group" style="display: flex; align-items: center;">
+            <input type="checkbox" id="use_real_people" style="width: auto; margin-right: 10px;">
+            <label style="margin-bottom: 0;">Incluir Pessoas Reais (Estilo Profissional/Canva)</label>
         </div>
 
         <div class="input-group">
             <label>Provedor de Imagem</label>
             <select id="provider">
-                <option value="pollinations">Pollinations (Rápido)</option>
-                <option value="leonardo">Leonardo.ai (Alta qualidade)</option>
+                <option value="pollinations">Pollinations (Grátis)</option>
+                <option value="leonardo">Leonardo.ai (Pago)</option>
             </select>
         </div>
 
@@ -191,45 +199,80 @@
         </div>
 
         <div class="input-group">
+            <label>Contexto Adicional (Telefone, Endereço, Nome da Empresa...)</label>
+            <textarea id="context" placeholder="Deixe em branco para não usar contextoo."></textarea>
+        </div>
+
+        <div class="input-group">
             <label>Sua Logo (PNG)</label>
             <input type="file" id="logo" accept="image/*">
         </div>
 
-        <button id="btnGenerate" onclick="startProcess()">Executar Motor</button>
+        <button id="btnGenerate" class="btn-action" onclick="startProcess()">Executar Motor e Gerar Mídia</button>
         
         <div id="status"></div>
         <div id="timer" style="display:none">Tempo estimado: <span id="sec">0</span>s</div>
 
-        <!-- Painel para editar frases (aparece após gerar roteiro) -->
-        <div id="phrasesPanel" class="phrases-panel">
-            <h3>Edite as frases para cada imagem:</h3>
-            <div id="phrasesList"></div>
-            <button onclick="continueWithPhrases()">Continuar com estas frases</button>
-        </div>
-
-        <div id="videoContainer">
+        <div id="resultContainer">
             <div id="mediaOutput"></div>
             <a id="downloadLink" class="download-link" href="#" download>Baixar Arquivo Final</a>
         </div>
     </div>
 
     <script>
-        let currentPhrases = [];
-        let currentSessionId = null;
+        let pollInterval;
 
         async function updateStatus() {
-            if (!currentSessionId) return;
             try {
-                const res = await fetch(`/status/${currentSessionId}`);
+                const res = await fetch('/status');
                 const data = await res.json();
                 document.getElementById('status').innerText = data.step;
                 document.getElementById('sec').innerText = data.remaining;
                 
                 if (data.step === "Concluído" || data.step.includes("Erro")) {
-                    clearInterval(window.statusInterval);
+                    clearInterval(pollInterval);
                     document.getElementById('timer').style.display = 'none';
                 }
             } catch (e) {}
+        }
+
+        async function fetchPhrases() {
+            const niche = document.getElementById('niche').value;
+            const btnSuggest = document.getElementById('btnSuggest');
+            const statusDiv = document.getElementById('status');
+            const phrasesContainer = document.getElementById('phrasesContainer');
+
+            if (!niche) {
+                statusDiv.innerText = 'Preencha o nicho primeiro';
+                return;
+            }
+
+            btnSuggest.disabled = true;
+            statusDiv.innerText = 'Buscando sugestões da IA...';
+
+            try {
+                const response = await fetch('/suggest-phrases', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ niche: niche })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    for (let i = 0; i < 4; i++) {
+                        document.getElementById(`phrase${i+1}`).value = result.phrases[i] || '';
+                    }
+                    phrasesContainer.style.display = 'block';
+                    statusDiv.innerText = 'Sugestões carregadas. Você pode editá-las agora.';
+                } else {
+                    statusDiv.innerText = 'Falha ao buscar sugestões: ' + result.error;
+                }
+            } catch (error) {
+                statusDiv.innerText = 'Erro na requisição das frases.';
+            } finally {
+                btnSuggest.disabled = false;
+            }
         }
 
         async function startProcess() {
@@ -238,13 +281,24 @@
             const mode = document.getElementById('mode').value;
             const provider = document.getElementById('provider').value;
             const ratio = document.getElementById('ratio').value;
-            const visualStyle = document.getElementById('visualStyle').value;
-            const customText = document.getElementById('customText').value;
+            const backgroundStyle = document.getElementById('background_style').value;
+            const useRealPeople = document.getElementById('use_real_people').checked;
+            const context = document.getElementById('context').value;
             
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('btnGenerate');
-            const videoContainer = document.getElementById('videoContainer');
-            const phrasesPanel = document.getElementById('phrasesPanel');
+            const resultContainer = document.getElementById('resultContainer');
+            const mediaOutput = document.getElementById('mediaOutput');
+            const downloadLink = document.getElementById('downloadLink');
+
+            // Captura as frases editadas
+            const phrases = [];
+            if (document.getElementById('phrasesContainer').style.display !== 'none') {
+                for (let i = 1; i <= 4; i++) {
+                    const phrase = document.getElementById(`phrase${i}`).value;
+                    if (phrase) phrases.push(phrase);
+                }
+            }
 
             if (!niche) {
                 statusDiv.innerText = 'Preencha o nicho primeiro';
@@ -256,129 +310,66 @@
             formData.append('mode', mode);
             formData.append('provider', provider);
             formData.append('ratio', ratio);
-            formData.append('visualStyle', visualStyle);
-            formData.append('customText', customText);
+            formData.append('background_style', backgroundStyle);
+            formData.append('use_real_people', useRealPeople);
+            formData.append('context', context);
+            formData.append('phrases', JSON.stringify(phrases));
             if (logoFile) formData.append('logo', logoFile);
 
-            statusDiv.innerText = 'Gerando roteiro e frases...';
+            statusDiv.innerText = 'Iniciando motores e compilando...';
             btn.disabled = true;
-            videoContainer.style.display = 'none';
-            phrasesPanel.style.display = 'none';
+            resultContainer.style.display = 'none';
+            mediaOutput.innerHTML = '';
+            document.getElementById('timer').style.display = 'block';
+
+            pollInterval = setInterval(updateStatus, 1000);
 
             try {
-                // Primeiro, gerar roteiro e frases (etapa 1)
-                const scriptResponse = await fetch('/generate_script', {
+                const response = await fetch('/generate', {
                     method: 'POST',
                     body: formData
                 });
-                const scriptData = await scriptResponse.json();
 
-                if (!scriptData.success) {
-                    statusDiv.innerText = 'Erro: ' + scriptData.error;
-                    btn.disabled = false;
-                    return;
-                }
-
-                // Exibir painel de edição de frases
-                currentPhrases = scriptData.phrases;
-                currentSessionId = scriptData.session_id;
-
-                const phrasesListDiv = document.getElementById('phrasesList');
-                phrasesListDiv.innerHTML = '';
-                currentPhrases.forEach((phrase, idx) => {
-                    const div = document.createElement('div');
-                    div.className = 'phrase-item';
-                    div.innerHTML = `
-                        <label>Imagem ${idx+1}:</label>
-                        <input type="text" value="${escapeHtml(phrase)}" data-idx="${idx}" class="phrase-input">
-                    `;
-                    phrasesListDiv.appendChild(div);
-                });
-
-                phrasesPanel.style.display = 'block';
-                statusDiv.innerText = 'Edite as frases acima e clique em "Continuar"';
-                btn.disabled = false;
-            } catch (error) {
-                statusDiv.innerText = 'Erro na requisição inicial.';
-                btn.disabled = false;
-            }
-        }
-
-        async function continueWithPhrases() {
-            // Coletar frases editadas
-            const inputs = document.querySelectorAll('.phrase-input');
-            const updatedPhrases = [];
-            inputs.forEach(input => {
-                updatedPhrases.push(input.value);
-            });
-
-            const btn = document.getElementById('btnGenerate');
-            const statusDiv = document.getElementById('status');
-            btn.disabled = true;
-            statusDiv.innerText = 'Iniciando geração de imagens...';
-            document.getElementById('timer').style.display = 'block';
-            document.getElementById('phrasesPanel').style.display = 'none';
-
-            // Enviar para geração final
-            const payload = {
-                session_id: currentSessionId,
-                phrases: updatedPhrases
-            };
-
-            try {
-                const response = await fetch('/generate_final', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
                 const result = await response.json();
 
                 if (result.success) {
-                    statusDiv.innerText = 'Pronto! Renderização concluída.';
-                    const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
-                    const mediaOutput = document.getElementById('mediaOutput');
-                    const downloadLink = document.getElementById('downloadLink');
+                    statusDiv.innerText = 'Pronto! Mídia gerada com sucesso.';
                     
                     if (result.type === 'video') {
+                        const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
                         mediaOutput.innerHTML = `<video id="vPlayer" controls><source src="${fileUrl}" type="video/mp4"></video>`;
                         document.getElementById('vPlayer').load();
-                    } else if (result.type === 'carousel') {
-                        // Exibe todas as imagens em grade
-                        let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+                        downloadLink.href = fileUrl;
+                        downloadLink.innerText = 'Baixar Vídeo Final';
+                    } else if (result.type === 'carrossel') {
+                        let html = '<div class="carousel-gallery">';
                         result.files.forEach(file => {
-                            html += `<img src="/download/${file}" style="margin-bottom:10px;">`;
+                            const fileUrl = '/download/' + file + '?t=' + new Date().getTime();
+                            html += `<img src="${fileUrl}">`;
                         });
                         html += '</div>';
                         mediaOutput.innerHTML = html;
                         downloadLink.href = '#';
-                        downloadLink.style.display = 'none';
+                        downloadLink.innerText = 'Baixe as imagens individualmente clicando nelas (ou implemente ZIP).';
+                        downloadLink.style.cursor = 'default';
+                        downloadLink.onclick = (e) => e.preventDefault();
                     } else {
+                        const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
                         mediaOutput.innerHTML = `<img src="${fileUrl}">`;
+                        downloadLink.href = fileUrl;
+                        downloadLink.innerText = 'Baixar Imagem Final';
                     }
 
-                    if (result.type !== 'carousel') {
-                        downloadLink.href = fileUrl;
-                        downloadLink.style.display = 'block';
-                    }
-                    document.getElementById('videoContainer').style.display = 'block';
+                    resultContainer.style.display = 'block';
                 } else {
                     statusDiv.innerText = 'Falha: ' + result.error;
                 }
             } catch (error) {
-                statusDiv.innerText = 'Erro na geração final.';
+                statusDiv.innerText = 'Erro na requisição.';
             } finally {
                 btn.disabled = false;
-                clearInterval(window.statusInterval);
+                clearInterval(pollInterval);
             }
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
         }
     </script>
 </body>
