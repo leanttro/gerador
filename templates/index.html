@@ -13,8 +13,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
         }
         .container {
             background-color: #1a1a1a;
@@ -67,6 +68,23 @@
             color: #aaaaaa;
             min-height: 20px;
         }
+        #videoContainer {
+            margin-top: 30px;
+            display: none;
+            width: 100%;
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid #00ffcc;
+        }
+        .download-link {
+            display: block;
+            margin-top: 15px;
+            color: #00ffcc;
+            text-decoration: none;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -76,6 +94,14 @@
         <input type="text" id="niche" placeholder="Defina o nicho do canal">
         <button id="btnGenerate" onclick="startProcess()">Executar Motor</button>
         <div id="status"></div>
+
+        <div id="videoContainer">
+            <video id="videoPlayer" controls>
+                <source id="videoSource" src="" type="video/mp4">
+                Seu navegador não suporta vídeos.
+            </video>
+            <a id="downloadLink" class="download-link" href="#" download>Baixar Vídeo Final</a>
+        </div>
     </div>
 
     <script>
@@ -83,14 +109,19 @@
             const niche = document.getElementById('niche').value;
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('btnGenerate');
+            const videoContainer = document.getElementById('videoContainer');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const videoSource = document.getElementById('videoSource');
+            const downloadLink = document.getElementById('downloadLink');
             
             if (!niche) {
                 statusDiv.innerText = 'Preencha o nicho primeiro';
                 return;
             }
 
-            statusDiv.innerText = 'Construindo o ativo digital aguarde';
+            statusDiv.innerText = 'Construindo o ativo digital, aguarde...';
             btn.disabled = true;
+            videoContainer.style.display = 'none';
 
             try {
                 const response = await fetch('/generate', {
@@ -102,12 +133,20 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    statusDiv.innerText = 'Pronto Arquivo renderizado como ' + result.file;
+                    statusDiv.innerText = 'Pronto! Vídeo renderizado.';
+                    
+                    // Atualiza o player e o link de download
+                    const videoUrl = '/download/' + result.file + '?t=' + new Date().getTime();
+                    videoSource.src = videoUrl;
+                    downloadLink.href = videoUrl;
+                    
+                    videoContainer.style.display = 'block';
+                    videoPlayer.load();
                 } else {
-                    statusDiv.innerText = 'Falha ' + result.error;
+                    statusDiv.innerText = 'Falha: ' + result.error;
                 }
             } catch (error) {
-                statusDiv.innerText = 'Erro de rede ou tempo limite atingido';
+                statusDiv.innerText = 'Erro de rede ou tempo limite atingido. Verifique os logs no Dokploy.';
             } finally {
                 btn.disabled = false;
             }
