@@ -188,17 +188,13 @@ def generate_script_and_prompts(niche, mode, background_style, use_real_people, 
     base_instruction = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave script contendo o texto falado."
     
     if viral_context:
-        base_instruction += f"\n\nUSE ESTES CONTEÚDOS VIRAIS DA ÚLTIMA SEMANA COMO INSPIRAÇÃO DE TEMA E TOM DE VOZ:\n{viral_context}\nNão copie exatamente, mas modele o formato que está em alta."
+        base_instruction += f"\n\nUSE ESTES CONTEÚDOS VIRAIS COMO INSPIRAÇÃO:\n{viral_context}"
     
-    image_style_instruction = f"Inclua também a chave prompts contendo uma lista de 4 prompts em inglês DETALHADOS para gerar imagens em IA profissionais. As imagens devem ter um estilo profissional Canva com um fundo {background_style}."
+    image_style_instruction = f"Inclua a chave prompts com 4 descrições CURTAS EM INGLÊS (MÁXIMO 100 CARACTERES). Estilo: {background_style}."
     if use_real_people:
-        image_style_instruction += " Devem incluir pessoas reais em poses profissionais."
-    if context:
-        image_style_instruction += f" Adicione visualmente uma área discreta com o texto: {context}."
-    if mode == "carrossel":
-        image_style_instruction += " Os prompts devem descrever cenas que se conectam visualmente, criando uma transição suave entre elas."
+        image_style_instruction += " Adicione 'real people'."
         
-    prompt = f"{base_instruction} {image_style_instruction}"
+    prompt = f"{base_instruction} {image_style_instruction} ATENÇÃO: SEJA BREVE NOS PROMPTS PARA EVITAR ERROS."
     
     models = [
         "llama-3.3-70b-versatile",
@@ -225,19 +221,19 @@ def sanitize_prompts(prompts_raw):
     if isinstance(prompts_raw, list):
         for p in prompts_raw:
             if isinstance(p, str):
-                sanitized.append(p)
+                sanitized.append(p[:150])
             elif isinstance(p, dict):
-                sanitized.append(", ".join(str(v) for v in p.values()))
+                sanitized.append(", ".join(str(v) for v in p.values())[:150])
             else:
-                sanitized.append(str(p))
+                sanitized.append(str(p)[:150])
     elif isinstance(prompts_raw, dict):
         for v in prompts_raw.values():
-            sanitized.append(str(v))
+            sanitized.append(str(v)[:150])
     elif isinstance(prompts_raw, str):
-        sanitized.append(prompts_raw)
+        sanitized.append(prompts_raw[:150])
     
     if not sanitized:
-        sanitized = ["Professional corporate image, high quality"] * 4
+        sanitized = ["Professional image, high quality"] * 4
         
     while len(sanitized) < 4:
         sanitized.append(sanitized[-1])
@@ -253,34 +249,43 @@ def generate_audio(text, filename="output_audio.mp3"):
 
 def generate_images_pollinations(prompts, width, height, logo_path, phrases):
     downloaded_files = []
+    max_retries = 3
+    
     for index, prompt in enumerate(prompts):
         global progress_status
         progress_status["remaining"] = 30 - (index * 5)
         
         prompt_str = str(prompt)
         encoded_prompt = requests.utils.quote(prompt_str)
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={int(time.time()) + index}"
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&seed={int(time.time()) + index}"
         
-        try:
-            response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=40)
-            response.raise_for_status()
-            img_data = response.content
-            
-            img_filename = f"image_{index}.jpg"
-            img_filepath = os.path.join(BASE_DIR, img_filename)
-            
-            with open(img_filepath, "wb") as handler:
-                handler.write(img_data)
+        success = False
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=40)
+                response.raise_for_status()
+                img_data = response.content
                 
-            if os.path.getsize(img_filepath) < 1024:
-                raise Exception("A imagem veio vazia ou corrompida da API.")
-            
-            apply_text_visual(img_filepath, phrases[index])
-            apply_logo(img_filepath, logo_path)
-            downloaded_files.append(img_filename)
-        except Exception as e:
-            print(f"Erro ao gerar imagem no Pollinations: {e}")
-            raise Exception(f"A API do Pollinations falhou: {e}")
+                img_filename = f"image_{index}.jpg"
+                img_filepath = os.path.join(BASE_DIR, img_filename)
+                
+                with open(img_filepath, "wb") as handler:
+                    handler.write(img_data)
+                    
+                if os.path.getsize(img_filepath) < 1024:
+                    raise Exception("A imagem veio vazia ou corrompida da API.")
+                
+                apply_text_visual(img_filepath, phrases[index])
+                apply_logo(img_filepath, logo_path)
+                downloaded_files.append(img_filename)
+                success = True
+                break
+            except Exception as e:
+                print(f"Tentativa {attempt + 1} falhou para a imagem {index}: {e}")
+                time.sleep(2)
+                
+        if not success:
+            raise Exception(f"A API do Pollinations falhou apos {max_retries} tentativas")
         
     return downloaded_files
 
@@ -427,7 +432,7 @@ def generate_video():
         prompts = sanitize_prompts(prompts_raw)
         
         if not phrases or len(phrases) < 4:
-            phrases = ["Aproveite!", "Saiba Mais", "Descubra", "Increva-se"]
+            phrases = ["Aproveite!", "Saiba Mais", "Descubra", "Inscreva-se"]
         
         if provider == "leonardo":
             progress_status = {"step": "Gerando Imagens e Texto (Leonardo)...", "remaining": 45}
