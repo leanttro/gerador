@@ -3,221 +3,493 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Dark (Atualizado)</title>
+    <title>Motor Dark | Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --netflix-red: #E50914;
+            --netflix-red-hover: #F40612;
+            --bg-base: #141414;
+            --bg-card: #181818;
+            --bg-input: #333333;
+            --text-main: #FFFFFF;
+            --text-muted: #B3B3B3;
+            --border-color: #404040;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0d0d0d;
-            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header / Navbar */
+        header {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0) 100%);
+            padding: 25px 50px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        header h1 {
+            color: var(--netflix-red);
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
+
+        /* Main Content */
+        main {
+            padding: 120px 50px 50px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            color: var(--text-main);
+        }
+
+        /* Inputs & Forms */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group.flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        input[type="text"], 
+        select, 
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        input[type="text"]:focus, 
+        select:focus, 
+        textarea:focus {
+            border-color: var(--text-main);
+            background-color: #404040;
+        }
+
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+
+        /* Checkbox Customizado */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background-color: var(--bg-input);
+            padding: 14px 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--netflix-red);
+        }
+
+        .checkbox-wrapper label {
+            margin-bottom: 0;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        /* Botões */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-secondary {
+            background-color: rgba(255,255,255,0.1);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--netflix-red);
+            color: #fff;
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            border-radius: 4px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--netflix-red-hover);
+            box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
+            transform: scale(1.02);
+        }
+
+        .btn-primary:disabled {
+            background-color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* File Input */
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-input);
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            background-color: var(--text-main);
+            color: var(--bg-base);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-right: 15px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        /* Frases Sugeridas */
+        #phrasesContainer {
+            display: none;
+            margin-top: 20px;
+            background-color: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .phrases-list input {
+            margin-bottom: 12px;
+            border-left: 3px solid var(--netflix-red);
+        }
+
+        /* Área de Ação e Status */
+        .action-area {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .status-wrapper {
+            margin-top: 30px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+            min-height: 80px;
         }
-        .container {
-            background-color: #1a1a1a;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            text-align: center;
-            width: 100%;
-            max-width: 480px;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #00ffcc;
-        }
-        .input-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #888;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            background-color: #333;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            box-sizing: border-box;
-        }
-        textarea {
-            resize: vertical;
-            height: 60px;
-        }
-        .btn-action {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 6px;
-            background-color: #00ffcc;
-            color: #000;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
-        }
-        .btn-action:hover {
-            background-color: #00b38f;
-        }
-        .btn-action:disabled {
-            background-color: #555;
-            color: #888;
-            cursor: not-allowed;
-        }
-        .btn-secondary {
-            background-color: #444;
-            color: #fff;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        #phrasesContainer {
-            margin-top: 20px;
-            display: none;
-            text-align: left;
-            border-top: 1px solid #333;
-            padding-top: 15px;
-        }
-        .phrases-list input {
-            margin-bottom: 5px;
-        }
+
         #status {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #00ffcc;
-            min-height: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
         }
+
         #timer {
-            font-size: 12px;
-            color: #888;
-            margin-top: 5px;
+            font-size: 14px;
+            color: var(--netflix-red);
+            font-weight: 500;
         }
-        #resultContainer {
-            margin-top: 30px;
+
+        /* Spinner Animado */
+        .spinner {
             display: none;
-            width: 100%;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--netflix-red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
-        #mediaOutput video, #mediaOutput img {
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Área de Resultados */
+        #resultContainer {
+            display: none;
+            margin-top: 40px;
+            background-color: var(--bg-card);
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        #resultContainer h2 {
+            font-size: 28px;
+            margin-bottom: 30px;
+            color: var(--text-main);
+        }
+
+        #mediaOutput {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        #mediaOutput video, 
+        #mediaOutput img {
             width: 100%;
             border-radius: 8px;
-            border: 2px solid #00ffcc;
-            margin-bottom: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
+
         .carousel-gallery {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
         }
+
         .download-link {
-            display: block;
-            margin-top: 15px;
-            color: #00ffcc;
+            display: inline-block;
+            margin-top: 30px;
+            background-color: var(--text-main);
+            color: var(--bg-base);
             text-decoration: none;
-            font-weight: bold;
-            font-size: 14px;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 15px 40px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .download-link:hover {
+            background-color: #e6e6e6;
+            transform: translateY(-2px);
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            header { padding: 20px; }
+            main { padding: 100px 20px 30px; }
+            .hero-title { font-size: 32px; }
+            .action-area { padding: 20px; }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Painel de Controle</h1>
-        
-        <div class="input-group">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label>Nicho do Canal</label>
-                <button type="button" class="btn-secondary" id="btnSuggest" onclick="fetchPhrases()">Sugerir Frases</button>
+    <header>
+        <h1>Motor Dark</h1>
+    </header>
+
+    <main>
+        <h2 class="hero-title">Crie Seu Próximo Sucesso.</h2>
+        <p class="hero-subtitle">Configure o tema, estilo e formato. Nossa inteligência faz o resto.</p>
+
+        <div class="dashboard-grid">
+            
+            <div class="card">
+                <h2>1. Conteúdo Base</h2>
+                
+                <div class="input-group">
+                    <div class="flex-between">
+                        <label for="niche">Nicho / Tema do Canal</label>
+                        <button type="button" class="btn btn-secondary" id="btnSuggest" onclick="fetchPhrases()">Sugerir Frases com IA</button>
+                    </div>
+                    <input type="text" id="niche" placeholder="Ex: Curiosidades Históricas, Motivação...">
+                </div>
+
+                <div id="phrasesContainer">
+                    <label>Roteiro Visual (Editável)</label>
+                    <div class="phrases-list">
+                        <input type="text" id="phrase1" placeholder="Cena 1">
+                        <input type="text" id="phrase2" placeholder="Cena 2">
+                        <input type="text" id="phrase3" placeholder="Cena 3">
+                        <input type="text" id="phrase4" placeholder="Cena 4">
+                    </div>
+                </div>
             </div>
-            <input type="text" id="niche" placeholder="Ex: Curiosidades Históricas">
+
+            <div class="card">
+                <h2>2. Direção de Arte</h2>
+
+                <div class="input-group">
+                    <label for="mode">Formato de Saída</label>
+                    <select id="mode">
+                        <option value="video">Vídeo Completo (Áudio + Imagens)</option>
+                        <option value="carrossel">Carrossel de Imagens</option>
+                        <option value="image">Apenas Imagens Individuais</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="ratio">Proporção (Aspect Ratio)</label>
+                    <select id="ratio">
+                        <option value="9:16">Vertical 9:16 (Shorts, Reels, TikTok)</option>
+                        <option value="16:9">Horizontal 16:9 (YouTube Padrão)</option>
+                        <option value="1:1">Quadrado 1:1 (Feed Instagram)</option>
+                        <option value="4:5">Retrato 4:5 (Post Instagram)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="background_style">Atmosfera Visual</label>
+                    <select id="background_style">
+                        <option value="clean">Clean & Suave</option>
+                        <option value="minimalista">Minimalista</option>
+                        <option value="moderno">Moderno / Alta Tecnologia</option>
+                        <option value="corporativo">Corporativo / Elegante</option>
+                        <option value="vibrante">Vibrante / Cinematográfico</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="provider">Motor de Geração de Imagem</label>
+                    <select id="provider">
+                        <option value="pollinations">Pollinations (Rápido e Gratuito)</option>
+                        <option value="leonardo">Leonardo.ai (Ultra Realista - Exige API Pago)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="use_real_people">
+                        Forçar geração de pessoas reais nas imagens
+                    </label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>3. Identidade da Marca</h2>
+
+                <div class="input-group">
+                    <label for="context">Contexto Adicional (Chamada para ação)</label>
+                    <textarea id="context" placeholder="Ex: Siga nosso perfil! @motordark | WhatsApp: 11 9999-9999. (Deixe em branco se não quiser)"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="logo">Logotipo da Marca (PNG Transparente)</label>
+                    <input type="file" id="logo" accept="image/png, image/jpeg">
+                </div>
+            </div>
+
         </div>
 
-        <div id="phrasesContainer">
-            <label style="color: #fff; margin-bottom: 10px;">FRASES SUGERIDAS (Selecione/Edite)</label>
-            <div class="phrases-list">
-                <input type="text" id="phrase1" placeholder="Frase para imagem 1">
-                <input type="text" id="phrase2" placeholder="Frase para imagem 2">
-                <input type="text" id="phrase3" placeholder="Frase para imagem 3">
-                <input type="text" id="phrase4" placeholder="Frase para imagem 4">
+        <div class="action-area">
+            <button id="btnGenerate" class="btn btn-primary" onclick="startProcess()">Produzir Conteúdo Agora</button>
+            
+            <div class="status-wrapper">
+                <div class="spinner" id="loadingSpinner"></div>
+                <div id="status">Aguardando comando...</div>
+                <div id="timer" style="display:none">Tempo estimado de processamento: <span id="sec">0</span>s</div>
             </div>
         </div>
-
-        <div class="input-group">
-            <label>O que gerar?</label>
-            <select id="mode">
-                <option value="video">Vídeo Completo</option>
-                <option value="carrossel">Carrossel de Imagens</option>
-                <option value="image">Apenas Imagens (Individuais)</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>Estilo Visual (Fundo)</label>
-            <select id="background_style">
-                <option value="clean">Clean</option>
-                <option value="minimalista">Minimalista</option>
-                <option value="moderno">Corporativo</option>
-                <option value="corporativo">Corporativo</option>
-                <option value="vibrante">Vibrante</option>
-            </select>
-        </div>
-
-        <div class="input-group" style="display: flex; align-items: center;">
-            <input type="checkbox" id="use_real_people" style="width: auto; margin-right: 10px;">
-            <label style="margin-bottom: 0;">Incluir Pessoas Reais (Estilo Profissional/Canva)</label>
-        </div>
-
-        <div class="input-group">
-            <label>Provedor de Imagem</label>
-            <select id="provider">
-                <option value="pollinations">Pollinations (Grátis)</option>
-                <option value="leonardo">Leonardo.ai (Pago)</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>Formato (Ratio)</label>
-            <select id="ratio">
-                <option value="9:16">9:16 (Shorts/TikTok)</option>
-                <option value="16:9">16:9 (YouTube)</option>
-                <option value="1:1">1:1 (Instagram)</option>
-                <option value="4:5">4:5 (Post)</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>Contexto Adicional (Telefone, Endereço, Nome da Empresa...)</label>
-            <textarea id="context" placeholder="Deixe em branco para não usar contextoo."></textarea>
-        </div>
-
-        <div class="input-group">
-            <label>Sua Logo (PNG)</label>
-            <input type="file" id="logo" accept="image/*">
-        </div>
-
-        <button id="btnGenerate" class="btn-action" onclick="startProcess()">Executar Motor e Gerar Mídia</button>
-        
-        <div id="status"></div>
-        <div id="timer" style="display:none">Tempo estimado: <span id="sec">0</span>s</div>
 
         <div id="resultContainer">
+            <h2>Produção Concluída</h2>
             <div id="mediaOutput"></div>
             <a id="downloadLink" class="download-link" href="#" download>Baixar Arquivo Final</a>
         </div>
-    </div>
+
+    </main>
 
     <script>
         let pollInterval;
@@ -226,14 +498,26 @@
             try {
                 const res = await fetch('/status');
                 const data = await res.json();
-                document.getElementById('status').innerText = data.step;
-                document.getElementById('sec').innerText = data.remaining;
                 
-                if (data.step === "Concluído" || data.step.includes("Erro")) {
+                const statusEl = document.getElementById('status');
+                const secEl = document.getElementById('sec');
+                const timerEl = document.getElementById('timer');
+                const spinnerEl = document.getElementById('loadingSpinner');
+
+                statusEl.innerText = data.step;
+                secEl.innerText = data.remaining;
+                
+                if (data.step === "Concluído" || data.step.includes("Erro") || data.step === "Erro fatal") {
                     clearInterval(pollInterval);
-                    document.getElementById('timer').style.display = 'none';
+                    timerEl.style.display = 'none';
+                    spinnerEl.style.display = 'none';
+                } else if (data.step !== "Ocioso") {
+                    spinnerEl.style.display = 'block';
+                    timerEl.style.display = 'block';
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error("Erro ao puxar status", e);
+            }
         }
 
         async function fetchPhrases() {
@@ -241,14 +525,18 @@
             const btnSuggest = document.getElementById('btnSuggest');
             const statusDiv = document.getElementById('status');
             const phrasesContainer = document.getElementById('phrasesContainer');
+            const spinnerEl = document.getElementById('loadingSpinner');
 
             if (!niche) {
-                statusDiv.innerText = 'Preencha o nicho primeiro';
+                statusDiv.innerText = 'Preencha o nicho do canal primeiro.';
+                statusDiv.style.color = 'var(--netflix-red)';
+                setTimeout(() => statusDiv.style.color = 'var(--text-main)', 3000);
                 return;
             }
 
             btnSuggest.disabled = true;
-            statusDiv.innerText = 'Buscando sugestões da IA...';
+            statusDiv.innerText = 'Consultando inteligência artificial...';
+            spinnerEl.style.display = 'block';
 
             try {
                 const response = await fetch('/suggest-phrases', {
@@ -264,14 +552,15 @@
                         document.getElementById(`phrase${i+1}`).value = result.phrases[i] || '';
                     }
                     phrasesContainer.style.display = 'block';
-                    statusDiv.innerText = 'Sugestões carregadas. Você pode editá-las agora.';
+                    statusDiv.innerText = 'Roteiro gerado. Faça os ajustes necessários.';
                 } else {
-                    statusDiv.innerText = 'Falha ao buscar sugestões: ' + result.error;
+                    statusDiv.innerText = 'Falha na IA: ' + result.error;
                 }
             } catch (error) {
-                statusDiv.innerText = 'Erro na requisição das frases.';
+                statusDiv.innerText = 'Erro na comunicação com o servidor.';
             } finally {
                 btnSuggest.disabled = false;
+                spinnerEl.style.display = 'none';
             }
         }
 
@@ -290,8 +579,8 @@
             const resultContainer = document.getElementById('resultContainer');
             const mediaOutput = document.getElementById('mediaOutput');
             const downloadLink = document.getElementById('downloadLink');
+            const spinnerEl = document.getElementById('loadingSpinner');
 
-            // Captura as frases editadas
             const phrases = [];
             if (document.getElementById('phrasesContainer').style.display !== 'none') {
                 for (let i = 1; i <= 4; i++) {
@@ -301,7 +590,9 @@
             }
 
             if (!niche) {
-                statusDiv.innerText = 'Preencha o nicho primeiro';
+                statusDiv.innerText = 'Preencha o nicho do canal para começar.';
+                statusDiv.style.color = 'var(--netflix-red)';
+                setTimeout(() => statusDiv.style.color = 'var(--text-main)', 3000);
                 return;
             }
 
@@ -316,11 +607,12 @@
             formData.append('phrases', JSON.stringify(phrases));
             if (logoFile) formData.append('logo', logoFile);
 
-            statusDiv.innerText = 'Iniciando motores e compilando...';
+            statusDiv.innerText = 'Inicializando motores e compilando dados...';
+            statusDiv.style.color = 'var(--text-main)';
             btn.disabled = true;
             resultContainer.style.display = 'none';
             mediaOutput.innerHTML = '';
-            document.getElementById('timer').style.display = 'block';
+            spinnerEl.style.display = 'block';
 
             pollInterval = setInterval(updateStatus, 1000);
 
@@ -333,42 +625,49 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    statusDiv.innerText = 'Pronto! Mídia gerada com sucesso.';
+                    statusDiv.innerText = 'Produção finalizada com sucesso!';
                     
                     if (result.type === 'video') {
                         const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
-                        mediaOutput.innerHTML = `<video id="vPlayer" controls><source src="${fileUrl}" type="video/mp4"></video>`;
+                        mediaOutput.innerHTML = `<video id="vPlayer" controls autoplay><source src="${fileUrl}" type="video/mp4"></video>`;
                         document.getElementById('vPlayer').load();
                         downloadLink.href = fileUrl;
-                        downloadLink.innerText = 'Baixar Vídeo Final';
+                        downloadLink.innerText = 'Baixar Vídeo (MP4)';
                     } else if (result.type === 'carrossel') {
                         let html = '<div class="carousel-gallery">';
                         result.files.forEach(file => {
                             const fileUrl = '/download/' + file + '?t=' + new Date().getTime();
-                            html += `<img src="${fileUrl}">`;
+                            html += `<img src="${fileUrl}" alt="Carrossel Image">`;
                         });
                         html += '</div>';
                         mediaOutput.innerHTML = html;
                         downloadLink.href = '#';
-                        downloadLink.innerText = 'Baixe as imagens individualmente clicando nelas (ou implemente ZIP).';
+                        downloadLink.innerText = 'Para baixar, clique com o botão direito nas imagens';
                         downloadLink.style.cursor = 'default';
+                        downloadLink.style.backgroundColor = 'var(--bg-input)';
+                        downloadLink.style.color = 'var(--text-muted)';
                         downloadLink.onclick = (e) => e.preventDefault();
                     } else {
                         const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
-                        mediaOutput.innerHTML = `<img src="${fileUrl}">`;
+                        mediaOutput.innerHTML = `<img src="${fileUrl}" alt="Imagem Final">`;
                         downloadLink.href = fileUrl;
-                        downloadLink.innerText = 'Baixar Imagem Final';
+                        downloadLink.innerText = 'Baixar Imagem (JPG)';
                     }
 
                     resultContainer.style.display = 'block';
+                    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
-                    statusDiv.innerText = 'Falha: ' + result.error;
+                    statusDiv.innerText = 'Falha na produção: ' + result.error;
+                    statusDiv.style.color = 'var(--netflix-red)';
                 }
             } catch (error) {
-                statusDiv.innerText = 'Erro na requisição.';
+                statusDiv.innerText = 'Erro na comunicação com os servidores.';
+                statusDiv.style.color = 'var(--netflix-red)';
             } finally {
                 btn.disabled = false;
                 clearInterval(pollInterval);
+                spinnerEl.style.display = 'none';
+                document.getElementById('timer').style.display = 'none';
             }
         }
     </script>
