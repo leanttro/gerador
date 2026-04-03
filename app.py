@@ -210,6 +210,30 @@ def generate_script_and_prompts(niche, mode, background_style, use_real_people, 
             
     raise Exception("Todos os modelos do Groq falharam.")
 
+def sanitize_prompts(prompts_raw):
+    sanitized = []
+    if isinstance(prompts_raw, list):
+        for p in prompts_raw:
+            if isinstance(p, str):
+                sanitized.append(p)
+            elif isinstance(p, dict):
+                sanitized.append(", ".join(str(v) for v in p.values()))
+            else:
+                sanitized.append(str(p))
+    elif isinstance(prompts_raw, dict):
+        for v in prompts_raw.values():
+            sanitized.append(str(v))
+    elif isinstance(prompts_raw, str):
+        sanitized.append(prompts_raw)
+    
+    if not sanitized:
+        sanitized = ["Professional corporate image, high quality"] * 4
+        
+    while len(sanitized) < 4:
+        sanitized.append(sanitized[-1])
+        
+    return sanitized[:4]
+
 def generate_audio(text, filename="output_audio.mp3"):
     safe_text = text.replace('"', '').replace("'", "")
     filepath = os.path.join(BASE_DIR, filename)
@@ -223,7 +247,8 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases):
         global progress_status
         progress_status["remaining"] = 30 - (index * 5)
         
-        encoded_prompt = requests.utils.quote(prompt)
+        prompt_str = str(prompt)
+        encoded_prompt = requests.utils.quote(prompt_str)
         image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={int(time.time()) + index}"
         
         try:
@@ -236,13 +261,16 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases):
             
             with open(img_filepath, "wb") as handler:
                 handler.write(img_data)
+                
+            if os.path.getsize(img_filepath) < 1024:
+                raise Exception("A imagem veio vazia ou corrompida da API.")
             
             apply_text_visual(img_filepath, phrases[index])
             apply_logo(img_filepath, logo_path)
             downloaded_files.append(img_filename)
         except Exception as e:
             print(f"Erro ao gerar imagem no Pollinations: {e}")
-            raise Exception(f"A API do Pollinations falhou ou bloqueou a conexao: {e}")
+            raise Exception(f"A API do Pollinations falhou: {e}")
         
     return downloaded_files
 
@@ -261,7 +289,7 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases):
         payload = {
             "height": height,
             "width": width,
-            "prompt": prompt,
+            "prompt": str(prompt),
             "modelId": "6bef9f1b-29cb-40c7-b9df-32b51c1f67d3",
             "num_images": 1
         }
@@ -339,8 +367,8 @@ def suggest_phrases():
     finally:
         process_lock.release()
 
-@app.route('/download/<filename>')
-def download_file(filename):
+@app.route('/media/<path:filename>')
+def serve_media(filename):
     return send_from_directory(BASE_DIR, filename)
 
 @app.route('/generate', methods=['POST'])
@@ -384,7 +412,9 @@ def generate_video():
         progress_status = {"step": "Criando Roteiro e Prompts...", "remaining": 50}
         content = generate_script_and_prompts(niche, mode, background_style, use_real_people, context)
         script = content.get("script")
-        prompts = content.get("prompts")
+        
+        prompts_raw = content.get("prompts", [])
+        prompts = sanitize_prompts(prompts_raw)
         
         if not phrases or len(phrases) < 4:
             phrases = ["Aproveite!", "Saiba Mais", "Descubra", "Increva-se"]
