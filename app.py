@@ -12,10 +12,12 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
-UPLOAD_FOLDER = 'uploads'
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -29,7 +31,7 @@ progress_status = {"step": "Ocioso", "remaining": 0}
 def cleanup_old_files():
     patterns = ['*.mp3', '*.jpg', '*.png', 'final_video.mp4']
     for pattern in patterns:
-        files = glob.glob(pattern)
+        files = glob.glob(os.path.join(BASE_DIR, pattern))
         for f in files:
             try:
                 os.remove(f)
@@ -120,7 +122,7 @@ def apply_text_visual(image_path, text, font_path=None):
         return image_path
     except Exception as e:
         print(f"Erro ao aplicar texto visual: {e}")
-        return image_path
+        raise Exception(f"A imagem gerada esta corrompida e nao pode ser lida: {e}")
 
 def apply_logo(image_path, logo_path):
     if not logo_path or not os.path.exists(logo_path):
@@ -146,7 +148,7 @@ def apply_logo(image_path, logo_path):
         return image_path
     except Exception as e:
         print(f"Erro ao aplicar logo: {e}")
-        return image_path
+        raise Exception(f"Erro ao embutir a logo na imagem: {e}")
 
 def search_viral_content(niche):
     url = 'https://google.serper.dev/search'
@@ -210,9 +212,10 @@ def generate_script_and_prompts(niche, mode, background_style, use_real_people, 
 
 def generate_audio(text, filename="output_audio.mp3"):
     safe_text = text.replace('"', '').replace("'", "")
-    command = f'edge-tts --text "{safe_text}" --voice pt-BR-AntonioNeural --write-media {filename}'
+    filepath = os.path.join(BASE_DIR, filename)
+    command = f'edge-tts --text "{safe_text}" --voice pt-BR-AntonioNeural --write-media "{filepath}"'
     os.system(command)
-    return filename
+    return filepath
 
 def generate_images_pollinations(prompts, width, height, logo_path, phrases):
     downloaded_files = []
@@ -224,17 +227,22 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases):
         image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&model=flux&seed={int(time.time()) + index}"
         
         try:
-            img_data = requests.get(image_url).content
-            img_filename = f"image_{index}.jpg"
+            response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=40)
+            response.raise_for_status()
+            img_data = response.content
             
-            with open(img_filename, "wb") as handler:
+            img_filename = f"image_{index}.jpg"
+            img_filepath = os.path.join(BASE_DIR, img_filename)
+            
+            with open(img_filepath, "wb") as handler:
                 handler.write(img_data)
             
-            apply_text_visual(img_filename, phrases[index])
-            apply_logo(img_filename, logo_path)
+            apply_text_visual(img_filepath, phrases[index])
+            apply_logo(img_filepath, logo_path)
             downloaded_files.append(img_filename)
         except Exception as e:
             print(f"Erro ao gerar imagem no Pollinations: {e}")
+            raise Exception(f"A API do Pollinations falhou ou bloqueou a conexao: {e}")
         
     return downloaded_files
 
@@ -260,10 +268,11 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases):
         
         try:
             create_res = requests.post("https://cloud.leonardo.ai/api/rest/v1/generations", json=payload, headers=headers)
+            create_res.raise_for_status()
             generation_id = create_res.json().get("sdGenerationJob", {}).get("generationId")
             
             if not generation_id:
-                continue
+                raise Exception("ID de geracao nao foi retornado pela API do Leonardo")
                 
             status = "PENDING"
             while status != "COMPLETE":
@@ -271,19 +280,24 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases):
                 get_res = requests.get(f"https://cloud.leonardo.ai/api/rest/v1/generations/{generation_id}", headers=headers)
                 data = get_res.json()
                 status = data.get("generations_by_pk", {}).get("status")
+                if status == "FAILED":
+                    raise Exception("A geracao da imagem falhou no painel do Leonardo")
                 
             image_url = data["generations_by_pk"]["generated_images"][0]["url"]
             img_data = requests.get(image_url).content
-            img_filename = f"image_{index}.jpg"
             
-            with open(img_filename, "wb") as handler:
+            img_filename = f"image_{index}.jpg"
+            img_filepath = os.path.join(BASE_DIR, img_filename)
+            
+            with open(img_filepath, "wb") as handler:
                 handler.write(img_data)
                 
-            apply_text_visual(img_filename, phrases[index])
-            apply_logo(img_filename, logo_path)
+            apply_text_visual(img_filepath, phrases[index])
+            apply_logo(img_filepath, logo_path)
             downloaded_files.append(img_filename)
         except Exception as e:
             print(f"Erro ao gerar imagem no Leonardo: {e}")
+            raise Exception(f"A API do Leonardo falhou: {e}")
             
     return downloaded_files
 
@@ -327,7 +341,7 @@ def suggest_phrases():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    return send_from_directory(os.getcwd(), filename)
+    return send_from_directory(BASE_DIR, filename)
 
 @app.route('/generate', methods=['POST'])
 def generate_video():
@@ -391,14 +405,16 @@ def generate_video():
             
             clips = []
             for img in image_paths:
-                clip = ImageClip(img).set_duration(duration_per_image)
+                img_filepath = os.path.join(BASE_DIR, img)
+                clip = ImageClip(img_filepath).set_duration(duration_per_image)
                 clips.append(clip)
                 
             video = concatenate_videoclips(clips, method="compose")
             video = video.set_audio(audio)
             
             threads = os.cpu_count() or 4
-            video.write_videofile("final_video.mp4", fps=24, codec="libx264", audio_codec="aac", threads=threads)
+            video_filepath = os.path.join(BASE_DIR, "final_video.mp4")
+            video.write_videofile(video_filepath, fps=24, codec="libx264", audio_codec="aac", threads=threads)
             
             progress_status = {"step": "Concluído", "remaining": 0}
             return jsonify({"success": True, "file": "final_video.mp4", "type": "video"})
