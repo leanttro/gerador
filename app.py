@@ -6,6 +6,8 @@ import threading
 import glob
 import re
 import urllib.parse
+import asyncio
+import edge_tts
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from groq import Groq
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
@@ -243,12 +245,16 @@ def sanitize_prompts(prompts_raw):
     return sanitized[:4]
 
 def generate_audio(text, filename="output_audio.mp3"):
-    safe_text = text.replace('"', '').replace("'", "")
     filepath = os.path.join(BASE_DIR, filename)
-    command = f'edge-tts --text "{safe_text}" --voice pt-BR-AntonioNeural --write-media "{filepath}"'
-    result = os.system(command)
-    if result != 0 or not os.path.exists(filepath):
-        raise Exception("Erro ao gerar áudio com edge-tts. Verifique se o módulo está instalado corretamente.")
+    
+    async def create_audio():
+        communicate = edge_tts.Communicate(text, "pt-BR-AntonioNeural")
+        await communicate.save(filepath)
+        
+    asyncio.run(create_audio())
+    
+    if not os.path.exists(filepath):
+        raise Exception("Erro ao gerar áudio nativo com edge_tts.")
     return filepath
 
 def generate_images_pollinations(prompts, width, height, logo_path, phrases):
