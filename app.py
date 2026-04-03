@@ -14,6 +14,7 @@ app = Flask(__name__)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
+SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 UPLOAD_FOLDER = 'uploads'
 
 if not os.path.exists(UPLOAD_FOLDER):
@@ -147,8 +148,35 @@ def apply_logo(image_path, logo_path):
         print(f"Erro ao aplicar logo: {e}")
         return image_path
 
+def search_viral_content(niche):
+    url = 'https://google.serper.dev/search'
+    query = f'{niche} (site:tiktok.com OR site:instagram.com/reels OR site:youtube.com/shorts)'
+    payload_dict = {'q': query, 'num': 5, 'gl': 'br', 'hl': 'pt-br', 'tbs': 'qdr:w'}
+    headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
+    
+    try:
+        response = requests.request('POST', url, headers=headers, data=json.dumps(payload_dict))
+        if response.status_code != 200:
+            return ''
+        
+        results = response.json().get('organic', [])
+        viral_text = ''
+        for item in results:
+            title = item.get('title', '')
+            snippet = item.get('snippet', '')
+            viral_text += f'Título: {title} | Resumo: {snippet}\n'
+        return viral_text
+    except Exception as e:
+        print(f'Erro na busca: {e}')
+        return ''
+
 def generate_script_and_prompts(niche, mode, background_style, use_real_people, context):
+    viral_context = search_viral_content(niche)
+    
     base_instruction = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave script contendo o texto falado."
+    
+    if viral_context:
+        base_instruction += f"\n\nUSE ESTES CONTEÚDOS VIRAIS DA ÚLTIMA SEMANA COMO INSPIRAÇÃO DE TEMA E TOM DE VOZ:\n{viral_context}\nNão copie exatamente, mas modele o formato que está em alta."
     
     image_style_instruction = f"Inclua também a chave prompts contendo uma lista de 4 prompts em inglês DETALHADOS para gerar imagens em IA profissionais. As imagens devem ter um estilo profissional Canva com um fundo {background_style}."
     if use_real_people:
