@@ -92,7 +92,12 @@ def apply_text_visual(image_path, text, font_path=None):
         max_line_w = 0
         total_text_h = 0
         for line in lines:
-            line_w, line_h = draw.textsize(line, font=font)
+            try:
+                line_w, line_h = draw.textsize(line, font=font)
+            except AttributeError:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_w = bbox[2] - bbox[0]
+                line_h = bbox[3] - bbox[1]
             max_line_w = max(max_line_w, line_w)
             total_text_h += line_h
             
@@ -111,7 +116,12 @@ def apply_text_visual(image_path, text, font_path=None):
         
         current_y = pos_y + rect_padding
         for line in lines:
-            line_w, line_h = draw.textsize(line, font=font)
+            try:
+                line_w, line_h = draw.textsize(line, font=font)
+            except AttributeError:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                line_w = bbox[2] - bbox[0]
+                line_h = bbox[3] - bbox[1]
             text_x = pos_x + rect_padding + (max_line_w - line_w) // 2
             rect_draw.text((text_x, current_y), line, font=font, fill="white")
             current_y += line_h
