@@ -33,6 +33,7 @@
             overflow-x: hidden;
         }
 
+        /* Header / Navbar */
         header {
             background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0) 100%);
             padding: 25px 50px;
@@ -50,6 +51,7 @@
             text-transform: uppercase;
         }
 
+        /* Main Content */
         main {
             padding: 120px 50px 50px;
             max-width: 1400px;
@@ -70,6 +72,7 @@
             font-weight: 400;
         }
 
+        /* Grid Layout */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -77,6 +80,7 @@
             margin-bottom: 40px;
         }
 
+        /* Cards */
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -94,6 +98,7 @@
             color: var(--text-main);
         }
 
+        /* Inputs & Forms */
         .input-group {
             margin-bottom: 20px;
         }
@@ -140,6 +145,7 @@
             height: 100px;
         }
 
+        /* Checkbox Customizado */
         .checkbox-wrapper {
             display: flex;
             align-items: center;
@@ -164,6 +170,7 @@
             cursor: pointer;
         }
 
+        /* Botões */
         .btn {
             padding: 12px 24px;
             border: none;
@@ -214,6 +221,7 @@
             transform: none;
         }
 
+        /* File Input */
         input[type="file"] {
             width: 100%;
             padding: 10px;
@@ -236,6 +244,7 @@
             transition: background-color 0.2s;
         }
 
+        /* Frases Sugeridas */
         #phrasesContainer {
             display: none;
             margin-top: 20px;
@@ -250,6 +259,7 @@
             border-left: 3px solid var(--netflix-red);
         }
 
+        /* Área de Ação e Status */
         .action-area {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -281,6 +291,7 @@
             font-weight: 500;
         }
 
+        /* Spinner Animado */
         .spinner {
             display: none;
             width: 40px;
@@ -296,6 +307,7 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Área de Resultados */
         #resultContainer {
             display: none;
             margin-top: 40px;
@@ -348,6 +360,7 @@
             transform: translateY(-2px);
         }
 
+        /* Responsividade */
         @media (max-width: 768px) {
             header { padding: 20px; }
             main { padding: 100px 20px 30px; }
