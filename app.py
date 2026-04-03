@@ -4,16 +4,18 @@ import time
 import requests
 import threading
 import glob
+import re
+import urllib.parse
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from groq import Groq
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 from PIL import Image, ImageDraw, ImageFont
 from werkzeug.utils import secure_filename
 
-app = Flask(__name__)
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+
+app = Flask(__name__, template_folder=BASE_DIR)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
@@ -190,9 +192,9 @@ def generate_script_and_prompts(niche, mode, background_style, use_real_people, 
     if viral_context:
         base_instruction += f"\n\nUSE ESTES CONTEÚDOS VIRAIS COMO INSPIRAÇÃO:\n{viral_context}"
     
-    image_style_instruction = f"Inclua a chave prompts com 4 descrições CURTAS EM INGLÊS (MÁXIMO 100 CARACTERES). Estilo: {background_style}."
+    image_style_instruction = f"Inclua a chave prompts com 4 descrições CURTAS EM INGLÊS MÁXIMO 100 CARACTERES. Estilo: {background_style}."
     if use_real_people:
-        image_style_instruction += " Adicione 'real people'."
+        image_style_instruction += " Adicione real people."
         
     prompt = f"{base_instruction} {image_style_instruction} ATENÇÃO: SEJA BREVE NOS PROMPTS PARA EVITAR ERROS."
     
@@ -221,16 +223,16 @@ def sanitize_prompts(prompts_raw):
     if isinstance(prompts_raw, list):
         for p in prompts_raw:
             if isinstance(p, str):
-                sanitized.append(p[:150])
+                sanitized.append(p[:100])
             elif isinstance(p, dict):
-                sanitized.append(", ".join(str(v) for v in p.values())[:150])
+                sanitized.append(", ".join(str(v) for v in p.values())[:100])
             else:
-                sanitized.append(str(p)[:150])
+                sanitized.append(str(p)[:100])
     elif isinstance(prompts_raw, dict):
         for v in prompts_raw.values():
-            sanitized.append(str(v)[:150])
+            sanitized.append(str(v)[:100])
     elif isinstance(prompts_raw, str):
-        sanitized.append(prompts_raw[:150])
+        sanitized.append(prompts_raw[:100])
     
     if not sanitized:
         sanitized = ["Professional image, high quality"] * 4
@@ -244,37 +246,41 @@ def generate_audio(text, filename="output_audio.mp3"):
     safe_text = text.replace('"', '').replace("'", "")
     filepath = os.path.join(BASE_DIR, filename)
     command = f'edge-tts --text "{safe_text}" --voice pt-BR-AntonioNeural --write-media "{filepath}"'
-    os.system(command)
+    result = os.system(command)
+    if result != 0 or not os.path.exists(filepath):
+        raise Exception("Erro ao gerar áudio com edge-tts. Verifique se o módulo está instalado corretamente.")
     return filepath
 
 def generate_images_pollinations(prompts, width, height, logo_path, phrases):
     downloaded_files = []
-    max_retries = 3
+    max_retries = 5
     
     for index, prompt in enumerate(prompts):
         global progress_status
         progress_status["remaining"] = 30 - (index * 5)
         
         prompt_str = str(prompt)
-        encoded_prompt = requests.utils.quote(prompt_str)
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true&seed={int(time.time()) + index}"
+        prompt_str = re.sub(r'[^a-zA-Z0-9\s,]', '', prompt_str)
+        prompt_str = prompt_str[:100].strip()
+        
+        encoded_prompt = urllib.parse.quote(prompt_str)
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&seed={int(time.time()) + index}"
         
         success = False
         for attempt in range(max_retries):
             try:
-                response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=40)
+                response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
                 response.raise_for_status()
-                img_data = response.content
+                
+                if len(response.content) < 5000:
+                    raise Exception("A API retornou uma pagina de erro HTML ao inves da imagem")
                 
                 img_filename = f"image_{index}.jpg"
                 img_filepath = os.path.join(BASE_DIR, img_filename)
                 
                 with open(img_filepath, "wb") as handler:
-                    handler.write(img_data)
+                    handler.write(response.content)
                     
-                if os.path.getsize(img_filepath) < 1024:
-                    raise Exception("A imagem veio vazia ou corrompida da API.")
-                
                 apply_text_visual(img_filepath, phrases[index])
                 apply_logo(img_filepath, logo_path)
                 downloaded_files.append(img_filename)
@@ -282,7 +288,7 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases):
                 break
             except Exception as e:
                 print(f"Tentativa {attempt + 1} falhou para a imagem {index}: {e}")
-                time.sleep(2)
+                time.sleep(3)
                 
         if not success:
             raise Exception(f"A API do Pollinations falhou apos {max_retries} tentativas")
