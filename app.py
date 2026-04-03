@@ -257,9 +257,11 @@ def generate_audio(text, filename="output_audio.mp3"):
         raise Exception("Erro ao gerar áudio nativo com edge_tts.")
     return filepath
 
-def generate_images_pollinations(prompts, width, height, logo_path, phrases):
+def generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style):
     downloaded_files = []
     max_retries = 5
+    base_seed = int(time.time())
+    style_suffix = f", {background_style}, uniform visual style, highly detailed masterpiece"
     
     for index, prompt in enumerate(prompts):
         global progress_status
@@ -267,10 +269,10 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases):
         
         prompt_str = str(prompt)
         prompt_str = re.sub(r'[^a-zA-Z0-9\s,]', '', prompt_str)
-        prompt_str = prompt_str[:100].strip()
+        prompt_str = prompt_str[:80].strip() + style_suffix
         
         encoded_prompt = urllib.parse.quote(prompt_str)
-        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&seed={int(time.time()) + index}"
+        image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&seed={base_seed}&nologo=true"
         
         success = False
         for attempt in range(max_retries):
@@ -301,7 +303,7 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases):
         
     return downloaded_files
 
-def generate_images_leonardo(prompts, width, height, logo_path, phrases):
+def generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
@@ -309,14 +311,18 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases):
     }
     
     downloaded_files = []
+    style_suffix = f", {background_style}, uniform visual style, highly detailed masterpiece"
+
     for index, prompt in enumerate(prompts):
         global progress_status
         progress_status["remaining"] = 40 - (index * 8)
         
+        prompt_str = str(prompt)[:80].strip() + style_suffix
+
         payload = {
             "height": height,
             "width": width,
-            "prompt": str(prompt),
+            "prompt": prompt_str,
             "modelId": "6bef9f1b-29cb-40c7-b9df-32b51c1f67d3",
             "num_images": 1
         }
@@ -448,30 +454,36 @@ def generate_video():
         
         if provider == "leonardo":
             progress_status = {"step": "Gerando Imagens e Texto (Leonardo)...", "remaining": 45}
-            image_paths = generate_images_leonardo(prompts, width, height, logo_path, phrases)
+            image_paths = generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style)
         else:
             progress_status = {"step": "Gerando Imagens e Texto (Pollinations)...", "remaining": 35}
-            image_paths = generate_images_pollinations(prompts, width, height, logo_path, phrases)
+            image_paths = generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style)
         
         if mode == "video":
             progress_status = {"step": "Gerando Áudio e Compilando Vídeo Final...", "remaining": 20}
             audio_path = generate_audio(script)
             
             audio = AudioFileClip(audio_path)
-            duration_per_image = audio.duration / len(image_paths)
+            overlap = 0.5
+            total_duration = audio.duration
+            num_images = len(image_paths)
+            duration_per_image = (total_duration + (num_images - 1) * overlap) / num_images
             
             clips = []
-            for img in image_paths:
+            for i, img in enumerate(image_paths):
                 img_filepath = os.path.join(BASE_DIR, img)
                 clip = ImageClip(img_filepath).set_duration(duration_per_image)
+                clip = clip.resize(lambda t: 1.0 + 0.04 * (t / duration_per_image))
+                if i > 0:
+                    clip = clip.crossfadein(overlap)
                 clips.append(clip)
                 
-            video = concatenate_videoclips(clips, method="compose")
+            video = concatenate_videoclips(clips, padding=-overlap, method="compose")
             video = video.set_audio(audio)
             
             threads = os.cpu_count() or 4
             video_filepath = os.path.join(BASE_DIR, "final_video.mp4")
-            video.write_videofile(video_filepath, fps=24, codec="libx264", audio_codec="aac", threads=threads)
+            video.write_videofile(video_filepath, fps=24, codec="libx264", audio_codec="aac", threads=threads, preset="ultrafast")
             
             progress_status = {"step": "Concluído", "remaining": 0}
             return jsonify({"success": True, "file": "final_video.mp4", "type": "video"})
