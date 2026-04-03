@@ -89,11 +89,6 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
         .card h2 {
             font-size: 20px;
             margin-bottom: 25px;
@@ -628,7 +623,7 @@
                     statusDiv.innerText = 'Produção finalizada com sucesso!';
                     
                     if (result.type === 'video') {
-                        const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
+                        const fileUrl = '/media/' + result.file + '?t=' + new Date().getTime();
                         mediaOutput.innerHTML = `<video id="vPlayer" controls autoplay><source src="${fileUrl}" type="video/mp4"></video>`;
                         document.getElementById('vPlayer').load();
                         downloadLink.href = fileUrl;
@@ -636,7 +631,7 @@
                     } else if (result.type === 'carrossel') {
                         let html = '<div class="carousel-gallery">';
                         result.files.forEach(file => {
-                            const fileUrl = '/download/' + file + '?t=' + new Date().getTime();
+                            const fileUrl = '/media/' + file + '?t=' + new Date().getTime();
                             html += `<img src="${fileUrl}" alt="Carrossel Image">`;
                         });
                         html += '</div>';
@@ -648,7 +643,7 @@
                         downloadLink.style.color = 'var(--text-muted)';
                         downloadLink.onclick = (e) => e.preventDefault();
                     } else {
-                        const fileUrl = '/download/' + result.file + '?t=' + new Date().getTime();
+                        const fileUrl = '/media/' + result.file + '?t=' + new Date().getTime();
                         mediaOutput.innerHTML = `<img src="${fileUrl}" alt="Imagem Final">`;
                         downloadLink.href = fileUrl;
                         downloadLink.innerText = 'Baixar Imagem (JPG)';
