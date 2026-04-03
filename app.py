@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 
-app = Flask(__name__, template_folder=BASE_DIR)
+app = Flask(__name__, templates_folder=BASE_DIR)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
@@ -352,7 +352,7 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_templates('index.html')
 
 @app.route('/status')
 def get_status():
