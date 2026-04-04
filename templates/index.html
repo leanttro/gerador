@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Dark | Studio</title>
+    <title>Motor Dark | Studio Avançado</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -16,13 +16,13 @@
             --text-muted: #B3B3B3;
             --border-color: #404040;
         }
-
+        
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
@@ -30,9 +30,8 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
         }
-
+        
         header {
             background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(20,20,20,0) 100%);
             padding: 25px 50px;
@@ -41,731 +40,503 @@
             width: 100%;
             z-index: 100;
         }
-
+        
         header h1 {
             color: var(--netflix-red);
             font-size: 32px;
             font-weight: 800;
-            letter-spacing: -1px;
             text-transform: uppercase;
         }
-
+        
         main {
             padding: 120px 50px 50px;
             max-width: 1400px;
             margin: 0 auto;
             width: 100%;
         }
-
-        .hero-title {
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            font-weight: 400;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
+        
+        .step-container {
+            display: none;
             margin-bottom: 40px;
         }
-
+        
+        .step-container.active {
+            display: block;
+        }
+        
         .card {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 30px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 25px;
         }
-
-        .card h2 {
+        
+        h2 {
             font-size: 20px;
             margin-bottom: 25px;
-            font-weight: 600;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 15px;
-            color: var(--text-main);
         }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group.flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        input[type="text"], 
-        select, 
-        textarea {
+        
+        input[type="text"], select, textarea {
             width: 100%;
             padding: 14px 16px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
             background-color: var(--bg-input);
             color: var(--text-main);
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: border-color 0.3s, background-color 0.3s;
+            margin-bottom: 15px;
         }
-
-        input[type="text"]:focus, 
-        select:focus, 
-        textarea:focus {
-            border-color: var(--text-main);
-            background-color: #404040;
-        }
-
-        textarea {
-            resize: vertical;
-            height: 100px;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background-color: var(--bg-input);
-            padding: 14px 16px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: var(--netflix-red);
-        }
-
-        .checkbox-wrapper label {
-            margin-bottom: 0;
-            color: var(--text-main);
-            cursor: pointer;
-        }
-
+        
         .btn {
-            padding: 12px 24px;
+            padding: 14px 24px;
             border: none;
             border-radius: 4px;
             font-weight: 600;
-            font-size: 15px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .btn-secondary {
-            background-color: rgba(255,255,255,0.1);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: rgba(255,255,255,0.2);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
             background-color: var(--netflix-red);
             color: #fff;
             width: 100%;
-            padding: 18px;
-            font-size: 18px;
-            border-radius: 4px;
-            margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+            font-size: 16px;
         }
-
-        .btn-primary:hover:not(:disabled) {
+        
+        .btn:hover {
             background-color: var(--netflix-red-hover);
-            box-shadow: 0 6px 20px rgba(229, 9, 20, 0.5);
-            transform: scale(1.02);
         }
-
-        .btn-primary:disabled {
-            background-color: #555;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
+        
+        .grid-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
-
-        input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--bg-input);
-            border: 1px dashed var(--border-color);
-            border-radius: 4px;
-            color: var(--text-muted);
+        
+        .result-item {
+            background: var(--bg-input);
+            padding: 15px;
+            border-radius: 6px;
             cursor: pointer;
+            border: 1px solid transparent;
         }
-
-        input[type="file"]::file-selector-button {
-            background-color: var(--text-main);
-            color: var(--bg-base);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            margin-right: 15px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
+        
+        .result-item:hover {
+            border-color: var(--netflix-red);
         }
-
-        #phrasesContainer {
-            display: none;
-            margin-top: 20px;
-            background-color: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .phrases-list input {
-            margin-bottom: 12px;
-            border-left: 3px solid var(--netflix-red);
-        }
-
-        .action-area {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        .status-wrapper {
-            margin-top: 30px;
+        
+        .editor-workspace {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 80px;
+            gap: 30px;
+            flex-wrap: wrap;
         }
-
-        #status {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 8px;
+        
+        .canvas-area {
+            background: #000;
+            border: 1px dashed var(--border-color);
+            position: relative;
+            overflow: hidden;
         }
-
-        #timer {
-            font-size: 14px;
-            color: var(--netflix-red);
-            font-weight: 500;
+        
+        .canvas-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
         }
-
-        .spinner {
+        
+        .text-element {
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            text-align: center;
+        }
+        
+        .logo-element {
+            width: 80px;
+        }
+        
+        .controls-area {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        #loadingSpinner {
             display: none;
+            margin: 20px auto;
             width: 40px;
             height: 40px;
             border: 4px solid rgba(255,255,255,0.1);
             border-left-color: var(--netflix-red);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 15px;
         }
-
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        #resultContainer {
-            display: none;
-            margin-top: 40px;
-            background-color: var(--bg-card);
-            padding: 40px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            text-align: center;
-        }
-
-        #resultContainer h2 {
-            font-size: 28px;
-            margin-bottom: 30px;
-            color: var(--text-main);
-        }
-
-        #mediaOutput {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        #mediaOutput video, 
-        #mediaOutput img {
-            width: 100%;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-        }
-
-        .carousel-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .download-link {
-            display: inline-block;
-            margin-top: 30px;
-            background-color: var(--text-main);
-            color: var(--bg-base);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 16px;
-            padding: 15px 40px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .download-link:hover {
-            background-color: #e6e6e6;
-            transform: translateY(-2px);
-        }
-
-        #previewArea {
-            width: 100%;
-            max-width: 300px;
-            height: 533px;
-            background-color: #222;
-            border: 1px dashed var(--border-color);
-            margin-top: 15px;
-            position: relative;
-            overflow: hidden;
-            display: none;
-        }
-
-        #dragLogo {
-            position: absolute;
-            width: 80px;
-            cursor: move;
-            user-select: none;
-            top: 10px;
-            left: 10px;
-        }
-
-        @media (max-width: 768px) {
-            header { padding: 20px; }
-            main { padding: 100px 20px 30px; }
-            .hero-title { font-size: 32px; }
-            .action-area { padding: 20px; }
         }
     </style>
 </head>
 <body>
-
     <header>
-        <h1>Motor Dark</h1>
+        <h1>Motor Dark Studio</h1>
     </header>
-
+    
     <main>
-        <h2 class="hero-title">Crie Seu Próximo Sucesso.</h2>
-        <p class="hero-subtitle">Configure o tema, estilo e formato. Nossa inteligência faz o resto.</p>
-
-        <div class="dashboard-grid">
-            
+        <div id="step1" class="step-container active">
             <div class="card">
-                <h2>1. Conteúdo Base</h2>
+                <h2>1. Pesquisar Referências Virais</h2>
+                <input type="text" id="searchNiche" placeholder="Digite o nicho (ex: Curiosidades Históricas)">
+                <button class="btn" onclick="searchViral()">Buscar no Serper</button>
+                <div id="loadingSpinner" class="spinner-1"></div>
+                <div class="grid-results" id="searchResults"></div>
+            </div>
+        </div>
+
+        <div id="step2" class="step-container">
+            <div class="card">
+                <h2>2. Direção de Arte e Roteiro (IA)</h2>
+                <div id="loadingSpinner" class="spinner-2"></div>
                 
-                <div class="input-group">
-                    <div class="flex-between">
-                        <label for="niche">Nicho / Tema do Canal</label>
-                        <button type="button" class="btn btn-secondary" id="btnSuggest" onclick="fetchPhrases()">Sugerir Frases com IA</button>
-                    </div>
-                    <input type="text" id="niche" placeholder="Ex: Curiosidades Históricas, Motivação...">
-                </div>
-
-                <div id="phrasesContainer">
-                    <label>Roteiro Visual (Editável)</label>
-                    <div class="phrases-list">
-                        <input type="text" id="phrase1" placeholder="Cena 1">
-                        <input type="text" id="phrase2" placeholder="Cena 2">
-                        <input type="text" id="phrase3" placeholder="Cena 3">
-                        <input type="text" id="phrase4" placeholder="Cena 4">
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>2. Direção de Arte</h2>
-
-                <div class="input-group">
-                    <label for="mode">Formato de Saída</label>
-                    <select id="mode">
-                        <option value="video">Vídeo Completo (Áudio + Imagens)</option>
-                        <option value="carrossel">Carrossel de Imagens</option>
-                        <option value="image">Apenas Imagens Individuais</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="ratio" onchange="updatePreviewBox()">Proporção (Aspect Ratio)</label>
-                    <select id="ratio">
-                        <option value="9:16">Vertical 9:16 (Shorts, Reels, TikTok)</option>
-                        <option value="16:9">Horizontal 16:9 (YouTube Padrão)</option>
-                        <option value="1:1">Quadrado 1:1 (Feed Instagram)</option>
-                        <option value="4:5">Retrato 4:5 (Post Instagram)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="background_style">Atmosfera Visual</label>
-                    <select id="background_style">
-                        <option value="clean">Clean & Suave</option>
-                        <option value="minimalista">Minimalista</option>
-                        <option value="moderno">Moderno / Alta Tecnologia</option>
-                        <option value="corporativo">Corporativo / Elegante</option>
-                        <option value="vibrante">Vibrante / Cinematográfico</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="provider">Motor de Geração de Imagem</label>
-                    <select id="provider">
-                        <option value="pollinations">Pollinations (Rápido e Gratuito)</option>
-                        <option value="leonardo">Leonardo.ai (Ultra Realista - Exige API Pago)</option>
-                        <option value="pixabay">Pixabay (Banco de Imagens Pronto)</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" id="use_real_people">
-                        Forçar geração de pessoas reais nas imagens
-                    </label>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>3. Identidade da Marca</h2>
-
-                <div class="input-group">
-                    <label for="context">Contexto Adicional (Chamada para ação)</label>
-                    <textarea id="context" placeholder="Ex: Siga nosso perfil! @motordark | WhatsApp: 11 9999-9999. (Deixe em branco se não quiser)"></textarea>
-                </div>
-
-                <div class="input-group">
-                    <label for="logo">Logotipo da Marca (PNG Transparente)</label>
-                    <input type="file" id="logo" accept="image/png, image/jpeg" onchange="loadLogoPreview(event)">
-                </div>
-
-                <div id="previewArea">
-                    <img id="dragLogo" src="" alt="Logo" style="display:none;">
-                </div>
+                <label>Script Narrado</label>
+                <textarea id="scriptText" rows="3"></textarea>
                 
-                <input type="hidden" id="logoX" value="0.8">
-                <input type="hidden" id="logoY" value="0.8">
+                <label>Prompts Visuais (Gerados pelo Groq)</label>
+                <textarea id="promptsText" rows="3"></textarea>
+                
+                <label>Motor Sugerido</label>
+                <select id="engineSelect">
+                    <option value="pollinations">Pollinations</option>
+                    <option value="pixabay">Pixabay</option>
+                    <option value="leonardo">Leonardo.ai</option>
+                </select>
+                
+                <label>Proporção</label>
+                <select id="ratioSelect">
+                    <option value="9:16">Vertical 9:16</option>
+                    <option value="16:9">Horizontal 16:9</option>
+                    <option value="1:1">Quadrado 1:1</option>
+                </select>
+                
+                <button class="btn" onclick="generateRawImages()">Gerar Imagens Base</button>
             </div>
-
         </div>
 
-        <div class="action-area">
-            <button id="btnGenerate" class="btn btn-primary" onclick="startProcess()">Produzir Conteúdo Agora</button>
-            
-            <div class="status-wrapper">
-                <div class="spinner" id="loadingSpinner"></div>
-                <div id="status">Aguardando comando...</div>
-                <div id="timer" style="display:none">Tempo estimado de processamento: <span id="sec">0</span>s</div>
+        <div id="step3" class="step-container">
+            <div class="card">
+                <h2>3. Editor Visual Canva</h2>
+                <div class="editor-workspace">
+                    <div class="canvas-area" id="canvasBox" style="width: 300px; height: 533px;">
+                        <img id="bgPreview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div id="dragText" class="canvas-element text-element" style="left: 10%; top: 70%; color: #FFFFFF; font-family: Arial;">Texto da Cena</div>
+                        <img id="dragLogo" class="canvas-element logo-element" src="" style="display:none; left: 10px; top: 10px;">
+                    </div>
+                    
+                    <div class="controls-area">
+                        <label>Textos Cenas (Separados por linha)</label>
+                        <textarea id="scenePhrases" rows="4">Cena 1&#10;Cena 2&#10;Cena 3&#10;Cena 4</textarea>
+                        
+                        <label>Cor do Texto</label>
+                        <input type="color" id="textColor" value="#FFFFFF" onchange="updateEditor()">
+                        
+                        <label>Fonte</label>
+                        <select id="fontFamily" onchange="updateEditor()">
+                            <option value="Arial">Arial</option>
+                            <option value="Verdana">Verdana</option>
+                            <option value="Courier New">Courier</option>
+                        </select>
+                        
+                        <label>Sua Logo</label>
+                        <input type="file" id="logoUpload" accept="image/png" onchange="loadLogo(event)">
+                        
+                        <label>Formato Final</label>
+                        <select id="modeSelect">
+                            <option value="video">Vídeo Completo (MP4)</option>
+                            <option value="carrossel">Carrossel (Imagens)</option>
+                        </select>
+                        
+                        <button class="btn" onclick="renderFinal()">Finalizar Produção</button>
+                        
+                        <div id="loadingSpinner" class="spinner-3"></div>
+                        <div id="statusTracker" style="margin-top: 10px; color: var(--netflix-red);"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="resultContainer">
-            <h2>Produção Concluída</h2>
-            <div id="mediaOutput"></div>
-            <a id="downloadLink" class="download-link" href="#" download>Baixar Arquivo Final</a>
+        <div id="step4" class="step-container">
+            <div class="card" style="text-align: center;">
+                <h2>Pronto!</h2>
+                <div id="finalOutput"></div>
+            </div>
         </div>
-
     </main>
 
     <script>
+        let rawImages = [];
         let pollInterval;
-        let isDragging = false;
-        let startX, startY, initialLeft, initialTop;
 
-        const ratioSelect = document.getElementById('ratio');
-        const previewArea = document.getElementById('previewArea');
-        const dragLogo = document.getElementById('dragLogo');
-
-        ratioSelect.addEventListener('change', updatePreviewBox);
-
-        function updatePreviewBox() {
-            const val = ratioSelect.value;
-            previewArea.style.width = '300px';
-            if (val === '9:16') previewArea.style.height = '533px';
-            else if (val === '16:9') previewArea.style.height = '168px';
-            else if (val === '1:1') previewArea.style.height = '300px';
-            else if (val === '4:5') previewArea.style.height = '375px';
-            updateCoordinates();
+        function showSpinner(className) {
+            document.querySelector(className).style.display = 'block';
+        }
+        
+        function hideSpinner(className) {
+            document.querySelector(className).style.display = 'none';
+        }
+        
+        function switchStep(stepId) {
+            document.querySelectorAll('.step-container').forEach(e => e.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
         }
 
-        function loadLogoPreview(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    dragLogo.src = e.target.result;
-                    dragLogo.style.display = 'block';
-                    previewArea.style.display = 'block';
-                    updatePreviewBox();
-                    
-                    dragLogo.style.left = (previewArea.clientWidth - dragLogo.clientWidth - 10) + 'px';
-                    dragLogo.style.top = (previewArea.clientHeight - dragLogo.clientHeight - 10) + 'px';
-                    updateCoordinates();
-                }
-                reader.readAsDataURL(file);
-            } else {
-                dragLogo.style.display = 'none';
-                previewArea.style.display = 'none';
-            }
-        }
-
-        dragLogo.onmousedown = function(e) {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            initialLeft = dragLogo.offsetLeft;
-            initialTop = dragLogo.offsetTop;
-            return false;
-        };
-
-        document.onmousemove = function(e) {
-            if (isDragging) {
-                let dx = e.clientX - startX;
-                let dy = e.clientY - startY;
-                let newLeft = initialLeft + dx;
-                let newTop = initialTop + dy;
-
-                let maxLeft = Math.max(0, previewArea.clientWidth - dragLogo.clientWidth);
-                let maxTop = Math.max(0, previewArea.clientHeight - dragLogo.clientHeight);
-
-                newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-                newTop = Math.max(0, Math.min(newTop, maxTop));
-
-                dragLogo.style.left = newLeft + 'px';
-                dragLogo.style.top = newTop + 'px';
-            }
-        };
-
-        document.onmouseup = function() {
-            if (isDragging) {
-                isDragging = false;
-                updateCoordinates();
-            }
-        };
-
-        function updateCoordinates() {
-            if(dragLogo.style.display === 'none') return;
-            let maxLeft = Math.max(1, previewArea.clientWidth - dragLogo.clientWidth);
-            let maxTop = Math.max(1, previewArea.clientHeight - dragLogo.clientHeight);
-            let pctX = dragLogo.offsetLeft / maxLeft;
-            let pctY = dragLogo.offsetTop / maxTop;
-            document.getElementById('logoX').value = pctX;
-            document.getElementById('logoY').value = pctY;
-        }
-
-        async function updateStatus() {
-            try {
-                const res = await fetch('/status');
-                const data = await res.json();
-                
-                const statusEl = document.getElementById('status');
-                const secEl = document.getElementById('sec');
-                const timerEl = document.getElementById('timer');
-                const spinnerEl = document.getElementById('loadingSpinner');
-
-                statusEl.innerText = data.step;
-                secEl.innerText = data.remaining;
-                
-                if (data.step === "Concluído" || data.step.includes("Erro") || data.step === "Erro fatal") {
-                    clearInterval(pollInterval);
-                    timerEl.style.display = 'none';
-                    spinnerEl.style.display = 'none';
-                } else if (data.step !== "Ocioso") {
-                    spinnerEl.style.display = 'block';
-                    timerEl.style.display = 'block';
-                }
-            } catch (e) {
-                console.error("Erro ao puxar status", e);
-            }
-        }
-
-        async function fetchPhrases() {
-            const niche = document.getElementById('niche').value;
-            const btnSuggest = document.getElementById('btnSuggest');
-            const statusDiv = document.getElementById('status');
-            const phrasesContainer = document.getElementById('phrasesContainer');
-            const spinnerEl = document.getElementById('loadingSpinner');
-
-            if (!niche) {
-                statusDiv.innerText = 'Preencha o nicho do canal primeiro.';
-                statusDiv.style.color = 'var(--netflix-red)';
-                setTimeout(() => statusDiv.style.color = 'var(--text-main)', 3000);
+        async function searchViral() {
+            const niche = document.getElementById('searchNiche').value;
+            
+            if(!niche) {
+                alert("Digite o nicho");
                 return;
             }
-
-            btnSuggest.disabled = true;
-            statusDiv.innerText = 'Consultando inteligência artificial...';
-            spinnerEl.style.display = 'block';
-
+            
+            showSpinner('.spinner-1');
+            
             try {
-                const response = await fetch('/suggest-phrases', {
+                const response = await fetch('/api/search', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ niche: niche })
+                    body: JSON.stringify({niche})
                 });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    for (let i = 0; i < 4; i++) {
-                        document.getElementById(`phrase${i+1}`).value = result.phrases[i] || '';
-                    }
-                    phrasesContainer.style.display = 'block';
-                    statusDiv.innerText = 'Roteiro gerado. Faça os ajustes necessários.';
-                } else {
-                    statusDiv.innerText = 'Falha na IA: ' + result.error;
+                
+                const data = await response.json();
+                const container = document.getElementById('searchResults');
+                container.innerHTML = '';
+                
+                if(data.success) {
+                    data.data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.innerHTML = `<strong>${item.title}</strong><p style="font-size:12px; margin-top:5px; color:gray;">${item.snippet}</p>`;
+                        div.onclick = () => analyzeRef(item.title + " " + item.snippet);
+                        container.appendChild(div);
+                    });
                 }
-            } catch (error) {
-                statusDiv.innerText = 'Erro na comunicação com o servidor.';
-            } finally {
-                btnSuggest.disabled = false;
-                spinnerEl.style.display = 'none';
+            } catch(e) {
+                alert("Erro na busca");
             }
+            
+            hideSpinner('.spinner-1');
         }
 
-        async function startProcess() {
-            const niche = document.getElementById('niche').value;
-            const logoFile = document.getElementById('logo').files[0];
-            const mode = document.getElementById('mode').value;
-            const provider = document.getElementById('provider').value;
-            const ratio = document.getElementById('ratio').value;
-            const backgroundStyle = document.getElementById('background_style').value;
-            const useRealPeople = document.getElementById('use_real_people').checked;
-            const context = document.getElementById('context').value;
-            const logoX = document.getElementById('logoX').value;
-            const logoY = document.getElementById('logoY').value;
+        async function analyzeRef(content) {
+            switchStep('step2');
+            showSpinner('.spinner-2');
             
-            const statusDiv = document.getElementById('status');
-            const btn = document.getElementById('btnGenerate');
-            const resultContainer = document.getElementById('resultContainer');
-            const mediaOutput = document.getElementById('mediaOutput');
-            const downloadLink = document.getElementById('downloadLink');
-            const spinnerEl = document.getElementById('loadingSpinner');
-
-            const phrases = [];
-            if (document.getElementById('phrasesContainer').style.display !== 'none') {
-                for (let i = 1; i <= 4; i++) {
-                    const phrase = document.getElementById(`phrase${i}`).value;
-                    if (phrase) phrases.push(phrase);
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({content})
+                });
+                
+                const data = await response.json();
+                
+                if(data.success) {
+                    document.getElementById('scriptText').value = data.data.script;
+                    document.getElementById('promptsText').value = JSON.stringify(data.data.prompts);
+                    document.getElementById('engineSelect').value = data.data.engine === 'pixabay' ? 'pixabay' : 'pollinations';
+                    document.getElementById('textColor').value = data.data.color || "#FFFFFF";
+                    document.getElementById('fontFamily').value = data.data.font || "Arial";
                 }
+            } catch(e) {
+                alert("Erro na IA");
             }
+            
+            hideSpinner('.spinner-2');
+        }
 
-            if (!niche) {
-                statusDiv.innerText = 'Preencha o nicho do canal para começar.';
-                statusDiv.style.color = 'var(--netflix-red)';
-                setTimeout(() => statusDiv.style.color = 'var(--text-main)', 3000);
-                return;
-            }
-
+        async function generateRawImages() {
+            const provider = document.getElementById('engineSelect').value;
+            const ratio = document.getElementById('ratioSelect').value;
+            const prompts = document.getElementById('promptsText').value;
+            
+            showSpinner('.spinner-2');
+            
             const formData = new FormData();
-            formData.append('niche', niche);
-            formData.append('mode', mode);
             formData.append('provider', provider);
             formData.append('ratio', ratio);
-            formData.append('background_style', backgroundStyle);
-            formData.append('use_real_people', useRealPeople);
-            formData.append('context', context);
-            formData.append('logoX', logoX);
-            formData.append('logoY', logoY);
-            formData.append('phrases', JSON.stringify(phrases));
-            if (logoFile) formData.append('logo', logoFile);
-
-            statusDiv.innerText = 'Inicializando motores e compilando dados...';
-            statusDiv.style.color = 'var(--text-main)';
-            btn.disabled = true;
-            resultContainer.style.display = 'none';
-            mediaOutput.innerHTML = '';
-            spinnerEl.style.display = 'block';
-
-            pollInterval = setInterval(updateStatus, 1000);
+            formData.append('prompts', prompts);
 
             try {
-                const response = await fetch('/generate', {
+                const response = await fetch('/api/generate-raw', {
                     method: 'POST',
                     body: formData
                 });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    statusDiv.innerText = 'Produção finalizada com sucesso!';
-                    
-                    if (result.type === 'video') {
-                        const fileUrl = '/media/' + result.file + '?t=' + new Date().getTime();
-                        mediaOutput.innerHTML = `<video id="vPlayer" controls autoplay><source src="${fileUrl}" type="video/mp4"></video>`;
-                        document.getElementById('vPlayer').load();
-                        downloadLink.href = fileUrl;
-                        downloadLink.innerText = 'Baixar Vídeo (MP4)';
-                    } else if (result.type === 'carrossel') {
-                        let html = '<div class="carousel-gallery">';
-                        result.files.forEach(file => {
-                            const fileUrl = '/media/' + file + '?t=' + new Date().getTime();
-                            html += `<img src="${fileUrl}" alt="Carrossel Image">`;
-                        });
-                        html += '</div>';
-                        mediaOutput.innerHTML = html;
-                        downloadLink.href = '#';
-                        downloadLink.innerText = 'Para baixar, clique com o botão direito nas imagens';
-                        downloadLink.style.cursor = 'default';
-                        downloadLink.style.backgroundColor = 'var(--bg-input)';
-                        downloadLink.style.color = 'var(--text-muted)';
-                        downloadLink.onclick = (e) => e.preventDefault();
-                    } else {
-                        const fileUrl = '/media/' + result.files[0] + '?t=' + new Date().getTime();
-                        mediaOutput.innerHTML = `<img src="${fileUrl}" alt="Imagem Final">`;
-                        downloadLink.href = fileUrl;
-                        downloadLink.innerText = 'Baixar Imagem (JPG)';
-                    }
-
-                    resultContainer.style.display = 'block';
-                    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                const data = await response.json();
+                
+                if(data.success) {
+                    rawImages = data.images;
+                    setupEditor(ratio);
+                    switchStep('step3');
                 } else {
-                    statusDiv.innerText = 'Falha na produção: ' + result.error;
-                    statusDiv.style.color = 'var(--netflix-red)';
+                    alert(data.error);
                 }
-            } catch (error) {
-                statusDiv.innerText = 'Erro na comunicação com os servidores.';
-                statusDiv.style.color = 'var(--netflix-red)';
-            } finally {
-                btn.disabled = false;
+            } catch(e) {
+                alert("Erro ao gerar");
+            }
+            
+            hideSpinner('.spinner-2');
+        }
+
+        function setupEditor(ratio) {
+            const box = document.getElementById('canvasBox');
+            
+            if(ratio === '9:16') {
+                box.style.width = '300px';
+                box.style.height = '533px';
+            }
+            
+            if(ratio === '16:9') {
+                box.style.width = '533px';
+                box.style.height = '300px';
+            }
+            
+            if(ratio === '1:1') {
+                box.style.width = '400px';
+                box.style.height = '400px';
+            }
+            
+            document.getElementById('bgPreview').src = '/media/' + rawImages[0];
+            
+            makeDraggable(document.getElementById('dragText'), box);
+            makeDraggable(document.getElementById('dragLogo'), box);
+            
+            updateEditor();
+        }
+
+        function updateEditor() {
+            const txt = document.getElementById('dragText');
+            txt.style.color = document.getElementById('textColor').value;
+            txt.style.fontFamily = document.getElementById('fontFamily').value;
+            
+            const phrases = document.getElementById('scenePhrases').value.split('\n');
+            txt.innerText = phrases[0] || "Texto Exemplo";
+        }
+
+        function loadLogo(event) {
+            const file = event.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const l = document.getElementById('dragLogo');
+                    l.src = e.target.result;
+                    l.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function makeDraggable(elmnt, container) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            elmnt.onmousedown = dragMouseDown;
+            
+            function dragMouseDown(e) {
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+            
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                let newTop = elmnt.offsetTop - pos2;
+                let newLeft = elmnt.offsetLeft - pos1;
+                
+                newTop = Math.max(0, Math.min(newTop, container.clientHeight - elmnt.clientHeight));
+                newLeft = Math.max(0, Math.min(newLeft, container.clientWidth - elmnt.clientWidth));
+                
+                elmnt.style.top = newTop + "px";
+                elmnt.style.left = newLeft + "px";
+            }
+            
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        async function renderFinal() {
+            showSpinner('.spinner-3');
+            
+            pollInterval = setInterval(async () => {
+                const response = await fetch('/status');
+                const stat = await response.json();
+                document.getElementById('statusTracker').innerText = stat.step;
+            }, 1000);
+
+            const box = document.getElementById('canvasBox');
+            const txt = document.getElementById('dragText');
+            const logo = document.getElementById('dragLogo');
+            
+            const text_x = txt.offsetLeft / box.clientWidth;
+            const text_y = txt.offsetTop / box.clientHeight;
+            const logo_x = logo.offsetLeft / box.clientWidth;
+            const logo_y = logo.offsetTop / box.clientHeight;
+
+            const formData = new FormData();
+            formData.append('mode', document.getElementById('modeSelect').value);
+            formData.append('images', JSON.stringify(rawImages));
+            formData.append('phrases', JSON.stringify(document.getElementById('scenePhrases').value.split('\n')));
+            formData.append('script', document.getElementById('scriptText').value);
+            formData.append('text_x', text_x);
+            formData.append('text_y', text_y);
+            formData.append('color', document.getElementById('textColor').value);
+            formData.append('font', document.getElementById('fontFamily').value);
+            formData.append('logo_x', logo_x);
+            formData.append('logo_y', logo_y);
+
+            const logoFile = document.getElementById('logoUpload').files[0];
+            if(logoFile) {
+                formData.append('logo', logoFile);
+            }
+
+            try {
+                const response = await fetch('/api/render-final', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
                 clearInterval(pollInterval);
-                spinnerEl.style.display = 'none';
-                document.getElementById('timer').style.display = 'none';
+                hideSpinner('.spinner-3');
+                
+                if(data.success) {
+                    switchStep('step4');
+                    const out = document.getElementById('finalOutput');
+                    
+                    if(data.type === 'video') {
+                        out.innerHTML = `<video controls width="300"><source src="/media/${data.file}?t=${Date.now()}" type="video/mp4"></video><br><a href="/media/${data.file}" download class="btn" style="display:inline-block; margin-top:20px; width:auto;">Baixar Vídeo</a>`;
+                    } else {
+                        let html = '';
+                        data.files.forEach(f => {
+                            html += `<img src="/media/${f}?t=${Date.now()}" width="200" style="margin:10px;">`;
+                        });
+                        out.innerHTML = html;
+                    }
+                } else {
+                    alert(data.error);
+                }
+            } catch(e) {
+                clearInterval(pollInterval);
+                hideSpinner('.spinner-3');
+                alert("Erro render");
             }
         }
     </script>
