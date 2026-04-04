@@ -34,21 +34,20 @@ process_lock = threading.Lock()
 progress_status = {"step": "Ocioso", "remaining": 0}
 
 def cleanup_old_files():
-    patterns = ['*.mp3', '*.jpg', '*.png', 'final_video.mp4']
+    patterns = ['*.mp3', '*.jpg', '*.png', 'final_video.mp4', 'raw_*.jpg']
     for pattern in patterns:
         files = glob.glob(os.path.join(BASE_DIR, pattern))
         for f in files:
             try:
                 os.remove(f)
-                print(f"Limpeza: {f} removido.")
             except Exception as e:
-                print(f"Erro na limpeza: {e}")
+                pass
     
     logos = glob.glob(os.path.join(UPLOAD_FOLDER, "*"))
     for l in logos:
         try:
             os.remove(l)
-        except:
+        except Exception as e:
             pass
 
 def get_dimensions(ratio):
@@ -63,23 +62,22 @@ def get_dimensions(ratio):
     else:
         return (1024, 1024)
 
-def load_system_font(size):
+def load_system_font(size, font_name="Arial"):
     possible_fonts = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-        "C:\\Windows\\Fonts\\Arial.ttf",
-        "/System/Library/Fonts/Helvetica.ttc",
+        f"C:\\Windows\\Fonts\\{font_name}.ttf",
+        f"/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        f"/System/Library/Fonts/Helvetica.ttc",
+        f"/System/Library/Fonts/Supplemental/{font_name}.ttf"
     ]
     for font_path in possible_fonts:
         if os.path.exists(font_path):
             try:
                 return ImageFont.truetype(font_path, size)
-            except:
+            except Exception as e:
                 pass
     return ImageFont.load_default()
 
-def apply_text_visual(image_path, text, font_path=None):
+def apply_text_custom(image_path, text, color_hex, font_name, pct_x, pct_y):
     if not text:
         return image_path
     
@@ -89,13 +87,14 @@ def apply_text_visual(image_path, text, font_path=None):
         draw = ImageDraw.Draw(base_image)
         
         font_size = int(base_h * 0.04)
-        font = load_system_font(font_size)
+        font = load_system_font(font_size, font_name)
         
         chars_per_line = 30
         lines = [text[i:i+chars_per_line] for i in range(0, len(text), chars_per_line)]
         
         max_line_w = 0
         total_text_h = 0
+        
         for line in lines:
             try:
                 line_w, line_h = draw.textsize(line, font=font)
@@ -106,20 +105,23 @@ def apply_text_visual(image_path, text, font_path=None):
             max_line_w = max(max_line_w, line_w)
             total_text_h += line_h
             
-        margin_x = 20
-        margin_y = 20
         rect_padding = 10
         rect_w = max_line_w + (rect_padding * 2)
         rect_h = total_text_h + (rect_padding * 2)
         
-        pos_x = (base_w - rect_w) // 2
-        pos_y = base_h - rect_h - (margin_y + 40)
+        pos_x = int(pct_x * (base_w - rect_w))
+        pos_y = int(pct_y * (base_h - rect_h))
+        
+        pos_x = max(0, min(pos_x, base_w - rect_w))
+        pos_y = max(0, min(pos_y, base_h - rect_h))
         
         rect_image = Image.new('RGBA', (base_w, base_h), (0,0,0,0))
         rect_draw = ImageDraw.Draw(rect_image)
-        rect_draw.rectangle([(pos_x, pos_y), (pos_x + rect_w, pos_y + rect_h)], fill=(0,0,0,160))
+        rect_draw.rectangle([(pos_x, pos_y), (pos_x + rect_w, pos_y + rect_h)], fill=(0,0,0,180))
         
         current_y = pos_y + rect_padding
+        color_tuple = tuple(int(color_hex.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
+        
         for line in lines:
             try:
                 line_w, line_h = draw.textsize(line, font=font)
@@ -128,18 +130,20 @@ def apply_text_visual(image_path, text, font_path=None):
                 line_w = bbox[2] - bbox[0]
                 line_h = bbox[3] - bbox[1]
             text_x = pos_x + rect_padding + (max_line_w - line_w) // 2
-            rect_draw.text((text_x, current_y), line, font=font, fill="white")
+            rect_draw.text((text_x, current_y), line, font=font, fill=color_tuple)
             current_y += line_h
 
         final_image = Image.alpha_composite(base_image, rect_image)
         rgb_image = final_image.convert("RGB")
         rgb_image.save(image_path)
+        
         return image_path
+    
     except Exception as e:
-        print(f"Erro ao aplicar texto visual: {e}")
-        raise Exception(f"A imagem gerada esta corrompida e nao pode ser lida: {e}")
+        print(f"Erro ao aplicar texto: {e}")
+        return image_path
 
-def apply_logo(image_path, logo_path, pct_x=0.8, pct_y=0.8):
+def apply_logo_custom(image_path, logo_path, pct_x, pct_y):
     if not logo_path or not os.path.exists(logo_path):
         return image_path
     
@@ -150,100 +154,25 @@ def apply_logo(image_path, logo_path, pct_x=0.8, pct_y=0.8):
         base_w, base_h = base_image.size
         logo_w, logo_h = logo.size
         
-        new_logo_w = int(base_w * 0.12)
+        new_logo_w = int(base_w * 0.15)
         new_logo_h = int(logo_h * (new_logo_w / logo_w))
         logo = logo.resize((new_logo_w, new_logo_h), Image.LANCZOS)
         
-        pos_x = int(pct_x * max(1, base_w - new_logo_w))
-        pos_y = int(pct_y * max(1, base_h - new_logo_h))
+        pos_x = int(pct_x * (base_w - new_logo_w))
+        pos_y = int(pct_y * (base_h - new_logo_h))
+        
+        pos_x = max(0, min(pos_x, base_w - new_logo_w))
+        pos_y = max(0, min(pos_y, base_h - new_logo_h))
         
         base_image.paste(logo, (pos_x, pos_y), logo)
         rgb_image = base_image.convert("RGB")
         rgb_image.save(image_path)
+        
         return image_path
+    
     except Exception as e:
         print(f"Erro ao aplicar logo: {e}")
-        raise Exception(f"Erro ao embutir a logo na imagem: {e}")
-
-def search_viral_content(niche):
-    url = 'https://google.serper.dev/search'
-    query = f'{niche} (site:tiktok.com OR site:instagram.com/reels OR site:youtube.com/shorts)'
-    payload_dict = {'q': query, 'num': 5, 'gl': 'br', 'hl': 'pt-br', 'tbs': 'qdr:w'}
-    headers = {'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json'}
-    
-    try:
-        response = requests.request('POST', url, headers=headers, data=json.dumps(payload_dict))
-        if response.status_code != 200:
-            return ''
-        
-        results = response.json().get('organic', [])
-        viral_text = ''
-        for item in results:
-            title = item.get('title', '')
-            snippet = item.get('snippet', '')
-            viral_text += f'Título: {title} | Resumo: {snippet}\n'
-        return viral_text
-    except Exception as e:
-        print(f'Erro na busca: {e}')
-        return ''
-
-def generate_script_and_prompts(niche, mode, background_style, use_real_people, context):
-    viral_context = search_viral_content(niche)
-    
-    base_instruction = f"Crie um roteiro curto de 30 segundos sobre {niche}. Retorne estritamente um JSON com a chave script contendo o texto falado."
-    
-    if viral_context:
-        base_instruction += f"\n\nUSE ESTES CONTEÚDOS VIRAIS COMO INSPIRAÇÃO:\n{viral_context}"
-    
-    image_style_instruction = f"Inclua a chave prompts com 4 descrições CURTAS EM INGLÊS MÁXIMO 100 CARACTERES. Estilo: {background_style}."
-    if use_real_people:
-        image_style_instruction += " Adicione real people."
-        
-    prompt = f"{base_instruction} {image_style_instruction} ATENÇÃO: SEJA BREVE NOS PROMPTS PARA EVITAR ERROS."
-    
-    models = [
-        "llama-3.3-70b-versatile",
-        "llama-3.1-8b-instant",
-        "gemma2-9b-it"
-    ]
-    
-    for model in models:
-        try:
-            response = groq_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=model,
-                response_format={"type": "json_object"}
-            )
-            return json.loads(response.choices[0].message.content)
-        except Exception as e:
-            print(f"Falha no modelo {model}: {e}")
-            continue
-            
-    raise Exception("Todos os modelos do Groq falharam.")
-
-def sanitize_prompts(prompts_raw):
-    sanitized = []
-    if isinstance(prompts_raw, list):
-        for p in prompts_raw:
-            if isinstance(p, str):
-                sanitized.append(p[:100])
-            elif isinstance(p, dict):
-                sanitized.append(", ".join(str(v) for v in p.values())[:100])
-            else:
-                sanitized.append(str(p)[:100])
-    elif isinstance(prompts_raw, dict):
-        for v in prompts_raw.values():
-            sanitized.append(str(v)[:100])
-    elif isinstance(prompts_raw, str):
-        sanitized.append(prompts_raw[:100])
-    
-    if not sanitized:
-        sanitized = ["Professional image, high quality"] * 4
-        
-    while len(sanitized) < 4:
-        sanitized.append(sanitized[-1])
-        
-    return sanitized[:4]
+        return image_path
 
 def generate_audio(text, filename="output_audio.mp3"):
     filepath = os.path.join(BASE_DIR, filename)
@@ -253,16 +182,12 @@ def generate_audio(text, filename="output_audio.mp3"):
         await communicate.save(filepath)
         
     asyncio.run(create_audio())
-    
-    if not os.path.exists(filepath):
-        raise Exception("Erro ao gerar áudio nativo com edge_tts.")
     return filepath
 
-def generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y):
+def generate_images_pollinations(prompts, width, height, background_style):
     downloaded_files = []
-    max_retries = 5
     base_seed = int(time.time())
-    style_suffix = f", {background_style}, uniform visual style, highly detailed masterpiece"
+    style_suffix = f", {background_style}, highly detailed masterpiece"
     
     for index, prompt in enumerate(prompts):
         global progress_status
@@ -275,36 +200,24 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases, bac
         encoded_prompt = urllib.parse.quote(prompt_str)
         image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&seed={base_seed}&nologo=true"
         
-        success = False
-        for attempt in range(max_retries):
+        for attempt in range(3):
             try:
                 response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
-                response.raise_for_status()
-                
-                if len(response.content) < 5000:
-                    raise Exception("A API retornou uma pagina de erro HTML ao inves da imagem")
-                
-                img_filename = f"image_{index}.jpg"
-                img_filepath = os.path.join(BASE_DIR, img_filename)
-                
-                with open(img_filepath, "wb") as handler:
-                    handler.write(response.content)
+                if len(response.content) > 5000:
+                    img_filename = f"raw_image_{index}.jpg"
+                    img_filepath = os.path.join(BASE_DIR, img_filename)
                     
-                apply_text_visual(img_filepath, phrases[index])
-                apply_logo(img_filepath, logo_path, logo_x, logo_y)
-                downloaded_files.append(img_filename)
-                success = True
-                break
+                    with open(img_filepath, "wb") as h:
+                        h.write(response.content)
+                        
+                    downloaded_files.append(img_filename)
+                    break
             except Exception as e:
-                print(f"Tentativa {attempt + 1} falhou para a imagem {index}: {e}")
                 time.sleep(3)
                 
-        if not success:
-            raise Exception(f"A API do Pollinations falhou apos {max_retries} tentativas")
-        
     return downloaded_files
 
-def generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y):
+def generate_images_leonardo(prompts, width, height, background_style):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
@@ -312,7 +225,7 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases, backgro
     }
     
     downloaded_files = []
-    style_suffix = f", {background_style}, uniform visual style, highly detailed masterpiece"
+    style_suffix = f", {background_style}, highly detailed masterpiece"
 
     for index, prompt in enumerate(prompts):
         global progress_status
@@ -330,42 +243,36 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases, backgro
         
         try:
             create_res = requests.post("https://cloud.leonardo.ai/api/rest/v1/generations", json=payload, headers=headers)
-            create_res.raise_for_status()
             generation_id = create_res.json().get("sdGenerationJob", {}).get("generationId")
             
-            if not generation_id:
-                raise Exception("ID de geracao nao foi retornado pela API do Leonardo")
-                
             status = "PENDING"
             while status != "COMPLETE":
                 time.sleep(3)
                 get_res = requests.get(f"https://cloud.leonardo.ai/api/rest/v1/generations/{generation_id}", headers=headers)
                 data = get_res.json()
                 status = data.get("generations_by_pk", {}).get("status")
+                
                 if status == "FAILED":
-                    raise Exception("A geracao da imagem falhou no painel do Leonardo")
+                    raise Exception("Falha Leonardo")
                 
             image_url = data["generations_by_pk"]["generated_images"][0]["url"]
             img_data = requests.get(image_url).content
             
-            img_filename = f"image_{index}.jpg"
+            img_filename = f"raw_image_{index}.jpg"
             img_filepath = os.path.join(BASE_DIR, img_filename)
             
-            with open(img_filepath, "wb") as handler:
-                handler.write(img_data)
+            with open(img_filepath, "wb") as h:
+                h.write(img_data)
                 
-            apply_text_visual(img_filepath, phrases[index])
-            apply_logo(img_filepath, logo_path, logo_x, logo_y)
             downloaded_files.append(img_filename)
+            
         except Exception as e:
-            print(f"Erro ao gerar imagem no Leonardo: {e}")
-            raise Exception(f"A API do Leonardo falhou: {e}")
+            print(e)
             
     return downloaded_files
 
-def generate_images_pixabay(prompts, width, height, logo_path, phrases, logo_x, logo_y):
+def generate_images_pixabay(prompts, width, height):
     downloaded_files = []
-    
     orientation = "vertical" if height > width else "horizontal"
     if width == height:
         orientation = "horizontal"
@@ -381,29 +288,24 @@ def generate_images_pixabay(prompts, width, height, logo_path, phrases, logo_x, 
         url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={search_term}&image_type=photo&orientation={orientation}&per_page=3"
         
         try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
+            response = requests.get(url).json()
             
-            if data.get("totalHits", 0) > 0 and len(data.get("hits", [])) > 0:
-                image_url = data["hits"][0]["largeImageURL"]
+            if response.get("totalHits", 0) > 0:
+                image_url = response["hits"][0]["largeImageURL"]
             else:
                 image_url = "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg"
                 
             img_data = requests.get(image_url).content
-            
-            img_filename = f"image_{index}.jpg"
+            img_filename = f"raw_image_{index}.jpg"
             img_filepath = os.path.join(BASE_DIR, img_filename)
             
-            with open(img_filepath, "wb") as handler:
-                handler.write(img_data)
+            with open(img_filepath, "wb") as h:
+                h.write(img_data)
                 
-            apply_text_visual(img_filepath, phrases[index])
-            apply_logo(img_filepath, logo_path, logo_x, logo_y)
             downloaded_files.append(img_filename)
+            
         except Exception as e:
-            print(f"Erro ao buscar no Pixabay: {e}")
-            raise Exception(f"A API do Pixabay falhou: {e}")
+            print(e)
             
     return downloaded_files
 
@@ -415,70 +317,124 @@ def index():
 def get_status():
     return jsonify(progress_status)
 
-@app.route('/suggest-phrases', methods=['POST'])
-def suggest_phrases():
-    global progress_status
-    if not process_lock.acquire(blocking=False):
-        return jsonify({"success": False, "error": "O motor já está processando um ativo."}), 429
-    
+@app.route('/media/<path:filename>')
+def serve_media(filename):
+    return send_from_directory(BASE_DIR, filename)
+
+@app.route('/api/search', methods=['POST'])
+def api_search():
     data = request.json
     niche = data.get('niche')
     
-    if not niche:
-        return jsonify({"success": False, "error": "Nicho ausente"}), 400
-
+    url = 'https://google.serper.dev/search'
+    query = f'{niche} (site:tiktok.com OR site:instagram.com/reels OR site:youtube.com/shorts)'
+    
+    payload = {
+        'q': query,
+        'num': 5,
+        'gl': 'br',
+        'hl': 'pt-br',
+        'tbs': 'qdr:w'
+    }
+    
+    headers = {
+        'X-API-KEY': SERPER_API_KEY,
+        'Content-Type': 'application/json'
+    }
+    
     try:
-        progress_status = {"step": "Buscando Frases Criativas...", "remaining": 10}
-        prompt = f"Crie 4 frases curtas e impactantes sobre {niche} para posts de redes sociais. Retorne estritamente um JSON com a chave phrases contendo uma lista de 4 strings."
-        
+        response = requests.post(url, headers=headers, json=payload)
+        results = response.json().get('organic', [])
+        return jsonify({"success": True, "data": results})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/analyze', methods=['POST'])
+def api_analyze():
+    data = request.json
+    content = data.get('content')
+    
+    prompt = f"Analise este post viral: '{content}'. Retorne estritamente um JSON com: 'script' (texto narrado 30s), 'prompts' (lista 4 prompts imagem em ingles), 'engine' (pixabay ou pollinations), 'color' (cor sugerida hex), 'font' (Arial ou Verdana)."
+    
+    try:
         response = groq_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.1-8b-instant",
             response_format={"type": "json_object"}
         )
-        phrases_data = json.loads(response.choices[0].message.content)
-        phrases = phrases_data.get("phrases")
         
-        return jsonify({"success": True, "phrases": phrases})
+        result = json.loads(response.choices[0].message.content)
+        return jsonify({"success": True, "data": result})
+        
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/generate-raw', methods=['POST'])
+def api_generate_raw():
+    global progress_status
+    if not process_lock.acquire(blocking=False):
+        return jsonify({"success": False, "error": "O motor já está em uso"}), 429
+    
+    try:
+        cleanup_old_files()
+        
+        provider = request.form.get('provider', 'pollinations')
+        ratio = request.form.get('ratio', '9:16')
+        background_style = request.form.get('background_style', 'modern')
+        
+        prompts = []
+        try:
+            prompts = json.loads(request.form.get('prompts', '[]'))
+        except Exception as e:
+            pass
+            
+        width, height = get_dimensions(ratio)
+        progress_status = {"step": f"Gerando imagens via {provider}...", "remaining": 30}
+        
+        if provider == "leonardo":
+            images = generate_images_leonardo(prompts, width, height, background_style)
+        elif provider == "pixabay":
+            images = generate_images_pixabay(prompts, width, height)
+        else:
+            images = generate_images_pollinations(prompts, width, height, background_style)
+            
+        progress_status = {"step": "Ocioso", "remaining": 0}
+        return jsonify({"success": True, "images": images})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+        
     finally:
         process_lock.release()
 
-@app.route('/media/<path:filename>')
-def serve_media(filename):
-    return send_from_directory(BASE_DIR, filename)
-
-@app.route('/generate', methods=['POST'])
-def generate_video():
+@app.route('/api/render-final', methods=['POST'])
+def api_render_final():
     global progress_status
     if not process_lock.acquire(blocking=False):
-        return jsonify({"success": False, "error": "O motor já está processando um ativo."}), 429
+        return jsonify({"success": False, "error": "O motor já está em uso"}), 429
     
     try:
-        niche = request.form.get('niche')
         mode = request.form.get('mode', 'video')
-        provider = request.form.get('provider', 'pollinations')
-        ratio = request.form.get('ratio', '9:16')
-        background_style = request.form.get('background_style')
-        use_real_people = request.form.get('use_real_people') == 'true'
-        context = request.form.get('context')
-        logo_x = float(request.form.get('logoX', 0.8))
-        logo_y = float(request.form.get('logoY', 0.8))
+        script = request.form.get('script', '')
+        text_pct_x = float(request.form.get('text_x', 0.5))
+        text_pct_y = float(request.form.get('text_y', 0.8))
+        color = request.form.get('color', '#FFFFFF')
+        font = request.form.get('font', 'Arial')
+        logo_pct_x = float(request.form.get('logo_x', 0.1))
+        logo_pct_y = float(request.form.get('logo_y', 0.1))
         
+        images = []
+        try:
+            images = json.loads(request.form.get('images', '[]'))
+        except Exception as e:
+            pass
+            
         phrases = []
         try:
-            phrases_raw = request.form.get('phrases')
-            if phrases_raw:
-                phrases = json.loads(phrases_raw)
-        except:
+            phrases = json.loads(request.form.get('phrases', '[]'))
+        except Exception as e:
             pass
-        
-        if not niche:
-            return jsonify({"success": False, "error": "Nicho ausente"}), 400
-
-        cleanup_old_files()
-        
+            
         logo_path = None
         if 'logo' in request.files:
             logo_file = request.files['logo']
@@ -487,66 +443,51 @@ def generate_video():
                 logo_path = os.path.join(UPLOAD_FOLDER, filename)
                 logo_file.save(logo_path)
 
-        width, height = get_dimensions(ratio)
-            
-        progress_status = {"step": "Criando Roteiro e Prompts...", "remaining": 50}
-        content = generate_script_and_prompts(niche, mode, background_style, use_real_people, context)
-        script = content.get("script")
+        progress_status = {"step": "Aplicando textos e logos nas imagens...", "remaining": 20}
+        final_images = []
         
-        prompts_raw = content.get("prompts", [])
-        prompts = sanitize_prompts(prompts_raw)
-        
-        if not phrases or len(phrases) < 4:
-            phrases = ["Aproveite!", "Saiba Mais", "Descubra", "Inscreva-se"]
-        
-        if provider == "leonardo":
-            progress_status = {"step": "Gerando Imagens e Texto (Leonardo)...", "remaining": 45}
-            image_paths = generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y)
-        elif provider == "pixabay":
-            progress_status = {"step": "Buscando Imagens e Texto (Pixabay)...", "remaining": 30}
-            image_paths = generate_images_pixabay(prompts, width, height, logo_path, phrases, logo_x, logo_y)
-        else:
-            progress_status = {"step": "Gerando Imagens e Texto (Pollinations)...", "remaining": 35}
-            image_paths = generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y)
-        
+        for i, img_name in enumerate(images):
+            filepath = os.path.join(BASE_DIR, img_name)
+            if i < len(phrases) and phrases[i].strip():
+                apply_text_custom(filepath, phrases[i], color, font, text_pct_x, text_pct_y)
+            if logo_path:
+                apply_logo_custom(filepath, logo_path, logo_pct_x, logo_pct_y)
+            final_images.append(img_name)
+
         if mode == "video":
-            progress_status = {"step": "Gerando Áudio e Compilando Vídeo Final...", "remaining": 20}
-            audio_path = generate_audio(script)
+            progress_status = {"step": "Renderizando Vídeo com Audio...", "remaining": 10}
             
+            audio_path = generate_audio(script)
             audio = AudioFileClip(audio_path)
-            overlap = 0.5
             total_duration = audio.duration
-            num_images = len(image_paths)
+            num_images = len(final_images)
+            overlap = 0.5
             duration_per_image = (total_duration + (num_images - 1) * overlap) / num_images
             
             clips = []
-            for i, img in enumerate(image_paths):
-                img_filepath = os.path.join(BASE_DIR, img)
-                clip = ImageClip(img_filepath).set_duration(duration_per_image)
+            for i, img in enumerate(final_images):
+                clip = ImageClip(os.path.join(BASE_DIR, img)).set_duration(duration_per_image)
                 clip = clip.resize(lambda t: 1.0 + 0.04 * (t / duration_per_image))
                 if i > 0:
                     clip = clip.crossfadein(overlap)
                 clips.append(clip)
                 
-            video = concatenate_videoclips(clips, padding=-overlap, method="compose")
-            video = video.set_audio(audio)
+            video = concatenate_videoclips(clips, padding=-overlap, method="compose").set_audio(audio)
+            video_filepath = os.path.join(BASE_DIR, "final_video.mp4")
             
             threads = os.cpu_count() or 4
-            video_filepath = os.path.join(BASE_DIR, "final_video.mp4")
             video.write_videofile(video_filepath, fps=24, codec="libx264", audio_codec="aac", threads=threads, preset="ultrafast")
             
             progress_status = {"step": "Concluído", "remaining": 0}
-            return jsonify({"success": True, "file": "final_video.mp4", "type": "video"})
-        elif mode == "carrossel":
-            progress_status = {"step": "Concluído", "remaining": 0}
-            return jsonify({"success": True, "files": image_paths, "type": "carrossel"})
+            return jsonify({"success": True, "type": "video", "file": "final_video.mp4"})
+            
         else:
             progress_status = {"step": "Concluído", "remaining": 0}
-            return jsonify({"success": True, "files": image_paths, "type": "image"})
-        
+            return jsonify({"success": True, "type": mode, "files": final_images})
+            
     except Exception as e:
-        progress_status = {"step": "Erro fatal", "remaining": 0}
         return jsonify({"success": False, "error": str(e)}), 500
+        
     finally:
         process_lock.release()
 
