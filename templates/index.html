@@ -348,6 +348,27 @@
             transform: translateY(-2px);
         }
 
+        #previewArea {
+            width: 100%;
+            max-width: 300px;
+            height: 533px;
+            background-color: #222;
+            border: 1px dashed var(--border-color);
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+
+        #dragLogo {
+            position: absolute;
+            width: 80px;
+            cursor: move;
+            user-select: none;
+            top: 10px;
+            left: 10px;
+        }
+
         @media (max-width: 768px) {
             header { padding: 20px; }
             main { padding: 100px 20px 30px; }
@@ -403,7 +424,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="ratio">Proporção (Aspect Ratio)</label>
+                    <label for="ratio" onchange="updatePreviewBox()">Proporção (Aspect Ratio)</label>
                     <select id="ratio">
                         <option value="9:16">Vertical 9:16 (Shorts, Reels, TikTok)</option>
                         <option value="16:9">Horizontal 16:9 (YouTube Padrão)</option>
@@ -428,6 +449,7 @@
                     <select id="provider">
                         <option value="pollinations">Pollinations (Rápido e Gratuito)</option>
                         <option value="leonardo">Leonardo.ai (Ultra Realista - Exige API Pago)</option>
+                        <option value="pixabay">Pixabay (Banco de Imagens Pronto)</option>
                     </select>
                 </div>
 
@@ -449,8 +471,15 @@
 
                 <div class="input-group">
                     <label for="logo">Logotipo da Marca (PNG Transparente)</label>
-                    <input type="file" id="logo" accept="image/png, image/jpeg">
+                    <input type="file" id="logo" accept="image/png, image/jpeg" onchange="loadLogoPreview(event)">
                 </div>
+
+                <div id="previewArea">
+                    <img id="dragLogo" src="" alt="Logo" style="display:none;">
+                </div>
+                
+                <input type="hidden" id="logoX" value="0.8">
+                <input type="hidden" id="logoY" value="0.8">
             </div>
 
         </div>
@@ -475,6 +504,89 @@
 
     <script>
         let pollInterval;
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        const ratioSelect = document.getElementById('ratio');
+        const previewArea = document.getElementById('previewArea');
+        const dragLogo = document.getElementById('dragLogo');
+
+        ratioSelect.addEventListener('change', updatePreviewBox);
+
+        function updatePreviewBox() {
+            const val = ratioSelect.value;
+            previewArea.style.width = '300px';
+            if (val === '9:16') previewArea.style.height = '533px';
+            else if (val === '16:9') previewArea.style.height = '168px';
+            else if (val === '1:1') previewArea.style.height = '300px';
+            else if (val === '4:5') previewArea.style.height = '375px';
+            updateCoordinates();
+        }
+
+        function loadLogoPreview(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    dragLogo.src = e.target.result;
+                    dragLogo.style.display = 'block';
+                    previewArea.style.display = 'block';
+                    updatePreviewBox();
+                    
+                    dragLogo.style.left = (previewArea.clientWidth - dragLogo.clientWidth - 10) + 'px';
+                    dragLogo.style.top = (previewArea.clientHeight - dragLogo.clientHeight - 10) + 'px';
+                    updateCoordinates();
+                }
+                reader.readAsDataURL(file);
+            } else {
+                dragLogo.style.display = 'none';
+                previewArea.style.display = 'none';
+            }
+        }
+
+        dragLogo.onmousedown = function(e) {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            initialLeft = dragLogo.offsetLeft;
+            initialTop = dragLogo.offsetTop;
+            return false;
+        };
+
+        document.onmousemove = function(e) {
+            if (isDragging) {
+                let dx = e.clientX - startX;
+                let dy = e.clientY - startY;
+                let newLeft = initialLeft + dx;
+                let newTop = initialTop + dy;
+
+                let maxLeft = Math.max(0, previewArea.clientWidth - dragLogo.clientWidth);
+                let maxTop = Math.max(0, previewArea.clientHeight - dragLogo.clientHeight);
+
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                newTop = Math.max(0, Math.min(newTop, maxTop));
+
+                dragLogo.style.left = newLeft + 'px';
+                dragLogo.style.top = newTop + 'px';
+            }
+        };
+
+        document.onmouseup = function() {
+            if (isDragging) {
+                isDragging = false;
+                updateCoordinates();
+            }
+        };
+
+        function updateCoordinates() {
+            if(dragLogo.style.display === 'none') return;
+            let maxLeft = Math.max(1, previewArea.clientWidth - dragLogo.clientWidth);
+            let maxTop = Math.max(1, previewArea.clientHeight - dragLogo.clientHeight);
+            let pctX = dragLogo.offsetLeft / maxLeft;
+            let pctY = dragLogo.offsetTop / maxTop;
+            document.getElementById('logoX').value = pctX;
+            document.getElementById('logoY').value = pctY;
+        }
 
         async function updateStatus() {
             try {
@@ -555,6 +667,8 @@
             const backgroundStyle = document.getElementById('background_style').value;
             const useRealPeople = document.getElementById('use_real_people').checked;
             const context = document.getElementById('context').value;
+            const logoX = document.getElementById('logoX').value;
+            const logoY = document.getElementById('logoY').value;
             
             const statusDiv = document.getElementById('status');
             const btn = document.getElementById('btnGenerate');
@@ -586,6 +700,8 @@
             formData.append('background_style', backgroundStyle);
             formData.append('use_real_people', useRealPeople);
             formData.append('context', context);
+            formData.append('logoX', logoX);
+            formData.append('logoY', logoY);
             formData.append('phrases', JSON.stringify(phrases));
             if (logoFile) formData.append('logo', logoFile);
 
