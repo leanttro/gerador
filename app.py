@@ -22,6 +22,7 @@ app = Flask(__name__)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
+PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -138,7 +139,7 @@ def apply_text_visual(image_path, text, font_path=None):
         print(f"Erro ao aplicar texto visual: {e}")
         raise Exception(f"A imagem gerada esta corrompida e nao pode ser lida: {e}")
 
-def apply_logo(image_path, logo_path):
+def apply_logo(image_path, logo_path, pct_x=0.8, pct_y=0.8):
     if not logo_path or not os.path.exists(logo_path):
         return image_path
     
@@ -153,8 +154,8 @@ def apply_logo(image_path, logo_path):
         new_logo_h = int(logo_h * (new_logo_w / logo_w))
         logo = logo.resize((new_logo_w, new_logo_h), Image.LANCZOS)
         
-        pos_x = base_w - new_logo_w - 15
-        pos_y = base_h - new_logo_h - 15
+        pos_x = int(pct_x * max(1, base_w - new_logo_w))
+        pos_y = int(pct_y * max(1, base_h - new_logo_h))
         
         base_image.paste(logo, (pos_x, pos_y), logo)
         rgb_image = base_image.convert("RGB")
@@ -257,7 +258,7 @@ def generate_audio(text, filename="output_audio.mp3"):
         raise Exception("Erro ao gerar áudio nativo com edge_tts.")
     return filepath
 
-def generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style):
+def generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y):
     downloaded_files = []
     max_retries = 5
     base_seed = int(time.time())
@@ -290,7 +291,7 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases, bac
                     handler.write(response.content)
                     
                 apply_text_visual(img_filepath, phrases[index])
-                apply_logo(img_filepath, logo_path)
+                apply_logo(img_filepath, logo_path, logo_x, logo_y)
                 downloaded_files.append(img_filename)
                 success = True
                 break
@@ -303,7 +304,7 @@ def generate_images_pollinations(prompts, width, height, logo_path, phrases, bac
         
     return downloaded_files
 
-def generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style):
+def generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
@@ -354,11 +355,55 @@ def generate_images_leonardo(prompts, width, height, logo_path, phrases, backgro
                 handler.write(img_data)
                 
             apply_text_visual(img_filepath, phrases[index])
-            apply_logo(img_filepath, logo_path)
+            apply_logo(img_filepath, logo_path, logo_x, logo_y)
             downloaded_files.append(img_filename)
         except Exception as e:
             print(f"Erro ao gerar imagem no Leonardo: {e}")
             raise Exception(f"A API do Leonardo falhou: {e}")
+            
+    return downloaded_files
+
+def generate_images_pixabay(prompts, width, height, logo_path, phrases, logo_x, logo_y):
+    downloaded_files = []
+    
+    orientation = "vertical" if height > width else "horizontal"
+    if width == height:
+        orientation = "horizontal"
+
+    for index, prompt in enumerate(prompts):
+        global progress_status
+        progress_status["remaining"] = 20 - (index * 4)
+        
+        prompt_str = str(prompt)
+        prompt_str = re.sub(r'[^a-zA-Z0-9\s]', '', prompt_str).strip()
+        search_term = urllib.parse.quote(prompt_str[:50])
+        
+        url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={search_term}&image_type=photo&orientation={orientation}&per_page=3"
+        
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            
+            if data.get("totalHits", 0) > 0 and len(data.get("hits", [])) > 0:
+                image_url = data["hits"][0]["largeImageURL"]
+            else:
+                image_url = "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_1280.jpg"
+                
+            img_data = requests.get(image_url).content
+            
+            img_filename = f"image_{index}.jpg"
+            img_filepath = os.path.join(BASE_DIR, img_filename)
+            
+            with open(img_filepath, "wb") as handler:
+                handler.write(img_data)
+                
+            apply_text_visual(img_filepath, phrases[index])
+            apply_logo(img_filepath, logo_path, logo_x, logo_y)
+            downloaded_files.append(img_filename)
+        except Exception as e:
+            print(f"Erro ao buscar no Pixabay: {e}")
+            raise Exception(f"A API do Pixabay falhou: {e}")
             
     return downloaded_files
 
@@ -418,6 +463,8 @@ def generate_video():
         background_style = request.form.get('background_style')
         use_real_people = request.form.get('use_real_people') == 'true'
         context = request.form.get('context')
+        logo_x = float(request.form.get('logoX', 0.8))
+        logo_y = float(request.form.get('logoY', 0.8))
         
         phrases = []
         try:
@@ -454,10 +501,13 @@ def generate_video():
         
         if provider == "leonardo":
             progress_status = {"step": "Gerando Imagens e Texto (Leonardo)...", "remaining": 45}
-            image_paths = generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style)
+            image_paths = generate_images_leonardo(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y)
+        elif provider == "pixabay":
+            progress_status = {"step": "Buscando Imagens e Texto (Pixabay)...", "remaining": 30}
+            image_paths = generate_images_pixabay(prompts, width, height, logo_path, phrases, logo_x, logo_y)
         else:
             progress_status = {"step": "Gerando Imagens e Texto (Pollinations)...", "remaining": 35}
-            image_paths = generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style)
+            image_paths = generate_images_pollinations(prompts, width, height, logo_path, phrases, background_style, logo_x, logo_y)
         
         if mode == "video":
             progress_status = {"step": "Gerando Áudio e Compilando Vídeo Final...", "remaining": 20}
