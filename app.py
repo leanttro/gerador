@@ -53,13 +53,13 @@ def cleanup_old_files():
 
 def get_dimensions(ratio):
     if ratio == "16:9":
-        return (1280, 720)
+        return (1024, 576)
     elif ratio == "9:16":
-        return (720, 1280)
+        return (576, 1024)
     elif ratio == "1:1":
         return (1024, 1024)
     elif ratio == "4:5":
-        return (1080, 1350)
+        return (768, 960)
     else:
         return (1024, 1024)
 
