@@ -42,7 +42,7 @@ PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
 if not PIXABAY_API_KEY:
     print("⚠️  AVISO: PIXABAY_API_KEY não encontrada! Configure para habilitar busca de imagens.")
 
-BEST_FREE_MODEL = "llama-3.3-70b-versatile"   # Melhor modelo free do Groq em 2025/2026
+BEST_FREE_MODEL = "llama-3.1-8b-instant"   # Melhor modelo free do Groq em 2025/2026
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
