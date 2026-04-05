@@ -310,6 +310,22 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             except KeyError:
                 return jsonify({"success": False, "error": f"Erro Gemini: {res}"}), 500
 
+        if ai_engine == 'gemini':
+            if not GEMINI_API_KEY:
+                return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+            payload = {
+                "systemInstruction": {"parts": [{"text": system_prompt}]},
+                "contents": [{"parts": [{"text": user_content}]}],
+                "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8000}
+            }
+            res = requests.post(url, json=payload).json()
+            try:
+                generated_html = res['candidates'][0]['content']['parts'][0]['text']
+            except KeyError:
+                return jsonify({"success": False, "error": f"Erro Gemini: {res}"}), 500
+
         elif ai_engine == 'openrouter':
             if not OPENROUTER_API_KEY:
                 return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
@@ -317,7 +333,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             url = "https://openrouter.ai/api/v1/chat/completions"
             headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
             payload = {
-                "model": "meta-llama/llama-3.1-8b-instruct:free",
+                "model": "meta-llama/llama-3.3-70b-instruct:free",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content}
