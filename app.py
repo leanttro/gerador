@@ -246,10 +246,10 @@ Use variáveis CSS (:root) para todas as cores e tamanhos. Crie uma paleta coesa
 ═══════════════════════════════════════════
 REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
 ═══════════════════════════════════════════
-1. MOTOR DE CENAS: Use um sistema de Cenas (divs com class=scene) que aparecem e desaparecem. Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none para transições de cena.
+1. MOTOR DE CENAS: Use um sistema de Cenas (divs com class="scene") que aparecem e desaparecem. Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none para transições de cena.
 2. TIMING (JS): Use um script JS no final com requestAnimationFrame, setTimeout ou Promises para controlar o tempo exato de entrada e saída de cada cena, criando um fluxo narrativo perfeito e sincronizado.
-3. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: max-width: 100%; max-height: 100%; object-fit: contain; para NUNCA serem cortadas ou distorcidas.
-4. EFEITOS CANVAS (Obrigatório): Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 canvas (ex: brilhos, pétalas, poeira, estrelas, formas flutuantes).
+3. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: `max-width: 100%; max-height: 100%; object-fit: contain;` para NUNCA serem cortadas ou distorcidas.
+4. EFEITOS CANVAS (Obrigatório): Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 <canvas> (ex: brilhos, pétalas, poeira, estrelas, formas flutuantes).
 5. TIPOGRAFIA CINEMATOGRÁFICA: Importe fontes elegantes do Google Fonts (ex: Cormorant Garamond, DM Sans, Inter, Playfair Display) e use tamanhos responsivos dinâmicos com clamp() (ex: clamp(2rem, 5vw, 5rem)).
 6. TRANSIÇÕES SUAVES: Crie transições (ease-in-out ou cubic-bezier) longas e suaves de pelo menos 1.2 segundos entre os elementos e camadas.
 7. PROFUNDIDADE E LAYERS: Use box-shadow, text-shadow, drop-shadow (em SVGs ou PNGs), e backdrop-filter: blur() para criar camadas ricas e texturas sofisticadas. 
@@ -258,12 +258,12 @@ REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
 ═══════════════════════════════════════════
 REGRAS DE CONTEÚDO E ASSETS
 ═══════════════════════════════════════════
-- NUNCA use Lorem ipsum — crie conteúdo coerente e persuasivo com a instrução.
+- NUNCA use "Lorem ipsum" — crie conteúdo coerente e persuasivo com a instrução.
 - NUNCA deixe regiões vazias sem intenção visual.
 - SEMPRE crie hierarquia visual (hero element, suporte, background animado).
 - Se houver assets do usuário (logos, fotos, vídeos): ELES SÃO O ELEMENTO CENTRAL DO DESIGN.
 - Aplique as imagens/logos do usuário com destaque absoluto, centralizado ou no topo das cenas aplicáveis. NUNCA distorça essas imagens.
-- Vídeos do usuário: use video autoplay muted loop playsinline style=object-fit: contain; max-width: 100%; max-height: 100%;.
+- Vídeos do usuário: use <video autoplay muted loop playsinline style="object-fit: contain; max-width: 100%; max-height: 100%;">.
 
 ═══════════════════════════════════════════
 SAÍDA ESPERADA
@@ -294,7 +294,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
         generated_html = ""
         tokens_used = 0
 
-       if ai_engine == 'gemini':
+        if ai_engine == 'gemini':
             if not GEMINI_API_KEY:
                 return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
             
@@ -318,27 +318,6 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
             payload = {
                 "model": "google/gemini-2.0-pro-exp-02-05:free",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content}
-                ],
-                "temperature": 0.45
-            }
-            res = requests.post(url, headers=headers, json=payload).json()
-            try:
-                generated_html = res['choices'][0]['message']['content']
-                tokens_used = res.get('usage', {}).get('total_tokens', 0)
-            except KeyError:
-                return jsonify({"success": False, "error": f"Erro OpenRouter: {res}"}), 500
-
-        elif ai_engine == 'openrouter':
-            if not OPENROUTER_API_KEY:
-                return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
-            
-            url = "https://openrouter.ai/api/v1/chat/completions"
-            headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
-            payload = {
-                "model": "meta-llama/llama-3.3-70b-instruct:free",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content}
