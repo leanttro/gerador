@@ -1085,6 +1085,14 @@
                         <span class="text-10 text-dim" id="uploadStatusText">Enviando...</span>
                     </div>
                 </div>
+                
+                <div class="divider mt-6"></div>
+                <div class="flex-row gap-6 mt-6" style="margin-bottom: 8px;">
+                    <input type="text" id="pixabayInput" placeholder="Buscar imagens no Pixabay..." style="margin:0; flex:1; font-size:11px; padding:8px;">
+                    <button class="btn btn-secondary" onclick="searchPixabay()" style="width:auto; padding:8px 12px; font-size:11px;">Buscar</button>
+                </div>
+                <div id="pixabayResults" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:10px;"></div>
+
                 <div class="asset-grid" id="assetGrid"></div>
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
             </div>
@@ -1124,7 +1132,7 @@
                 <textarea
                     id="promptInput"
                     rows="6"
-                    placeholder="Ex: Crie uma intro de marca escura com minha logo no centro, partículas de luz ao redor, tagline com efeito de digitação e fade out suave..."
+                    placeholder="Ex: Crie um carrossel de fotos estático, tela 1 com logo, tela 2 com texto... Não use autoplay."
                     oninput="updateCharCounter()"
                     onkeydown="handlePromptKeydown(event)"
                 ></textarea>
@@ -1209,6 +1217,7 @@
 
         <div class="toolbar-right">
             <button class="btn btn-ghost" onclick="openFullscreen()" title="Preview em tela cheia">⛶ Fullscreen</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:8px 12px; background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);" onclick="captureImage()">📸 Baixar Foto</button>
             <button class="btn btn-secondary" style="font-size:12px; padding:8px 12px;" onclick="downloadHTML()">⬇ Baixar HTML</button>
             <button class="btn btn-green" style="font-size:12px; padding:8px 12px;" onclick="recordScreen()">⏺ Gravar Vídeo</button>
         </div>
@@ -1326,7 +1335,7 @@ function switchTab(name) {
 // Drag and drop
 const uploadZone = document.getElementById('uploadZone');
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'); });
 uploadZone.addEventListener('drop', e => {
     e.preventDefault();
     uploadZone.classList.remove('drag-over');
@@ -1375,6 +1384,61 @@ async function handleFileSelect(files) {
     document.getElementById('fileInput').value = '';
     updateAssetStatus();
 }
+
+/* ═══════════════════════════════════════════
+   PIXABAY BUSCA
+═══════════════════════════════════════════ */
+async function searchPixabay() {
+    const query = document.getElementById('pixabayInput').value.trim();
+    if (!query) return;
+
+    const resultsDiv = document.getElementById('pixabayResults');
+    resultsDiv.innerHTML = '<span class="text-10 text-dim">Buscando...</span>';
+    resultsDiv.style.display = 'grid';
+
+    try {
+        const res = await fetch('/api/pixabay', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            resultsDiv.innerHTML = '';
+            if (data.images.length === 0) {
+                resultsDiv.innerHTML = '<span class="text-10 text-dim">Sem resultados.</span>';
+                return;
+            }
+            data.images.forEach(img => {
+                const imgEl = document.createElement('img');
+                imgEl.src = img.preview;
+                imgEl.style.width = '100%';
+                imgEl.style.height = '60px';
+                imgEl.style.objectFit = 'cover';
+                imgEl.style.borderRadius = '4px';
+                imgEl.style.cursor = 'pointer';
+                imgEl.title = 'Clique para adicionar aos assets';
+                imgEl.onclick = () => addPixabayAsset(img.url);
+                resultsDiv.appendChild(imgEl);
+            });
+        } else {
+            resultsDiv.innerHTML = `<span class="text-10 text-dim" style="color:var(--red)">${data.error}</span>`;
+        }
+    } catch (e) {
+        resultsDiv.innerHTML = '<span class="text-10 text-dim" style="color:var(--red)">Erro de conexão.</span>';
+    }
+}
+
+function addPixabayAsset(url) {
+    state.assets.push({ url: url, type: 'image', name: 'Pixabay Image' });
+    renderAssetGrid();
+    updateAssetStatus();
+    showToast('success', 'Asset adicionado', 'A imagem do Pixabay foi adicionada com sucesso.');
+    document.getElementById('pixabayResults').style.display = 'none';
+    document.getElementById('pixabayInput').value = '';
+}
+
 
 function renderAssetGrid() {
     const grid = document.getElementById('assetGrid');
@@ -1812,6 +1876,49 @@ function downloadHTML() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('success', 'Download iniciado', 'Arquivo HTML salvo com sucesso!');
+}
+
+/* ═══════════════════════════════════════════
+   CAPTURAR FOTO (NOVO)
+═══════════════════════════════════════════ */
+async function captureImage() {
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
+        return;
+    }
+    
+    const iframe = document.getElementById('previewFrame');
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    
+    if (!iframe.contentWindow.html2canvas) {
+        showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
+        const script = doc.createElement('script');
+        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+        doc.head.appendChild(script);
+        
+        await new Promise(resolve => {
+            script.onload = resolve;
+            setTimeout(resolve, 2000); 
+        });
+    }
+    
+    showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
+    
+    try {
+        const canvas = await iframe.contentWindow.html2canvas(doc.body, {
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null
+        });
+        
+        const link = document.createElement('a');
+        link.download = `motordark_frame_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso. Pode pular pra próxima cena e baixar a próxima.');
+    } catch (e) {
+        showToast('error', 'Erro', 'Não foi possível capturar a imagem.');
+    }
 }
 
 /* ═══════════════════════════════════════════
