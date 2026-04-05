@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 # ─────────────────────────────────────────────
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+HTML_TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'html_templates')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'svg', 'avif'}
 MAX_FILE_SIZE_MB = 20
@@ -47,6 +48,9 @@ version_history: dict[str, list[dict]] = {}
 # ─────────────────────────────────────────────
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+if not os.path.exists(HTML_TEMPLATES_FOLDER):
+    os.makedirs(HTML_TEMPLATES_FOLDER)
 
 
 def allowed_file(filename: str) -> bool:
@@ -88,6 +92,11 @@ def index():
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
+
+
+@app.route('/html_templates/<path:filename>')
+def serve_html_templates(filename):
+    return send_from_directory(HTML_TEMPLATES_FOLDER, filename)
 
 
 # ─────────────────────────────────────────────
@@ -238,8 +247,10 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
 
     if previous_code:
         user_content += (
-            "═══ CÓDIGO HTML EXISTENTE ═══\n"
-            "Modifique/melhore o HTML abaixo com base na nova instrução. Preserve o que estava bom e garanta a arquitetura nova solicitada.\n\n"
+            "═══ CÓDIGO HTML EXISTENTE (TEMPLATE BASE) ═══\n"
+            "O código abaixo é um template funcional de alta qualidade.\n"
+            "PRESERVE estritamente a física do <canvas>, os temporizadores (timers/JS), os z-indexes e o motor de cenas.\n"
+            "Sua tarefa é SUBSTITUIR APENAS textos, URLs de imagens, cores (mantendo a harmonia) e tipografia para se adaptar perfeitamente à INSTRUÇÃO CRIATIVA e aos ASSETS DO USUÁRIO.\n\n"
             f"{previous_code}"
         )
     else:
@@ -254,7 +265,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
         response = groq_client.chat.completions.create(
             messages=messages,
             model=BEST_FREE_MODEL,
-            temperature=0.55,
+            temperature=0.45,
             max_tokens=8000,
             top_p=0.92,
         )
@@ -360,72 +371,46 @@ def api_clear_history():
 
 
 # ─────────────────────────────────────────────
-# TEMPLATES PRONTOS
+# TEMPLATES REAIS (LENDO DA PASTA html_templates)
 # ─────────────────────────────────────────────
 @app.route('/api/templates', methods=['GET'])
 def api_templates():
-    templates = [
-        {
-            "id":     "brand_intro",
-            "name":   "✨ Intro de Marca",
-            "prompt": "Crie uma intro animada de marca com logo centralizado rodeado por partículas brilhantes, tagline com efeito de digitação letra por letra, fundo com gradiente dark animado e fade out suave no final",
-            "style":  "dark",
-        },
-        {
-            "id":     "product_launch",
-            "name":   "🚀 Lançamento de Produto",
-            "prompt": "Crie uma animação de lançamento de produto premium: título com efeito de explosão de letras, subtítulo, preço em destaque com glow dourado, botão de compra pulsante e fundo com efeito de luz dinâmica",
-            "style":  "dark",
-        },
-        {
-            "id":     "countdown",
-            "name":   "⏱️ Contagem Regressiva",
-            "prompt": "Crie uma contagem regressiva animada para evento especial com JavaScript calculando dias, horas, minutos e segundos em tempo real. Cada número em card separado com flip animation, título do evento e data acima",
-            "style":  "neon",
-        },
-        {
-            "id":     "social_promo",
-            "name":   "🎉 Promoção Relâmpago",
-            "prompt": "Crie um post animado de promoção relâmpago: badge 'OFERTA' piscando, porcentagem de desconto gigante com efeito de zoom, preço riscado e preço novo, confete caindo animado, urgência com texto 'Só hoje!'",
-            "style":  "gradient",
-        },
-        {
-            "id":     "testimonial",
-            "name":   "⭐ Depoimento de Cliente",
-            "prompt": "Crie um card animado de depoimento: 5 estrelas douradas que aparecem uma a uma, foto de perfil circular com borda animada, texto do depoimento com digitação progressiva, nome e cargo do cliente",
-            "style":  "minimal",
-        },
-        {
-            "id":     "stats_showcase",
-            "name":   "📊 Showcase de Números",
-            "prompt": "Crie uma animação de estatísticas impactantes com 3 números grandes que contam do zero até o valor final (ex: 10.000 clientes, 98% satisfação, R$2M faturado), ícones e labels, cada stat em card glassmorphism",
-            "style":  "dark",
-        },
-        {
-            "id":     "event_invite",
-            "name":   "🎟️ Convite para Evento",
-            "prompt": "Crie um convite animado para evento premium com data, horário, local, speaker em destaque com foto placeholder circular, botão RSVP com efeito shimmer e fundo com bokeh animado",
-            "style":  "gold",
-        },
-        {
-            "id":     "services_carousel",
-            "name":   "🛠️ Carrossel de Serviços",
-            "prompt": "Crie um carrossel automático (auto-play com JavaScript, 3s por slide) mostrando 4 serviços diferentes, cada slide com ícone emoji grande, título, descrição curta, número do slide e barra de progresso animada",
-            "style":  "dark",
-        },
-        {
-            "id":     "music_visualizer",
-            "name":   "🎵 Visualizador Musical",
-            "prompt": "Crie um visualizador de música animado com barras de equalizer pulsando em CSS animation, nome da música, artista, disco girando animado, controles de play/pause decorativos e fundo dark com glow neon",
-            "style":  "neon",
-        },
-        {
-            "id":     "before_after",
-            "name":   "🔄 Antes e Depois",
-            "prompt": "Crie uma animação de comparação antes/depois com slider central que se move automaticamente revelando o lado 'depois'. Labels ANTES e DEPOIS animados, resultado final destacado com check verde e título de transformação",
-            "style":  "minimal",
-        },
-    ]
+    templates = []
+    try:
+        if os.path.exists(HTML_TEMPLATES_FOLDER):
+            for fname in os.listdir(HTML_TEMPLATES_FOLDER):
+                if fname.endswith('.html'):
+                    file_path = os.path.join(HTML_TEMPLATES_FOLDER, fname)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    # Usa o nome do arquivo para criar um nome amigável
+                    clean_name = fname.replace('.html', '').replace('_', ' ').title()
+                    
+                    templates.append({
+                        "id": fname,
+                        "name": clean_name,
+                        "prompt": f"Mantenha a animação, canvas e estrutura deste template, mas altere os textos e imagens para a seguinte instrução: ",
+                        "style": "dark",
+                        "url": f"/html_templates/{fname}",
+                        "html": content
+                    })
+    except Exception as e:
+        print(f"Erro ao ler templates: {e}")
+
+    # Fallback se a pasta estiver vazia
+    if not templates:
+        templates = [
+            {
+                "id": "exemplo_vazio",
+                "name": "Nenhum Template Encontrado",
+                "prompt": "Crie uma animação do zero pois não há templates na pasta html_templates...",
+                "style": "dark",
+                "url": "",
+                "html": ""
+            }
+        ]
+
     return jsonify({"success": True, "templates": templates})
 
 
