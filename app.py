@@ -302,13 +302,15 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             payload = {
                 "systemInstruction": {"parts": [{"text": system_prompt}]},
                 "contents": [{"parts": [{"text": user_content}]}],
-                "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8000}
+                "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8192}
             }
             res = requests.post(url, json=payload).json()
             try:
+                if 'error' in res:
+                    raise Exception(f"Gemini Error: {res['error']['message']}")
                 generated_html = res['candidates'][0]['content']['parts'][0]['text']
-            except KeyError:
-                return jsonify({"success": False, "error": f"Erro Gemini: {res}"}), 500
+            except (KeyError, IndexError):
+                return jsonify({"success": False, "error": f"Erro resposta Gemini: {res}"}), 500
 
         elif ai_engine == 'openrouter':
             if not OPENROUTER_API_KEY:
@@ -316,8 +318,9 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             
             url = "https://openrouter.ai/api/v1/chat/completions"
             headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
+            # ID corrigido para o modelo flash disponível
             payload = {
-                "model": "google/gemini-2.0-pro-exp-02-05:free",
+                "model": "google/gemini-2.0-flash-001",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_content}
@@ -326,10 +329,12 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             }
             res = requests.post(url, headers=headers, json=payload).json()
             try:
+                if 'error' in res:
+                    raise Exception(f"OpenRouter Error: {res['error']['message']}")
                 generated_html = res['choices'][0]['message']['content']
                 tokens_used = res.get('usage', {}).get('total_tokens', 0)
-            except KeyError:
-                return jsonify({"success": False, "error": f"Erro OpenRouter: {res}"}), 500
+            except (KeyError, IndexError):
+                return jsonify({"success": False, "error": f"Erro resposta OpenRouter: {res}"}), 500
 
         else:
             if not groq_client:
@@ -393,12 +398,10 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
 
     except Exception as e:
         error_msg = str(e)
-        if "rate_limit" in error_msg.lower() or "429" in error_msg.lower():
-            msg = "Limite de requisições atingido. Troque de motor no painel ou aguarde."
+        if "429" in error_msg or "limit" in error_msg.lower():
+            msg = "Cota de IA excedida (429). Aguarde alguns segundos ou troque de motor (ex: Groq)."
         elif "api_key" in error_msg.lower() or "auth" in error_msg.lower():
-            msg = "Erro de autenticação. Verifique sua chave de API."
-        elif "context_length" in error_msg.lower() or "tokens" in error_msg.lower():
-            msg = "Código anterior muito longo. Tente começar uma nova geração do zero."
+            msg = "Erro de autenticação nas chaves de API."
         else:
             msg = f"Erro na geração: {error_msg}"
         return jsonify({"success": False, "error": msg}), 500
