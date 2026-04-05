@@ -3,350 +3,1937 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Dark | Gerador Front-End</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Motor Dark Studio | Gerador Front-End IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* ═══════════════════════════════════════════
+           VARIÁVEIS E RESET
+        ═══════════════════════════════════════════ */
         :root {
-            --netflix-red: #E50914;
-            --netflix-red-hover: #F40612;
-            --bg-base: #141414;
-            --bg-card: #181818;
-            --bg-input: #333333;
-            --text-main: #FFFFFF;
-            --text-muted: #B3B3B3;
-            --border-color: #404040;
+            --red:          #E50914;
+            --red-hover:    #F40612;
+            --red-glow:     rgba(229,9,20,0.25);
+            --bg-base:      #0d0d0d;
+            --bg-card:      #161616;
+            --bg-input:     #242424;
+            --bg-hover:     #2a2a2a;
+            --text-main:    #FFFFFF;
+            --text-muted:   #888888;
+            --text-dim:     #555555;
+            --border:       #2e2e2e;
+            --border-light: #3a3a3a;
+            --green:        #22c55e;
+            --amber:        #f59e0b;
+            --blue:         #3b82f6;
+            --sidebar-w:    380px;
+            --radius:       8px;
+            --radius-lg:    12px;
+            --transition:   0.18s ease;
         }
-        
-        * {
+
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-base);
             color: var(--text-main);
-            height: 100vh;
             display: flex;
-            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.5;
         }
-        
+
+        /* ═══════════════════════════════════════════
+           SCROLLBAR CUSTOMIZADA
+        ═══════════════════════════════════════════ */
+        ::-webkit-scrollbar          { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track    { background: transparent; }
+        ::-webkit-scrollbar-thumb    { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* ═══════════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════════ */
         .sidebar {
-            width: 400px;
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
             background-color: var(--bg-card);
-            border-right: 1px solid var(--border-color);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            overflow-y: auto;
+            overflow: hidden;
         }
-        
-        .sidebar h1 {
-            color: var(--netflix-red);
-            font-size: 24px;
+
+        .sidebar-header {
+            padding: 18px 20px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--red);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            box-shadow: 0 0 12px var(--red-glow);
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-size: 15px;
             font-weight: 800;
             text-transform: uppercase;
-            margin-bottom: 30px;
+            letter-spacing: 1.5px;
+            line-height: 1.1;
         }
-        
-        .section {
-            margin-bottom: 25px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid var(--border-color);
+
+        .logo-sub {
+            font-size: 9px;
+            color: var(--text-dim);
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: block;
         }
-        
-        .section h2 {
-            font-size: 16px;
-            margin-bottom: 15px;
-            color: var(--text-muted);
+
+        /* Model badge */
+        .model-badge {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.25);
+            color: var(--green);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: default;
         }
-        
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: var(--bg-input);
-            color: var(--text-main);
-            margin-bottom: 10px;
-            resize: vertical;
+
+        /* Tabs */
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
-        
-        input[type="file"] {
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        
-        .btn {
-            padding: 12px 20px;
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 8px;
+            background: none;
             border: none;
-            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
-            background-color: var(--netflix-red);
-            color: #fff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid transparent;
+            transition: all var(--transition);
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: var(--bg-hover);
+        }
+
+        .tab-btn.active {
+            color: var(--red);
+            border-bottom-color: var(--red);
+            background: rgba(229,9,20,0.04);
+        }
+
+        /* Sidebar panels */
+        .sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .panel {
+            display: none;
+            padding: 16px;
+            gap: 14px;
+            flex-direction: column;
+        }
+
+        .panel.active {
+            display: flex;
+        }
+
+        /* Sections */
+        .section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* ═══════════════════════════════════════════
+           INPUTS & CONTROLS
+        ═══════════════════════════════════════════ */
+        textarea, input[type="text"] {
             width: 100%;
-            font-size: 14px;
-            transition: background 0.2s;
+            padding: 10px 12px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            transition: border-color var(--transition);
+            outline: none;
+            line-height: 1.5;
         }
-        
-        .btn:hover {
-            background-color: var(--netflix-red-hover);
+
+        textarea:focus, input[type="text"]:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px var(--red-glow);
         }
-        
+
+        textarea::placeholder, input[type="text"]::placeholder {
+            color: var(--text-dim);
+        }
+
+        /* Character counter */
+        .char-counter {
+            font-size: 10px;
+            color: var(--text-dim);
+            text-align: right;
+        }
+
+        .char-counter.warn { color: var(--amber); }
+        .char-counter.error { color: var(--red); }
+
+        /* Selects */
+        .select-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .select-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .select-group label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color var(--transition);
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+
+        select:focus {
+            border-color: var(--red);
+        }
+
+        /* ═══════════════════════════════════════════
+           BOTÕES
+        ═══════════════════════════════════════════ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            text-decoration: none;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--red);
+            color: #fff;
+            box-shadow: 0 2px 8px var(--red-glow);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--red-hover);
+            box-shadow: 0 4px 16px var(--red-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
         .btn-secondary {
-            background-color: var(--bg-input);
-            border: 1px solid var(--border-color);
-            margin-top: 10px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border);
         }
-        
-        .btn-secondary:hover {
-            background-color: #404040;
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-hover);
+            border-color: var(--border-light);
         }
-        
-        .asset-list {
-            list-style: none;
+
+        .btn-ghost {
+            background: none;
+            color: var(--text-muted);
+            border: 1px solid transparent;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .btn-ghost:hover:not(:disabled) {
+            color: var(--text-main);
+            background: var(--bg-hover);
+        }
+
+        .btn-green {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-green:hover:not(:disabled) {
+            background: #16a34a;
+        }
+
+        .btn-full { width: 100%; }
+
+        .btn-icon {
+            padding: 7px;
+            font-size: 16px;
+            border-radius: var(--radius);
+        }
+
+        /* ═══════════════════════════════════════════
+           FILE UPLOAD
+        ═══════════════════════════════════════════ */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .upload-zone:hover, .upload-zone.drag-over {
+            border-color: var(--red);
+            background: rgba(229,9,20,0.04);
+        }
+
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .upload-icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .upload-text {
             font-size: 12px;
             color: var(--text-muted);
-            margin-bottom: 15px;
+            line-height: 1.4;
         }
-        
-        .asset-list li {
+
+        .upload-text strong {
+            color: var(--red);
+        }
+
+        /* Asset list */
+        .asset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .asset-card {
             background: var(--bg-input);
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 4px;
-            word-break: break-all;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: border-color var(--transition);
         }
-        
+
+        .asset-card:hover {
+            border-color: var(--border-light);
+        }
+
+        .asset-card .asset-thumb {
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .asset-card .asset-video-thumb {
+            width: 100%;
+            height: 70px;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .asset-card .asset-name {
+            font-size: 9px;
+            color: var(--text-muted);
+            padding: 4px 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .asset-card .asset-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0,0,0,0.75);
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity var(--transition);
+            line-height: 1;
+        }
+
+        .asset-card:hover .asset-remove {
+            opacity: 1;
+        }
+
+        /* Upload progress */
+        .upload-progress {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: var(--red);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* ═══════════════════════════════════════════
+           TEMPLATES
+        ═══════════════════════════════════════════ */
+        .template-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .template-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .template-card:hover {
+            border-color: var(--red);
+            background: rgba(229,9,20,0.05);
+        }
+
+        .template-card .tmpl-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+            width: 32px;
+            text-align: center;
+        }
+
+        .template-card .tmpl-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .template-card .tmpl-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 2px;
+        }
+
+        .template-card .tmpl-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ═══════════════════════════════════════════
+           HISTÓRICO DE VERSÕES
+        ═══════════════════════════════════════════ */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .history-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .history-card:hover {
+            border-color: var(--border-light);
+            background: var(--bg-hover);
+        }
+
+        .history-card.active-version {
+            border-color: var(--red);
+            background: rgba(229,9,20,0.05);
+        }
+
+        .history-card .hist-prompt {
+            font-size: 12px;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .history-card .hist-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .history-card .hist-time {
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .hist-tag {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--bg-hover);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* ═══════════════════════════════════════════
+           CODE EDITOR
+        ═══════════════════════════════════════════ */
+        .code-editor-wrapper {
+            position: relative;
+        }
+
+        .code-editor {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 11px;
+            line-height: 1.5;
+            background: #0a0a0a;
+            border-color: #222;
+            color: #c9d1d9;
+            white-space: pre;
+            overflow-x: auto;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        /* ═══════════════════════════════════════════
+           MAIN CONTENT
+        ═══════════════════════════════════════════ */
         .main-content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background-color: #000;
-            position: relative;
+            background: #080808;
+            overflow: hidden;
         }
-        
+
+        /* Toolbar */
         .toolbar {
-            height: 60px;
-            background-color: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
+            height: 52px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 16px;
+            gap: 12px;
+            flex-shrink: 0;
         }
-        
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .format-indicator {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 2px;
+        }
+
+        .zoom-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all var(--transition);
+            font-family: inherit;
+            line-height: 1;
+        }
+
+        .zoom-btn:hover {
+            color: var(--text-main);
+            background: var(--bg-hover);
+        }
+
+        .zoom-level {
+            font-size: 11px;
+            color: var(--text-muted);
+            min-width: 36px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .token-info {
+            font-size: 10px;
+            color: var(--text-dim);
+            background: var(--bg-input);
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        /* Preview area */
         .preview-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px;
             overflow: auto;
+            position: relative;
         }
-        
-        iframe {
-            width: 360px;
-            height: 640px;
-            border: 1px solid var(--border-color);
+
+        .preview-wrapper {
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .preview-label {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+
+        iframe#previewFrame {
+            display: block;
+            border: 1px solid var(--border);
             background: #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+            border-radius: 2px;
+            transition: width 0.3s ease, height 0.3s ease;
         }
-        
-        #loadingSpinner {
+
+        /* Format dimensions */
+        .format-9-16  iframe { width: 338px; height: 600px; }
+        .format-1-1   iframe { width: 540px; height: 540px; }
+        .format-16-9  iframe { width: 720px; height: 405px; }
+        .format-4-5   iframe { width: 432px; height: 540px; }
+
+        /* Empty state */
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+            pointer-events: none;
+        }
+
+        .empty-state.hidden { display: none; }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.4;
+        }
+
+        .empty-text {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .empty-sub {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        /* ═══════════════════════════════════════════
+           LOADING
+        ═══════════════════════════════════════════ */
+        .loading-overlay {
             display: none;
-            margin: 10px auto;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-left-color: var(--netflix-red);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: var(--red);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .loading-sub {
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        /* Loading dots */
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%   { content: ''; }
+            25%  { content: '.'; }
+            50%  { content: '..'; }
+            75%  { content: '...'; }
+        }
+
+        /* ═══════════════════════════════════════════
+           TOAST NOTIFICATIONS
+        ═══════════════════════════════════════════ */
+        .toast-container {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 12px 16px;
+            min-width: 260px;
+            max-width: 380px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            pointer-events: all;
+            animation: toast-in 0.3s ease;
+            font-size: 13px;
+        }
+
+        @keyframes toast-in {
+            from { opacity: 0; transform: translateX(100%); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast.removing {
+            animation: toast-out 0.3s ease forwards;
+        }
+
+        @keyframes toast-out {
+            from { opacity: 1; transform: translateX(0); }
+            to   { opacity: 0; transform: translateX(100%); }
+        }
+
+        .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 600; margin-bottom: 2px; }
+        .toast-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.error   { border-left: 3px solid var(--red); }
+        .toast.info    { border-left: 3px solid var(--blue); }
+        .toast.warning { border-left: 3px solid var(--amber); }
+
+        /* ═══════════════════════════════════════════
+           FULLSCREEN PREVIEW
+        ═══════════════════════════════════════════ */
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-overlay.show {
+            display: flex;
+        }
+
+        .fullscreen-overlay iframe {
+            border: none;
+        }
+
+        .fullscreen-close {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 2001;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 8px 14px;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all var(--transition);
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* ═══════════════════════════════════════════
+           STATUS BAR (bottom)
+        ═══════════════════════════════════════════ */
+        .status-bar {
+            height: 24px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: var(--text-dim);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .status-dot.offline { background: var(--red); }
+
+        /* ═══════════════════════════════════════════
+           GENERATE BUTTON (big)
+        ═══════════════════════════════════════════ */
+        .generate-btn-wrapper {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        #generateBtn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #generateBtn .btn-shine {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            transform: skewX(-15deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0%   { left: -100%; }
+            50%  { left: 150%; }
+            100% { left: 150%; }
+        }
+
+        /* ═══════════════════════════════════════════
+           DIVIDER
+        ═══════════════════════════════════════════ */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        /* ═══════════════════════════════════════════
+           MISC UTILS
+        ═══════════════════════════════════════════ */
+        .flex-row  { display: flex; align-items: center; }
+        .gap-6     { gap: 6px; }
+        .gap-8     { gap: 8px; }
+        .mt-6      { margin-top: 6px; }
+        .text-muted { color: var(--text-muted); }
+        .text-dim   { color: var(--text-dim); }
+        .text-10    { font-size: 10px; }
+        .hidden     { display: none !important; }
+
+        /* Badge */
+        .badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+            background: var(--red);
+            color: #fff;
         }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <h1>Motor Dark</h1>
-        
-        <div class="section">
-            <h2>1. Seus Assets</h2>
-            <input type="file" id="fileUpload" multiple accept="image/*,video/*">
-            <button class="btn btn-secondary" onclick="uploadFiles()">Enviar Arquivos</button>
-            <ul class="asset-list" id="assetList" style="margin-top: 15px;"></ul>
-        </div>
-        
-        <div class="section">
-            <h2>2. Geração e Alteração</h2>
-            <textarea id="promptInput" rows="5" placeholder="Descreva como deve ser o vídeo/animação. Ex: Faça um carrossel animado escuro usando minha logo..."></textarea>
-            <button class="btn" onclick="generateCode()">Gerar / Atualizar Código</button>
-            <div id="loadingSpinner"></div>
-        </div>
-        
-        <div class="section" style="border:none;">
-            <h2>3. Código Fonte</h2>
-            <button class="btn btn-secondary" onclick="toggleCodeView()">Ver/Esconder Código</button>
-            <textarea id="codeEditor" rows="10" style="display:none; margin-top:10px; font-family:monospace; font-size:11px; white-space:pre;" onchange="updateIframeFromEditor()"></textarea>
-        </div>
-    </div>
-    
-    <div class="main-content">
-        <div class="toolbar">
-            <div style="color: var(--text-muted); font-size: 14px;">Preview 9:16</div>
-            <div style="display:flex; gap:10px;">
-                <button class="btn" style="width:auto; padding:8px 15px;" onclick="downloadHTML()">Baixar HTML</button>
-                <button class="btn" style="width:auto; padding:8px 15px; background-color: #28a745;" onclick="recordScreen()">Gravar Vídeo</button>
+<div class="sidebar">
+
+    <div class="sidebar-header">
+        <div class="logo">
+            <div class="logo-icon">M</div>
+            <div class="logo-text">
+                Motor Dark
+                <span class="logo-sub">Studio IA</span>
             </div>
         </div>
-        <div class="preview-container">
-            <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+        <span class="model-badge" id="modelBadge" title="Modelo de IA sendo usado">llama 3.3</span>
+    </div>
+
+    <div class="sidebar-tabs">
+        <button class="tab-btn active" onclick="switchTab('generate')">✦ Gerar</button>
+        <button class="tab-btn" onclick="switchTab('templates')">⬚ Templates</button>
+        <button class="tab-btn" onclick="switchTab('history')">↺ Histórico</button>
+        <button class="tab-btn" onclick="switchTab('code')">⟨/⟩ Código</button>
+    </div>
+
+    <div class="sidebar-body">
+
+        <div class="panel active" id="panel-generate">
+
+            <div class="section">
+                <span class="section-label">Assets (imagens / vídeos)</span>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*,.svg" onchange="handleFileSelect(this.files)">
+                    <span class="upload-icon">☁</span>
+                    <div class="upload-text">
+                        <strong>Clique ou arraste</strong> arquivos aqui<br>
+                        PNG, JPG, SVG, MP4, WEBM — máx 20MB
+                    </div>
+                </div>
+                <div class="upload-progress hidden" id="uploadProgressWrap">
+                    <div class="upload-progress" style="margin-top:4px;">
+                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                    </div>
+                    <div class="flex-row gap-6 mt-6">
+                        <span class="text-10 text-dim" id="uploadStatusText">Enviando...</span>
+                    </div>
+                </div>
+                <div class="asset-grid" id="assetGrid"></div>
+                <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <span class="section-label">Estilo e Formato</span>
+                <div class="select-row">
+                    <div class="select-group">
+                        <label>Estilo Visual</label>
+                        <select id="styleSelect">
+                            <option value="dark">🌑 Motor Dark</option>
+                            <option value="neon">⚡ Neon Cyberpunk</option>
+                            <option value="minimal">○ Minimalista</option>
+                            <option value="gold">✦ Luxo Gold</option>
+                            <option value="gradient">🌈 Gradiente Vibrante</option>
+                            <option value="corporate">🏢 Corporativo</option>
+                        </select>
+                    </div>
+                    <div class="select-group">
+                        <label>Formato</label>
+                        <select id="formatSelect" onchange="updatePreviewFormat()">
+                            <option value="9:16">9:16 — Reels</option>
+                            <option value="1:1">1:1 — Feed</option>
+                            <option value="16:9">16:9 — YouTube</option>
+                            <option value="4:5">4:5 — Portrait</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <span class="section-label">Descreva a animação</span>
+                <textarea
+                    id="promptInput"
+                    rows="6"
+                    placeholder="Ex: Crie uma intro de marca escura com minha logo no centro, partículas de luz ao redor, tagline com efeito de digitação e fade out suave..."
+                    oninput="updateCharCounter()"
+                    onkeydown="handlePromptKeydown(event)"
+                ></textarea>
+                <div class="flex-row gap-6" style="justify-content: space-between;">
+                    <span class="text-10 text-dim">Ctrl+Enter para gerar</span>
+                    <span class="char-counter" id="charCounter">0 / 3000</span>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="panel" id="panel-templates">
+            <div class="section">
+                <span class="section-label">Clique para usar um template</span>
+                <div class="template-grid" id="templateGrid">
+                    <div class="text-dim text-10" style="text-align:center; padding: 20px;">Carregando templates...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="panel-history">
+            <div class="section">
+                <div class="flex-row gap-8" style="justify-content: space-between; align-items: center;">
+                    <span class="section-label">Versões geradas</span>
+                    <button class="btn btn-ghost text-10" onclick="clearHistory()" style="padding:4px 8px;">Limpar tudo</button>
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="text-dim text-10" style="text-align:center; padding: 20px;">
+                        Nenhuma versão gerada ainda.<br>Gere uma animação para ver o histórico.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="panel-code">
+            <div class="section">
+                <span class="section-label">Código HTML gerado</span>
+                <div class="code-editor-wrapper">
+                    <textarea
+                        id="codeEditor"
+                        class="code-editor"
+                        rows="16"
+                        placeholder="O código HTML aparecerá aqui após gerar..."
+                        oninput="onCodeEditorChange()"
+                        spellcheck="false"
+                    ></textarea>
+                </div>
+                <div class="code-actions">
+                    <button class="btn btn-secondary" style="flex:1; font-size:12px;" onclick="copyCode()">⎘ Copiar Código</button>
+                    <button class="btn btn-secondary" style="flex:1; font-size:12px;" onclick="applyCodeEditorChanges()">↺ Aplicar no Preview</button>
+                </div>
+                <div class="text-dim text-10 mt-6">Edite o código diretamente e clique em "Aplicar no Preview".</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="generate-btn-wrapper">
+        <button class="btn btn-primary btn-full" id="generateBtn" onclick="generateCode()">
+            <span class="btn-shine"></span>
+            <span>✦ Gerar / Atualizar Animação</span>
+        </button>
+    </div>
+
+</div>
+
+<div class="main-content">
+
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <span class="format-indicator" id="formatIndicator">9:16 — Reels</span>
+
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="changeZoom(-10)" title="Diminuir zoom">−</button>
+                <span class="zoom-level" id="zoomLabel">100%</span>
+                <button class="zoom-btn" onclick="changeZoom(10)" title="Aumentar zoom">+</button>
+                <button class="zoom-btn" onclick="resetZoom()" title="Resetar zoom" style="font-size:11px;">↺</button>
+            </div>
+
+            <span class="token-info" id="tokenInfo" style="display:none"></span>
+        </div>
+
+        <div class="toolbar-right">
+            <button class="btn btn-ghost" onclick="openFullscreen()" title="Preview em tela cheia">⛶ Fullscreen</button>
+            <button class="btn btn-secondary" style="font-size:12px; padding:8px 12px;" onclick="downloadHTML()">⬇ Baixar HTML</button>
+            <button class="btn btn-green" style="font-size:12px; padding:8px 12px;" onclick="recordScreen()">⏺ Gravar Vídeo</button>
         </div>
     </div>
 
-    <script>
-        let currentAssets = [];
-        let currentHTML = "";
-        let mediaRecorder;
-        let recordedChunks = [];
+    <div class="preview-container" id="previewContainer">
 
-        async function uploadFiles() {
-            const fileInput = document.getElementById('fileUpload');
-            const files = fileInput.files;
-            
-            if (files.length === 0) return;
-            
-            for (let i = 0; i < files.length; i++) {
-                const formData = new FormData();
-                formData.append('file', files[i]);
-                
-                try {
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        const fullUrl = window.location.origin + data.url;
-                        currentAssets.push(fullUrl);
-                        updateAssetList();
-                    }
-                } catch (e) {
-                    alert('Erro no upload: ' + files[i].name);
-                }
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">✦</div>
+            <div class="empty-text">Nenhuma animação gerada</div>
+            <div class="empty-sub">Descreva o que deseja no painel ao lado e clique em Gerar</div>
+        </div>
+
+        <div class="preview-wrapper format-9-16" id="previewWrapper" style="display:none;">
+            <span class="preview-label" id="previewLabel">360 × 640 — 9:16</span>
+            <iframe
+                id="previewFrame"
+                sandbox="allow-scripts allow-same-origin allow-forms"
+                title="Preview da animação"
+            ></iframe>
+        </div>
+
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Pronto</span>
+        </div>
+        <div class="status-item" id="versionStatus" style="display:none;">
+            <span>Versão <strong id="versionNum">1</strong></span>
+        </div>
+        <div class="status-item" id="assetStatus" style="display:none;">
+            <span id="assetCount">0 assets</span>
+        </div>
+        <div class="status-item" style="margin-left:auto;">
+            <span class="text-dim">Motor Dark Studio IA • llama-3.3-70b-versatile</span>
+        </div>
+    </div>
+
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Gerando sua animação<span class="loading-dots"></span></div>
+    <div class="loading-sub" id="loadingSubText">Isso pode levar alguns segundos</div>
+</div>
+
+<div class="fullscreen-overlay" id="fullscreenOverlay">
+    <button class="fullscreen-close" onclick="closeFullscreen()">✕ Fechar</button>
+    <iframe
+        id="fullscreenFrame"
+        sandbox="allow-scripts allow-same-origin allow-forms"
+        style="width:100%; height:100%; border:none;"
+        title="Preview fullscreen"
+    ></iframe>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+
+<script>
+/* ═══════════════════════════════════════════
+   ESTADO GLOBAL
+═══════════════════════════════════════════ */
+const state = {
+    assets:        [],          // { url, type, name }
+    currentHTML:   '',
+    currentVersionId: null,
+    zoomLevel:     100,
+    sessionId:     generateSessionId(),
+    totalTokens:   0,
+    activeTab:     'generate',
+    isGenerating:  false,
+};
+
+/* ═══════════════════════════════════════════
+   SESSION ID
+═══════════════════════════════════════════ */
+function generateSessionId() {
+    let id = localStorage.getItem('md_session_id');
+    if (!id) {
+        id = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('md_session_id', id);
+    }
+    return id;
+}
+
+function getHeaders(extra = {}) {
+    return {
+        'Content-Type': 'application/json',
+        'X-Session-ID': state.sessionId,
+        ...extra,
+    };
+}
+
+/* ═══════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════ */
+function switchTab(name) {
+    state.activeTab = name;
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', ['generate','templates','history','code'][i] === name);
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${name}`).classList.add('active');
+
+    if (name === 'history') loadHistory();
+    if (name === 'templates') loadTemplates();
+}
+
+/* ═══════════════════════════════════════════
+   UPLOAD DE ASSETS
+═══════════════════════════════════════════ */
+// Drag and drop
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    handleFileSelect(e.dataTransfer.files);
+});
+
+async function handleFileSelect(files) {
+    if (!files || files.length === 0) return;
+
+    const wrap  = document.getElementById('uploadProgressWrap');
+    const bar   = document.getElementById('uploadProgressBar');
+    const label = document.getElementById('uploadStatusText');
+
+    wrap.classList.remove('hidden');
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const progress = Math.round(((i) / files.length) * 100);
+        bar.style.width = progress + '%';
+        label.textContent = `Enviando ${i + 1} de ${files.length}: ${file.name}`;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res  = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (data.success) {
+                const fullUrl = window.location.origin + data.url;
+                state.assets.push({ url: fullUrl, type: data.type, name: file.name });
+                renderAssetGrid();
+                showToast('success', 'Asset enviado', `${file.name} — ${data.size_kb}KB`);
+            } else {
+                showToast('error', 'Erro no upload', data.error);
             }
-            fileInput.value = '';
+        } catch (e) {
+            showToast('error', 'Erro de conexão', `Falha ao enviar: ${file.name}`);
         }
+    }
 
-        function updateAssetList() {
-            const list = document.getElementById('assetList');
-            list.innerHTML = '';
-            currentAssets.forEach(url => {
-                const li = document.createElement('li');
-                li.innerText = url;
-                list.appendChild(li);
+    bar.style.width = '100%';
+    label.textContent = `${files.length} arquivo(s) enviado(s)`;
+    setTimeout(() => wrap.classList.add('hidden'), 1500);
+
+    document.getElementById('fileInput').value = '';
+    updateAssetStatus();
+}
+
+function renderAssetGrid() {
+    const grid = document.getElementById('assetGrid');
+    const clearBtn = document.getElementById('clearAssetsBtn');
+
+    grid.innerHTML = '';
+
+    if (state.assets.length === 0) {
+        clearBtn.style.display = 'none';
+        return;
+    }
+
+    clearBtn.style.display = '';
+
+    state.assets.forEach((asset, idx) => {
+        const card = document.createElement('div');
+        card.className = 'asset-card';
+
+        if (asset.type === 'video') {
+            card.innerHTML = `
+                <div class="asset-video-thumb">🎬</div>
+                <div class="asset-name">${asset.name}</div>
+                <button class="asset-remove" onclick="removeAsset(${idx})" title="Remover">✕</button>
+            `;
+        } else {
+            card.innerHTML = `
+                <img class="asset-thumb" src="${asset.url}" alt="${asset.name}" loading="lazy">
+                <div class="asset-name">${asset.name}</div>
+                <button class="asset-remove" onclick="removeAsset(${idx})" title="Remover">✕</button>
+            `;
+        }
+        grid.appendChild(card);
+    });
+}
+
+function removeAsset(idx) {
+    state.assets.splice(idx, 1);
+    renderAssetGrid();
+    updateAssetStatus();
+}
+
+function clearAllAssets() {
+    state.assets = [];
+    renderAssetGrid();
+    updateAssetStatus();
+    showToast('info', 'Assets removidos', 'Todos os assets foram removidos.');
+}
+
+function updateAssetStatus() {
+    const el = document.getElementById('assetStatus');
+    const ct = document.getElementById('assetCount');
+    if (state.assets.length > 0) {
+        el.style.display = '';
+        ct.textContent = `${state.assets.length} asset${state.assets.length > 1 ? 's' : ''}`;
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+/* ═══════════════════════════════════════════
+   CHAR COUNTER
+═══════════════════════════════════════════ */
+function updateCharCounter() {
+    const input   = document.getElementById('promptInput');
+    const counter = document.getElementById('charCounter');
+    const len     = input.value.length;
+    counter.textContent = `${len} / 3000`;
+    counter.className = 'char-counter' + (len > 2700 ? ' error' : len > 2200 ? ' warn' : '');
+}
+
+function handlePromptKeydown(e) {
+    if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        generateCode();
+    }
+}
+
+/* ═══════════════════════════════════════════
+   GERAÇÃO DE CÓDIGO
+═══════════════════════════════════════════ */
+async function generateCode() {
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!prompt) {
+        showToast('warning', 'Atenção', 'Escreva uma instrução antes de gerar.');
+        return;
+    }
+    if (state.isGenerating) return;
+
+    state.isGenerating = true;
+    setLoading(true, 'Gerando sua animação', 'O modelo de IA está criando o HTML...');
+    document.getElementById('generateBtn').disabled = true;
+    setStatus('Gerando...', false);
+
+    const payload = {
+        prompt:        prompt,
+        assets:        state.assets.map(a => a.url),
+        previous_code: state.currentHTML || null,
+        style_preset:  document.getElementById('styleSelect').value,
+        format_ratio:  document.getElementById('formatSelect').value,
+    };
+
+    try {
+        const res  = await fetch('/api/generate', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            state.currentHTML      = data.html;
+            state.currentVersionId = data.version_id;
+            state.totalTokens     += (data.tokens_used || 0);
+
+            document.getElementById('codeEditor').value = data.html;
+            renderIframe(data.html);
+            showPreview();
+
+            // Atualiza token info
+            if (data.tokens_used) {
+                const ti = document.getElementById('tokenInfo');
+                ti.textContent = `${data.tokens_used.toLocaleString()} tokens`;
+                ti.style.display = '';
+            }
+
+            // Atualiza versão na status bar
+            document.getElementById('versionStatus').style.display = '';
+            document.getElementById('versionNum').textContent = data.version_count || '1';
+
+            showToast('success', 'Animação gerada!', `${data.tokens_used ? data.tokens_used.toLocaleString() + ' tokens usados' : 'Sucesso'}`);
+            setStatus('Pronto', true);
+
+        } else {
+            showToast('error', 'Erro na geração', data.error || 'Ocorreu um erro desconhecido.');
+            setStatus('Erro', false);
+        }
+    } catch (e) {
+        showToast('error', 'Erro de conexão', 'Não foi possível conectar ao servidor.');
+        setStatus('Erro de conexão', false);
+    }
+
+    setLoading(false);
+    document.getElementById('generateBtn').disabled = false;
+    state.isGenerating = false;
+}
+
+/* ═══════════════════════════════════════════
+   PREVIEW
+═══════════════════════════════════════════ */
+const FORMAT_DIMENSIONS = {
+    '9:16':  { w: 338,  h: 600,  label: '338 × 600 — 9:16' },
+    '1:1':   { w: 540,  h: 540,  label: '540 × 540 — 1:1'  },
+    '16:9':  { w: 720,  h: 405,  label: '720 × 405 — 16:9' },
+    '4:5':   { w: 432,  h: 540,  label: '432 × 540 — 4:5'  },
+};
+
+const FORMAT_LABELS = {
+    '9:16':  '9:16 — Reels / Stories / TikTok',
+    '1:1':   '1:1 — Feed Instagram / LinkedIn',
+    '16:9':  '16:9 — YouTube / Apresentações',
+    '4:5':   '4:5 — Portrait Instagram',
+};
+
+function updatePreviewFormat() {
+    const fmt    = document.getElementById('formatSelect').value;
+    const dims   = FORMAT_DIMENSIONS[fmt];
+    const label  = FORMAT_LABELS[fmt];
+    const iframe = document.getElementById('previewFrame');
+    const wrap   = document.getElementById('previewWrapper');
+    const indic  = document.getElementById('formatIndicator');
+    const prevL  = document.getElementById('previewLabel');
+
+    // Remove todas as classes de formato
+    wrap.className = 'preview-wrapper format-' + fmt.replace(':', '-');
+
+    // Aplica dimensões explicitamente também
+    iframe.style.width  = dims.w + 'px';
+    iframe.style.height = dims.h + 'px';
+
+    indic.textContent = label;
+    prevL.textContent = dims.label;
+
+    applyZoom(state.zoomLevel);
+}
+
+function renderIframe(htmlContent) {
+    const iframe = document.getElementById('previewFrame');
+    iframe.srcdoc = htmlContent;
+    updatePreviewFormat();
+}
+
+function showPreview() {
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('previewWrapper').style.display = '';
+}
+
+/* ═══════════════════════════════════════════
+   ZOOM
+═══════════════════════════════════════════ */
+function changeZoom(delta) {
+    state.zoomLevel = Math.min(200, Math.max(25, state.zoomLevel + delta));
+    applyZoom(state.zoomLevel);
+}
+
+function resetZoom() {
+    state.zoomLevel = 100;
+    applyZoom(100);
+}
+
+function applyZoom(level) {
+    const wrap = document.getElementById('previewWrapper');
+    wrap.style.transform = `scale(${level / 100})`;
+    wrap.style.transformOrigin = 'center center';
+    document.getElementById('zoomLabel').textContent = level + '%';
+}
+
+/* ═══════════════════════════════════════════
+   FULLSCREEN
+═══════════════════════════════════════════ */
+function openFullscreen() {
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação primeiro.');
+        return;
+    }
+    document.getElementById('fullscreenFrame').srcdoc = state.currentHTML;
+    document.getElementById('fullscreenOverlay').classList.add('show');
+}
+
+function closeFullscreen() {
+    document.getElementById('fullscreenOverlay').classList.remove('show');
+    document.getElementById('fullscreenFrame').srcdoc = '';
+}
+
+// ESC fecha fullscreen
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeFullscreen();
+});
+
+/* ═══════════════════════════════════════════
+   CÓDIGO EDITOR
+═══════════════════════════════════════════ */
+let codeEditorTimer = null;
+
+function onCodeEditorChange() {
+    clearTimeout(codeEditorTimer);
+    codeEditorTimer = setTimeout(() => {
+        state.currentHTML = document.getElementById('codeEditor').value;
+    }, 300);
+}
+
+function applyCodeEditorChanges() {
+    state.currentHTML = document.getElementById('codeEditor').value;
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'O editor está vazio.');
+        return;
+    }
+    renderIframe(state.currentHTML);
+    showPreview();
+    showToast('info', 'Código aplicado', 'Preview atualizado com o código do editor.');
+}
+
+async function copyCode() {
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Nenhum código para copiar.');
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(state.currentHTML);
+        showToast('success', 'Copiado!', 'Código HTML copiado para a área de transferência.');
+    } catch (e) {
+        showToast('error', 'Erro', 'Não foi possível copiar. Use Ctrl+A no editor.');
+    }
+}
+
+/* ═══════════════════════════════════════════
+   TEMPLATES
+═══════════════════════════════════════════ */
+let templatesLoaded = false;
+
+async function loadTemplates() {
+    if (templatesLoaded) return;
+
+    try {
+        const res  = await fetch('/api/templates');
+        const data = await res.json();
+
+        const grid = document.getElementById('templateGrid');
+        grid.innerHTML = '';
+
+        if (data.success && data.templates.length > 0) {
+            data.templates.forEach(tmpl => {
+                const card = document.createElement('div');
+                card.className = 'template-card';
+
+                // Extrai emoji do início do nome
+                const match = tmpl.name.match(/^(\S+)\s(.+)$/);
+                const icon  = match ? match[1] : '✦';
+                const name  = match ? match[2] : tmpl.name;
+
+                card.innerHTML = `
+                    <div class="tmpl-icon">${icon}</div>
+                    <div class="tmpl-info">
+                        <div class="tmpl-name">${name}</div>
+                        <div class="tmpl-desc">${tmpl.prompt.slice(0, 60)}...</div>
+                    </div>
+                `;
+                card.addEventListener('click', () => useTemplate(tmpl));
+                grid.appendChild(card);
             });
+            templatesLoaded = true;
+        } else {
+            grid.innerHTML = '<div class="text-dim text-10" style="text-align:center;padding:20px;">Nenhum template disponível.</div>';
         }
+    } catch (e) {
+        document.getElementById('templateGrid').innerHTML =
+            '<div class="text-dim text-10" style="text-align:center;padding:20px;">Erro ao carregar templates.</div>';
+    }
+}
 
-        async function generateCode() {
-            const prompt = document.getElementById('promptInput').value;
-            if (!prompt) return;
-            
-            document.getElementById('loadingSpinner').style.display = 'block';
-            
-            const payload = {
-                prompt: prompt,
-                assets: currentAssets,
-                previous_code: currentHTML || null
-            };
-            
-            try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    currentHTML = data.html;
-                    document.getElementById('codeEditor').value = currentHTML;
-                    renderIframe(currentHTML);
-                } else {
-                    alert('Erro: ' + data.error);
-                }
-            } catch (e) {
-                alert('Erro na requisição');
-            }
-            
-            document.getElementById('loadingSpinner').style.display = 'none';
+function useTemplate(tmpl) {
+    document.getElementById('promptInput').value = tmpl.prompt;
+    if (tmpl.style) document.getElementById('styleSelect').value = tmpl.style;
+    updateCharCounter();
+    switchTab('generate');
+    showToast('info', 'Template carregado', tmpl.name.replace(/^\S+\s/, '') + ' — clique em Gerar!');
+}
+
+/* ═══════════════════════════════════════════
+   HISTÓRICO
+═══════════════════════════════════════════ */
+async function loadHistory() {
+    try {
+        const res  = await fetch('/api/history', { headers: getHeaders() });
+        const data = await res.json();
+        renderHistory(data.history || []);
+    } catch (e) {
+        document.getElementById('historyList').innerHTML =
+            '<div class="text-dim text-10" style="text-align:center;padding:20px;">Erro ao carregar histórico.</div>';
+    }
+}
+
+function renderHistory(history) {
+    const list = document.getElementById('historyList');
+    list.innerHTML = '';
+
+    if (!history || history.length === 0) {
+        list.innerHTML = `
+            <div class="text-dim text-10" style="text-align:center;padding:20px;">
+                Nenhuma versão gerada ainda.<br>Gere uma animação para ver o histórico.
+            </div>`;
+        return;
+    }
+
+    history.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'history-card' + (v.id === state.currentVersionId ? ' active-version' : '');
+        const date = new Date(v.timestamp * 1000);
+        const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+        card.innerHTML = `
+            <div class="hist-prompt">${v.prompt}</div>
+            <div class="hist-meta">
+                <span class="hist-time">${dateStr} ${timeStr}</span>
+                ${v.style ? `<span class="hist-tag">${v.style}</span>` : ''}
+                ${v.format ? `<span class="hist-tag">${v.format}</span>` : ''}
+            </div>
+        `;
+        card.addEventListener('click', () => restoreVersion(v.id));
+        list.appendChild(card);
+    });
+}
+
+async function restoreVersion(versionId) {
+    setStatus('Carregando versão...', false);
+    try {
+        const res  = await fetch(`/api/history/${versionId}`, { headers: getHeaders() });
+        const data = await res.json();
+
+        if (data.success) {
+            const v = data.version;
+            state.currentHTML      = v.html;
+            state.currentVersionId = v.id;
+            document.getElementById('codeEditor').value = v.html;
+            document.getElementById('promptInput').value = v.prompt;
+            if (v.style)  document.getElementById('styleSelect').value  = v.style;
+            if (v.format) document.getElementById('formatSelect').value  = v.format;
+            updateCharCounter();
+            updatePreviewFormat();
+            renderIframe(v.html);
+            showPreview();
+            switchTab('generate');
+            showToast('success', 'Versão restaurada', 'Você pode continuar editando desta versão.');
+            setStatus('Versão restaurada', true);
+        } else {
+            showToast('error', 'Erro', data.error || 'Versão não encontrada.');
         }
+    } catch (e) {
+        showToast('error', 'Erro de conexão', 'Não foi possível restaurar a versão.');
+    }
+}
 
-        function renderIframe(htmlContent) {
-            const iframe = document.getElementById('previewFrame');
-            iframe.srcdoc = htmlContent;
-        }
+async function clearHistory() {
+    if (!confirm('Deseja limpar todo o histórico de versões desta sessão?')) return;
+    try {
+        await fetch('/api/history', { method: 'DELETE', headers: getHeaders() });
+        renderHistory([]);
+        showToast('info', 'Histórico limpo', 'Todas as versões foram removidas.');
+    } catch (e) {
+        showToast('error', 'Erro', 'Não foi possível limpar o histórico.');
+    }
+}
 
-        function toggleCodeView() {
-            const editor = document.getElementById('codeEditor');
-            editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
-        }
+/* ═══════════════════════════════════════════
+   DOWNLOAD HTML
+═══════════════════════════════════════════ */
+function downloadHTML() {
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação antes de baixar.');
+        return;
+    }
+    const blob = new Blob([state.currentHTML], { type: 'text/html' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `motordark_${Date.now()}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('success', 'Download iniciado', 'Arquivo HTML salvo com sucesso!');
+}
 
-        function updateIframeFromEditor() {
-            currentHTML = document.getElementById('codeEditor').value;
-            renderIframe(currentHTML);
-        }
+/* ═══════════════════════════════════════════
+   GRAVAR TELA
+═══════════════════════════════════════════ */
+let mediaRecorder = null;
+let recordedChunks = [];
+let isRecording   = false;
 
-        function downloadHTML() {
-            if (!currentHTML) return;
-            const blob = new Blob([currentHTML], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+async function recordScreen() {
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação antes de gravar.');
+        return;
+    }
+
+    if (isRecording) {
+        // Para a gravação
+        mediaRecorder.stop();
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { preferCurrentTab: true, frameRate: 30 },
+            audio: false,
+        });
+
+        recordedChunks = [];
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+            ? 'video/webm;codecs=vp9'
+            : 'video/webm';
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+        mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
             a.href = url;
-            a.download = 'leanttro_animation.html';
+            a.download = `motordark_video_${Date.now()}.webm`;
             a.click();
             URL.revokeObjectURL(url);
-        }
+            stream.getTracks().forEach(t => t.stop());
+            isRecording = false;
+            document.querySelector('.btn-green').textContent = '⏺ Gravar Vídeo';
+            showToast('success', 'Vídeo salvo!', 'Arquivo .webm baixado com sucesso.');
+        };
 
-        async function recordScreen() {
-            try {
-                const stream = await navigator.mediaDevices.getDisplayMedia({
-                    video: { preferCurrentTab: true },
-                    audio: true
-                });
-                
-                recordedChunks = [];
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-                
-                mediaRecorder.ondataavailable = function(e) {
-                    if (e.data.size > 0) recordedChunks.push(e.data);
-                };
-                
-                mediaRecorder.onstop = function() {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'leanttro_video.webm';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    stream.getTracks().forEach(track => track.stop());
-                };
-                
-                mediaRecorder.start();
-                alert("Gravação iniciada. Dê play na sua animação dentro do iframe. Clique em 'Parar compartilhamento' no navegador quando finalizar.");
-                
-            } catch (err) {
-                alert("Erro ao iniciar gravação de tela: " + err);
+        mediaRecorder.start(100);
+        isRecording = true;
+        document.querySelector('.btn-green').textContent = '⏹ Parar Gravação';
+        showToast('info', 'Gravação iniciada', 'Clique em "Parar Gravação" quando finalizar.');
+
+    } catch (err) {
+        if (err.name !== 'NotAllowedError') {
+            showToast('error', 'Erro na gravação', String(err));
+        }
+    }
+}
+
+/* ═══════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════ */
+const TOAST_ICONS = {
+    success: '✓',
+    error:   '✕',
+    info:    'ℹ',
+    warning: '⚠',
+};
+
+function showToast(type, title, message, duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span class="toast-icon">${TOAST_ICONS[type] || 'ℹ'}</span>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            ${message ? `<div class="toast-msg">${message}</div>` : ''}
+        </div>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('removing');
+        toast.addEventListener('animationend', () => toast.remove());
+    }, duration);
+}
+
+/* ═══════════════════════════════════════════
+   STATUS BAR
+═══════════════════════════════════════════ */
+function setStatus(text, ok = true) {
+    document.getElementById('statusText').textContent = text;
+    document.getElementById('statusDot').className = 'status-dot' + (ok ? '' : ' offline');
+}
+
+/* ═══════════════════════════════════════════
+   LOADING
+═══════════════════════════════════════════ */
+function setLoading(show, title = '', sub = '') {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.toggle('show', show);
+    if (show) {
+        overlay.querySelector('.loading-text').innerHTML = title + '<span class="loading-dots"></span>';
+        document.getElementById('loadingSubText').textContent = sub;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   INICIALIZAÇÃO
+═══════════════════════════════════════════ */
+async function init() {
+    updatePreviewFormat();
+    updateCharCounter();
+
+    // Verifica status da API
+    try {
+        const res  = await fetch('/api/status');
+        const data = await res.json();
+        if (data.success) {
+            const badge = document.getElementById('modelBadge');
+            badge.textContent = 'llama 3.3 ✓';
+            if (!data.api_configured) {
+                badge.textContent = '⚠ sem API key';
+                badge.style.background = 'rgba(245,158,11,0.12)';
+                badge.style.borderColor = 'rgba(245,158,11,0.25)';
+                badge.style.color = '#f59e0b';
+                showToast('warning', 'API Key ausente', 'Configure a variável GROQ_API_KEY no servidor.');
             }
         }
-    </script>
+    } catch (e) {
+        // silencioso
+    }
+}
+
+init();
+</script>
 </body>
 </html>
