@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motor Dark Studio | Gerador Front-End IA</title>
-    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap)" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════
            VARIÁVEIS E RESET
@@ -268,7 +268,7 @@
             outline: none;
             transition: border-color var(--transition);
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 8px center;
         }
@@ -1899,7 +1899,7 @@ async function captureImage() {
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
         const script = doc.createElement('script');
-        script.src = "[https://html2canvas.hertzen.com/dist/html2canvas.min.js](https://html2canvas.hertzen.com/dist/html2canvas.min.js)";
+        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
         doc.head.appendChild(script);
         
         await new Promise(resolve => {
@@ -1951,6 +1951,21 @@ async function recordScreen() {
             video: { preferCurrentTab: true, frameRate: 30 },
             audio: false,
         });
+
+        // Aplicando a API CropTarget para isolar a área do iframe
+        try {
+            if (window.CropTarget) {
+                const iframe = document.getElementById('previewFrame');
+                const target = await window.CropTarget.fromElement(iframe);
+                const [videoTrack] = stream.getVideoTracks();
+                await videoTrack.cropTo(target);
+                showToast('info', 'Área Isolada', 'A gravação será focada apenas na animação.');
+            } else {
+                showToast('warning', 'Aviso', 'Navegador sem suporte para recorte automático. Selecione a área correta manualmente.');
+            }
+        } catch (cropErr) {
+            console.warn('Erro ao aplicar CropTarget:', cropErr);
+        }
 
         recordedChunks = [];
         const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
