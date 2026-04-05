@@ -2,6 +2,8 @@ import os
 import time
 import uuid
 import json
+import requests
+import urllib.parse
 from flask import Flask, request, jsonify, render_template, send_from_directory, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -36,7 +38,11 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 if not GROQ_API_KEY:
     print("⚠️  AVISO: GROQ_API_KEY não encontrada! Configure a variável de ambiente.")
 
-BEST_FREE_MODEL = "llama-3.1-8b-instant"   # Melhor modelo free do Groq em 2025/2026
+PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
+if not PIXABAY_API_KEY:
+    print("⚠️  AVISO: PIXABAY_API_KEY não encontrada! Configure para habilitar busca de imagens.")
+
+BEST_FREE_MODEL = "llama-3.3-70b-versatile"   # Melhor modelo free do Groq em 2025/2026
 
 groq_client = Groq(api_key=GROQ_API_KEY)
 
@@ -151,6 +157,38 @@ def api_upload():
 
 
 # ─────────────────────────────────────────────
+# BUSCA NO PIXABAY
+# ─────────────────────────────────────────────
+@app.route('/api/pixabay', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_pixabay():
+    if not PIXABAY_API_KEY:
+        return jsonify({"success": False, "error": "PIXABAY_API_KEY não configurada no servidor."}), 400
+    
+    data = request.json or {}
+    query = data.get('query', '').strip()
+    if not query:
+        return jsonify({"success": False, "error": "Busca vazia"}), 400
+        
+    try:
+        url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={urllib.parse.quote(query)}&image_type=photo&orientation=vertical&per_page=8"
+        response = requests.get(url, timeout=10)
+        res_data = response.json()
+        
+        images = []
+        for hit in res_data.get("hits", []):
+            images.append({
+                "url": hit["largeImageURL"],
+                "preview": hit["previewURL"],
+                "tags": hit["tags"]
+            })
+            
+        return jsonify({"success": True, "images": images})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
 # GERAÇÃO DE HTML VIA IA
 # ─────────────────────────────────────────────
 @app.route('/api/generate', methods=['POST'])
@@ -219,6 +257,7 @@ REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
 5. TIPOGRAFIA CINEMATOGRÁFICA: Importe fontes elegantes do Google Fonts (ex: Cormorant Garamond, DM Sans, Inter, Playfair Display) e use tamanhos responsivos dinâmicos com clamp() (ex: clamp(2rem, 5vw, 5rem)).
 6. TRANSIÇÕES SUAVES: Crie transições (ease-in-out ou cubic-bezier) longas e suaves de pelo menos 1.2 segundos entre os elementos e camadas.
 7. PROFUNDIDADE E LAYERS: Use box-shadow, text-shadow, drop-shadow (em SVGs ou PNGs), e backdrop-filter: blur() para criar camadas ricas e texturas sofisticadas. 
+8. CARROSSEL / POST ESTÁTICO (CRÍTICO): Se o usuário pedir um carrossel de fotos para postar, ou uma imagem estática, NUNCA USE auto-play rápido. Crie botões visíveis de navegação (Próximo/Anterior) ou permita troca de cena por clique, para que o usuário possa tirar print de cada tela com calma. Pare o temporizador automático!
 
 ═══════════════════════════════════════════
 REGRAS DE CONTEÚDO E ASSETS
