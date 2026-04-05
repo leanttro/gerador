@@ -294,11 +294,11 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
         generated_html = ""
         tokens_used = 0
 
-        if ai_engine == 'gemini':
+       if ai_engine == 'gemini':
             if not GEMINI_API_KEY:
                 return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
             
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
             payload = {
                 "systemInstruction": {"parts": [{"text": system_prompt}]},
                 "contents": [{"parts": [{"text": user_content}]}],
@@ -310,21 +310,26 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             except KeyError:
                 return jsonify({"success": False, "error": f"Erro Gemini: {res}"}), 500
 
-        if ai_engine == 'gemini':
-            if not GEMINI_API_KEY:
-                return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
+        elif ai_engine == 'openrouter':
+            if not OPENROUTER_API_KEY:
+                return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
             
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
             payload = {
-                "systemInstruction": {"parts": [{"text": system_prompt}]},
-                "contents": [{"parts": [{"text": user_content}]}],
-                "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8000}
+                "model": "google/gemini-2.0-pro-exp-02-05:free",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content}
+                ],
+                "temperature": 0.45
             }
-            res = requests.post(url, json=payload).json()
+            res = requests.post(url, headers=headers, json=payload).json()
             try:
-                generated_html = res['candidates'][0]['content']['parts'][0]['text']
+                generated_html = res['choices'][0]['message']['content']
+                tokens_used = res.get('usage', {}).get('total_tokens', 0)
             except KeyError:
-                return jsonify({"success": False, "error": f"Erro Gemini: {res}"}), 500
+                return jsonify({"success": False, "error": f"Erro OpenRouter: {res}"}), 500
 
         elif ai_engine == 'openrouter':
             if not OPENROUTER_API_KEY:
