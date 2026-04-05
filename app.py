@@ -9,6 +9,8 @@ import urllib.parse
 import asyncio
 import edge_tts
 from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from groq import Groq
 from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip
 from PIL import Image, ImageDraw, ImageFont
@@ -18,6 +20,12 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 
 app = Flask(__name__)
+
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
@@ -36,7 +44,7 @@ progress_status = {"step": "Ocioso", "remaining": 0}
 def cleanup_old_files():
     patterns = ['*.mp3', '*.jpg', '*.png', 'final_video.mp4', 'raw_*.jpg']
     for pattern in patterns:
-        files = glob.glob(os.path.join(BASE_DIR, pattern))
+        files = glob.glob(os.path.join(UPLOAD_FOLDER, pattern))
         for f in files:
             try:
                 os.remove(f)
@@ -175,7 +183,7 @@ def apply_logo_custom(image_path, logo_path, pct_x, pct_y):
         return image_path
 
 def generate_audio(text, filename="output_audio.mp3"):
-    filepath = os.path.join(BASE_DIR, filename)
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
     
     async def create_audio():
         communicate = edge_tts.Communicate(text, "pt-BR-AntonioNeural")
@@ -205,7 +213,7 @@ def generate_images_pollinations(prompts, width, height, background_style):
                 response = requests.get(image_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
                 if len(response.content) > 5000:
                     img_filename = f"raw_image_{index}.jpg"
-                    img_filepath = os.path.join(BASE_DIR, img_filename)
+                    img_filepath = os.path.join(UPLOAD_FOLDER, img_filename)
                     
                     with open(img_filepath, "wb") as h:
                         h.write(response.content)
@@ -259,7 +267,7 @@ def generate_images_leonardo(prompts, width, height, background_style):
             img_data = requests.get(image_url).content
             
             img_filename = f"raw_image_{index}.jpg"
-            img_filepath = os.path.join(BASE_DIR, img_filename)
+            img_filepath = os.path.join(UPLOAD_FOLDER, img_filename)
             
             with open(img_filepath, "wb") as h:
                 h.write(img_data)
@@ -297,7 +305,7 @@ def generate_images_pixabay(prompts, width, height):
                 
             img_data = requests.get(image_url).content
             img_filename = f"raw_image_{index}.jpg"
-            img_filepath = os.path.join(BASE_DIR, img_filename)
+            img_filepath = os.path.join(UPLOAD_FOLDER, img_filename)
             
             with open(img_filepath, "wb") as h:
                 h.write(img_data)
@@ -319,9 +327,10 @@ def get_status():
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
-    return send_from_directory(BASE_DIR, filename)
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 @app.route('/api/search', methods=['POST'])
+@limiter.limit("20 per minute")
 def api_search():
     data = request.json
     niche = data.get('niche')
@@ -347,9 +356,10 @@ def api_search():
         results = response.json().get('organic', [])
         return jsonify({"success": True, "data": results})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Erro interno no servidor"}), 500
 
 @app.route('/api/analyze', methods=['POST'])
+@limiter.limit("15 per minute")
 def api_analyze():
     data = request.json
     content = data.get('content')
@@ -367,9 +377,10 @@ def api_analyze():
         return jsonify({"success": True, "data": result})
         
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Erro interno no servidor"}), 500
 
 @app.route('/api/generate-raw', methods=['POST'])
+@limiter.limit("10 per minute")
 def api_generate_raw():
     global progress_status
     if not process_lock.acquire(blocking=False):
@@ -402,12 +413,13 @@ def api_generate_raw():
         return jsonify({"success": True, "images": images})
         
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Erro interno no servidor"}), 500
         
     finally:
         process_lock.release()
 
 @app.route('/api/render-final', methods=['POST'])
+@limiter.limit("10 per minute")
 def api_render_final():
     global progress_status
     if not process_lock.acquire(blocking=False):
@@ -447,7 +459,7 @@ def api_render_final():
         final_images = []
         
         for i, img_name in enumerate(images):
-            filepath = os.path.join(BASE_DIR, img_name)
+            filepath = os.path.join(UPLOAD_FOLDER, img_name)
             if i < len(phrases) and phrases[i].strip():
                 apply_text_custom(filepath, phrases[i], color, font, text_pct_x, text_pct_y)
             if logo_path:
@@ -466,14 +478,14 @@ def api_render_final():
             
             clips = []
             for i, img in enumerate(final_images):
-                clip = ImageClip(os.path.join(BASE_DIR, img)).set_duration(duration_per_image)
+                clip = ImageClip(os.path.join(UPLOAD_FOLDER, img)).set_duration(duration_per_image)
                 clip = clip.resize(lambda t: 1.0 + 0.04 * (t / duration_per_image))
                 if i > 0:
                     clip = clip.crossfadein(overlap)
                 clips.append(clip)
                 
             video = concatenate_videoclips(clips, padding=-overlap, method="compose").set_audio(audio)
-            video_filepath = os.path.join(BASE_DIR, "final_video.mp4")
+            video_filepath = os.path.join(UPLOAD_FOLDER, "final_video.mp4")
             
             threads = os.cpu_count() or 4
             video.write_videofile(video_filepath, fps=24, codec="libx264", audio_codec="aac", threads=threads, preset="ultrafast")
@@ -486,7 +498,7 @@ def api_render_final():
             return jsonify({"success": True, "type": mode, "files": final_images})
             
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": "Erro interno no servidor"}), 500
         
     finally:
         process_lock.release()
