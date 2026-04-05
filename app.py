@@ -31,20 +31,19 @@ limiter = Limiter(
 )
 
 # ─────────────────────────────────────────────
-# GROQ — MELHOR MODELO GRATUITO DISPONÍVEL
-# Troque por "gemma2-9b-it" se quiser mais velocidade
+# CHAVES DE API
 # ─────────────────────────────────────────────
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    print("⚠️  AVISO: GROQ_API_KEY não encontrada! Configure a variável de ambiente.")
-
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
-if not PIXABAY_API_KEY:
-    print("⚠️  AVISO: PIXABAY_API_KEY não encontrada! Configure para habilitar busca de imagens.")
 
-BEST_FREE_MODEL = "llama-3.1-8b-instant"   # Melhor modelo free do Groq em 2025/2026
+BEST_FREE_MODEL = "llama-3.3-70b-versatile"
 
-groq_client = Groq(api_key=GROQ_API_KEY)
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
+else:
+    groq_client = None
 
 # Histórico de versões em memória (por session_id)
 version_history: dict[str, list[dict]] = {}
@@ -69,7 +68,6 @@ def get_media_type(filename: str) -> str:
 
 
 def cleanup_old_uploads(max_age_hours: int = 24):
-    """Remove uploads mais antigos que max_age_hours para liberar espaço."""
     try:
         now = time.time()
         for fname in os.listdir(UPLOAD_FOLDER):
@@ -83,7 +81,6 @@ def cleanup_old_uploads(max_age_hours: int = 24):
 
 
 def get_session_id(req) -> str:
-    """Retorna session_id vindo do header X-Session-ID ou 'default'."""
     return req.headers.get('X-Session-ID', 'default')
 
 
@@ -200,6 +197,7 @@ def api_generate():
     previous_code = data.get('previous_code', None)
     style_preset  = data.get('style_preset', 'dark')
     format_ratio  = data.get('format_ratio', '9:16')
+    ai_engine     = data.get('ai_engine', 'groq')
 
     if not prompt:
         return jsonify({"success": False, "error": "Prompt não pode estar vazio"}), 400
@@ -207,7 +205,6 @@ def api_generate():
     if len(prompt) > 3000:
         return jsonify({"success": False, "error": "Prompt muito longo. Máximo: 3000 caracteres"}), 400
 
-    # ── Guias de estilo ──────────────────────────────────────
     style_guides = {
         'dark':      'Paleta escura premium (pretos profundos, cinzas, acentos neon sutis), estilo Motor Dark Studio',
         'neon':      'Paleta neon vibrante (roxo, rosa, azul elétrico, verde limão) em fundo preto absoluto, estética cyberpunk',
@@ -217,7 +214,6 @@ def api_generate():
         'corporate': 'Corporativo profissional confiável (azul petróleo, branco, cinza), clean e sério',
     }
 
-    # ── Guias de formato ─────────────────────────────────────
     format_guides = {
         '9:16':  'VERTICAL 9:16 — largura 100vw, altura 177.78vw (ou usar unidades fixas 1080×1920px emulado via viewport). Ideal para Stories, Reels, TikTok.',
         '1:1':   'QUADRADO 1:1 — largura e altura iguais em 100vmin. Ideal para feed do Instagram e LinkedIn.',
@@ -250,10 +246,10 @@ Use variáveis CSS (:root) para todas as cores e tamanhos. Crie uma paleta coesa
 ═══════════════════════════════════════════
 REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
 ═══════════════════════════════════════════
-1. MOTOR DE CENAS: Use um sistema de Cenas (divs com class="scene") que aparecem e desaparecem. Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none para transições de cena.
+1. MOTOR DE CENAS: Use um sistema de Cenas (divs com class=scene) que aparecem e desaparecem. Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none para transições de cena.
 2. TIMING (JS): Use um script JS no final com requestAnimationFrame, setTimeout ou Promises para controlar o tempo exato de entrada e saída de cada cena, criando um fluxo narrativo perfeito e sincronizado.
-3. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: `max-width: 100%; max-height: 100%; object-fit: contain;` para NUNCA serem cortadas ou distorcidas.
-4. EFEITOS CANVAS (Obrigatório): Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 <canvas> (ex: brilhos, pétalas, poeira, estrelas, formas flutuantes).
+3. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: max-width: 100%; max-height: 100%; object-fit: contain; para NUNCA serem cortadas ou distorcidas.
+4. EFEITOS CANVAS (Obrigatório): Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 canvas (ex: brilhos, pétalas, poeira, estrelas, formas flutuantes).
 5. TIPOGRAFIA CINEMATOGRÁFICA: Importe fontes elegantes do Google Fonts (ex: Cormorant Garamond, DM Sans, Inter, Playfair Display) e use tamanhos responsivos dinâmicos com clamp() (ex: clamp(2rem, 5vw, 5rem)).
 6. TRANSIÇÕES SUAVES: Crie transições (ease-in-out ou cubic-bezier) longas e suaves de pelo menos 1.2 segundos entre os elementos e camadas.
 7. PROFUNDIDADE E LAYERS: Use box-shadow, text-shadow, drop-shadow (em SVGs ou PNGs), e backdrop-filter: blur() para criar camadas ricas e texturas sofisticadas. 
@@ -262,19 +258,18 @@ REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
 ═══════════════════════════════════════════
 REGRAS DE CONTEÚDO E ASSETS
 ═══════════════════════════════════════════
-- NUNCA use "Lorem ipsum" — crie conteúdo coerente e persuasivo com a instrução.
+- NUNCA use Lorem ipsum — crie conteúdo coerente e persuasivo com a instrução.
 - NUNCA deixe regiões vazias sem intenção visual.
 - SEMPRE crie hierarquia visual (hero element, suporte, background animado).
 - Se houver assets do usuário (logos, fotos, vídeos): ELES SÃO O ELEMENTO CENTRAL DO DESIGN.
 - Aplique as imagens/logos do usuário com destaque absoluto, centralizado ou no topo das cenas aplicáveis. NUNCA distorça essas imagens.
-- Vídeos do usuário: use <video autoplay muted loop playsinline style="object-fit: contain; max-width: 100%; max-height: 100%;">.
+- Vídeos do usuário: use video autoplay muted loop playsinline style=object-fit: contain; max-width: 100%; max-height: 100%;.
 
 ═══════════════════════════════════════════
 SAÍDA ESPERADA
 ═══════════════════════════════════════════
-Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (sem marcações como ```html). ZERO texto antes ou depois do código. ZERO explicações. Comece com <!DOCTYPE html> e termine com </html>."""
+Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZERO texto antes ou depois do código. ZERO explicações. Comece com <!DOCTYPE html> e termine com </html>."""
 
-    # ── Montagem do prompt do usuário ─────────────────────────
     user_content = f"INSTRUÇÃO CRIATIVA: {prompt}\n\n"
 
     if assets:
@@ -288,30 +283,72 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
         user_content += (
             "═══ CÓDIGO HTML EXISTENTE (TEMPLATE BASE) ═══\n"
             "O código abaixo é um template funcional de alta qualidade.\n"
-            "PRESERVE estritamente a física do <canvas>, os temporizadores (timers/JS), os z-indexes e o motor de cenas.\n"
+            "PRESERVE estritamente a física do canvas, os temporizadores (timers/JS), os z-indexes e o motor de cenas.\n"
             "Sua tarefa é SUBSTITUIR APENAS textos, URLs de imagens, cores (mantendo a harmonia) e tipografia para se adaptar perfeitamente à INSTRUÇÃO CRIATIVA e aos ASSETS DO USUÁRIO.\n\n"
             f"{previous_code}"
         )
     else:
         user_content += "Crie do zero com base na instrução acima."
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user",   "content": user_content}
-    ]
-
     try:
-        response = groq_client.chat.completions.create(
-            messages=messages,
-            model=BEST_FREE_MODEL,
-            temperature=0.45,
-            max_tokens=8000,
-            top_p=0.92,
-        )
+        generated_html = ""
+        tokens_used = 0
 
-        generated_html = response.choices[0].message.content.strip()
+        if ai_engine == 'gemini':
+            if not GEMINI_API_KEY:
+                return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+            payload = {
+                "systemInstruction": {"parts": [{"text": system_prompt}]},
+                "contents": [{"parts": [{"text": user_content}]}],
+                "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8000}
+            }
+            res = requests.post(url, json=payload).json()
+            try:
+                generated_html = res['candidates'][0]['content']['parts'][0]['text']
+            except KeyError:
+                return jsonify({"success": False, "error": f"Erro Gemini: {res}"}), 500
 
-        # Limpa fences markdown caso o modelo insista
+        elif ai_engine == 'openrouter':
+            if not OPENROUTER_API_KEY:
+                return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
+            
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
+            payload = {
+                "model": "meta-llama/llama-3.1-8b-instruct:free",
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content}
+                ],
+                "temperature": 0.45
+            }
+            res = requests.post(url, headers=headers, json=payload).json()
+            try:
+                generated_html = res['choices'][0]['message']['content']
+                tokens_used = res.get('usage', {}).get('total_tokens', 0)
+            except KeyError:
+                return jsonify({"success": False, "error": f"Erro OpenRouter: {res}"}), 500
+
+        else:
+            if not groq_client:
+                return jsonify({"success": False, "error": "GROQ_API_KEY ausente no servidor"}), 400
+                
+            response = groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content}
+                ],
+                model=BEST_FREE_MODEL,
+                temperature=0.45,
+                max_tokens=8000,
+                top_p=0.92,
+            )
+            generated_html = response.choices[0].message.content
+            tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
+
+        generated_html = generated_html.strip()
         if generated_html.startswith("```html"):
             generated_html = generated_html[7:]
         elif generated_html.startswith("```"):
@@ -320,7 +357,6 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
             generated_html = generated_html[:-3]
         generated_html = generated_html.strip()
 
-        # Validação básica
         lower = generated_html.lower()
         if not (lower.startswith('<!doctype') or lower.startswith('<html')):
             return jsonify({
@@ -328,7 +364,6 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
                 "error": "O modelo não retornou HTML válido. Tente reformular a instrução."
             }), 500
 
-        # ── Salva no histórico de versões ──────────────────────
         session_id = get_session_id(request)
         if session_id not in version_history:
             version_history[session_id] = []
@@ -344,11 +379,8 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
         }
         version_history[session_id].append(version_entry)
 
-        # Mantém só as últimas 15 versões por sessão
         if len(version_history[session_id]) > 15:
             version_history[session_id] = version_history[session_id][-15:]
-
-        tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
 
         return jsonify({
             "success":       True,
@@ -356,15 +388,15 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown (se
             "version_id":    version_entry["id"],
             "version_count": len(version_history[session_id]),
             "tokens_used":   tokens_used,
-            "model":         BEST_FREE_MODEL,
+            "model":         ai_engine,
         })
 
     except Exception as e:
         error_msg = str(e)
-        if "rate_limit" in error_msg.lower():
-            msg = "Limite de requisições atingido. Aguarde um momento e tente novamente."
+        if "rate_limit" in error_msg.lower() or "429" in error_msg.lower():
+            msg = "Limite de requisições atingido. Troque de motor no painel ou aguarde."
         elif "api_key" in error_msg.lower() or "auth" in error_msg.lower():
-            msg = "Erro de autenticação. Verifique sua GROQ_API_KEY."
+            msg = "Erro de autenticação. Verifique sua chave de API."
         elif "context_length" in error_msg.lower() or "tokens" in error_msg.lower():
             msg = "Código anterior muito longo. Tente começar uma nova geração do zero."
         else:
@@ -423,7 +455,6 @@ def api_templates():
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                     
-                    # Usa o nome do arquivo para criar um nome amigável
                     clean_name = fname.replace('.html', '').replace('_', ' ').title()
                     
                     templates.append({
@@ -437,7 +468,6 @@ def api_templates():
     except Exception as e:
         print(f"Erro ao ler templates: {e}")
 
-    # Fallback se a pasta estiver vazia
     if not templates:
         templates = [
             {
@@ -467,7 +497,7 @@ def api_status():
     return jsonify({
         "success":        True,
         "model":          BEST_FREE_MODEL,
-        "api_configured": bool(GROQ_API_KEY),
+        "api_configured": True,
         "total_sessions": len(version_history),
         "total_versions": total_versions,
         "uploads_count":  uploads_count,
@@ -481,6 +511,4 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
     print(f"🚀 Motor Dark Studio — rodando na porta {port}")
-    print(f"🤖 Modelo IA: {BEST_FREE_MODEL}")
-    print(f"🔑 API Key: {'✅ configurada' if GROQ_API_KEY else '❌ NÃO configurada'}")
     app.run(host='0.0.0.0', port=port, debug=debug)
