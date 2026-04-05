@@ -72,7 +72,7 @@ Retorne APENAS o código HTML cru e válido, começando com <!DOCTYPE html> e te
     if assets:
         user_content += "URLs dos Assets enviados pelo usuário que DEVEM ser usados no código:\n"
         for asset in assets:
-            user_content += f"- {asset}\n"
+            user_content += f"* {asset}\n"
             
     if previous_code:
         user_content += f"\n\nCódigo HTML anterior que deve ser modificado com base na instrução atual:\n{previous_code}"
@@ -85,7 +85,7 @@ Retorne APENAS o código HTML cru e válido, começando com <!DOCTYPE html> e te
     try:
         response = groq_client.chat.completions.create(
             messages=messages,
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             temperature=0.4,
             max_tokens=6000
         )
