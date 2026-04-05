@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motor Dark Studio | Gerador Front-End IA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap)" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════
            VARIÁVEIS E RESET
@@ -268,7 +268,7 @@
             outline: none;
             transition: border-color var(--transition);
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 8px center;
         }
@@ -1123,6 +1123,17 @@
                         </select>
                     </div>
                 </div>
+                
+                <div class="select-row mt-6">
+                    <div class="select-group">
+                        <label>Motor de IA (API)</label>
+                        <select id="aiEngineSelect">
+                            <option value="groq">Groq (Llama 3.3) - Rápido</option>
+                            <option value="gemini">Google Gemini 1.5 - Inteligente</option>
+                            <option value="openrouter">OpenRouter (Llama Free) - Ilimitado</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="divider"></div>
@@ -1254,7 +1265,7 @@
             <span id="assetCount">0 assets</span>
         </div>
         <div class="status-item" style="margin-left:auto;">
-            <span class="text-dim">Motor Dark Studio IA • llama-3.3-70b-versatile</span>
+            <span class="text-dim">Motor Dark Studio IA • Llama / Gemini</span>
         </div>
     </div>
 
@@ -1538,6 +1549,7 @@ async function generateCode() {
         previous_code: state.currentHTML || null,
         style_preset:  document.getElementById('styleSelect').value,
         format_ratio:  document.getElementById('formatSelect').value,
+        ai_engine:     document.getElementById('aiEngineSelect').value,
     };
 
     try {
@@ -1557,16 +1569,15 @@ async function generateCode() {
             renderIframe(data.html);
             showPreview();
 
-            // Atualiza token info
             if (data.tokens_used) {
                 const ti = document.getElementById('tokenInfo');
                 ti.textContent = `${data.tokens_used.toLocaleString()} tokens`;
                 ti.style.display = '';
             }
 
-            // Atualiza versão na status bar
             document.getElementById('versionStatus').style.display = '';
             document.getElementById('versionNum').textContent = data.version_count || '1';
+            document.getElementById('modelBadge').textContent = data.model + ' ✓';
 
             showToast('success', 'Animação gerada!', `${data.tokens_used ? data.tokens_used.toLocaleString() + ' tokens usados' : 'Sucesso'}`);
             setStatus('Pronto', true);
@@ -1611,10 +1622,8 @@ function updatePreviewFormat() {
     const indic  = document.getElementById('formatIndicator');
     const prevL  = document.getElementById('previewLabel');
 
-    // Remove todas as classes de formato
     wrap.className = 'preview-wrapper format-' + fmt.replace(':', '-');
 
-    // Aplica dimensões explicitamente também
     iframe.style.width  = dims.w + 'px';
     iframe.style.height = dims.h + 'px';
 
@@ -1672,7 +1681,6 @@ function closeFullscreen() {
     document.getElementById('fullscreenFrame').srcdoc = '';
 }
 
-// ESC fecha fullscreen
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeFullscreen();
 });
@@ -1756,13 +1764,11 @@ async function loadTemplates() {
 }
 
 function useTemplate(tmpl) {
-    // Se o html for vazio (caso do fallback vazio) não faz nada
     if(!tmpl.html) return;
 
     document.getElementById('promptInput').value = tmpl.prompt;
     if (tmpl.style) document.getElementById('styleSelect').value = tmpl.style;
     
-    // Injeta o HTML lido do servidor direto no Editor e como código atual para a IA usar
     state.currentHTML = tmpl.html;
     document.getElementById('codeEditor').value = tmpl.html;
     
@@ -1893,7 +1899,7 @@ async function captureImage() {
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
         const script = doc.createElement('script');
-        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+        script.src = "[https://html2canvas.hertzen.com/dist/html2canvas.min.js](https://html2canvas.hertzen.com/dist/html2canvas.min.js)";
         doc.head.appendChild(script);
         
         await new Promise(resolve => {
@@ -2039,23 +2045,14 @@ async function init() {
     updatePreviewFormat();
     updateCharCounter();
 
-    // Verifica status da API
     try {
         const res  = await fetch('/api/status');
         const data = await res.json();
         if (data.success) {
             const badge = document.getElementById('modelBadge');
-            badge.textContent = 'llama 3.3 ✓';
-            if (!data.api_configured) {
-                badge.textContent = '⚠ sem API key';
-                badge.style.background = 'rgba(245,158,11,0.12)';
-                badge.style.borderColor = 'rgba(245,158,11,0.25)';
-                badge.style.color = '#f59e0b';
-                showToast('warning', 'API Key ausente', 'Configure a variável GROQ_API_KEY no servidor.');
-            }
+            badge.textContent = 'IA Pronta ✓';
         }
     } catch (e) {
-        // silencioso
     }
 }
 
