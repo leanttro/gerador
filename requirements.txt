@@ -4,3 +4,4 @@ requests
 moviepy==1.0.3
 edge-tts
 Pillow>=9.1.0
+Flask_Limiter
