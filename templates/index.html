@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motor Dark Studio | Gerador Front-End IA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap)" rel="stylesheet">
     <style>
         /* ═══════════════════════════════════════════
            VARIÁVEIS E RESET
@@ -119,7 +119,6 @@
             display: block;
         }
 
-        /* Model badge */
         .model-badge {
             font-size: 9px;
             padding: 3px 8px;
@@ -132,11 +131,11 @@
             cursor: default;
         }
 
-        /* Tabs */
         .sidebar-tabs {
             display: flex;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            overflow-x: auto;
         }
 
         .tab-btn {
@@ -153,6 +152,7 @@
             border-bottom: 2px solid transparent;
             transition: all var(--transition);
             font-family: inherit;
+            white-space: nowrap;
         }
 
         .tab-btn:hover {
@@ -166,7 +166,6 @@
             background: rgba(229,9,20,0.04);
         }
 
-        /* Sidebar panels */
         .sidebar-body {
             flex: 1;
             overflow-y: auto;
@@ -184,7 +183,6 @@
             display: flex;
         }
 
-        /* Sections */
         .section {
             display: flex;
             flex-direction: column;
@@ -226,7 +224,6 @@
             color: var(--text-dim);
         }
 
-        /* Character counter */
         .char-counter {
             font-size: 10px;
             color: var(--text-dim);
@@ -236,7 +233,6 @@
         .char-counter.warn { color: var(--amber); }
         .char-counter.error { color: var(--red); }
 
-        /* Selects */
         .select-row {
             display: flex;
             gap: 8px;
@@ -268,7 +264,7 @@
             outline: none;
             transition: border-color var(--transition);
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 8px center;
         }
@@ -354,12 +350,6 @@
 
         .btn-full { width: 100%; }
 
-        .btn-icon {
-            padding: 7px;
-            font-size: 16px;
-            border-radius: var(--radius);
-        }
-
         /* ═══════════════════════════════════════════
            FILE UPLOAD
         ═══════════════════════════════════════════ */
@@ -403,7 +393,6 @@
             color: var(--red);
         }
 
-        /* Asset list */
         .asset-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -474,7 +463,6 @@
             opacity: 1;
         }
 
-        /* Upload progress */
         .upload-progress {
             height: 3px;
             background: var(--border);
@@ -491,7 +479,7 @@
         }
 
         /* ═══════════════════════════════════════════
-           TEMPLATES
+           TEMPLATES E INSPIRAÇÃO
         ═══════════════════════════════════════════ */
         .template-grid {
             display: flex;
@@ -554,8 +542,41 @@
             line-height: 1.3;
         }
 
+        .inspire-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .inspire-type {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(59,130,246,0.15);
+            color: var(--blue);
+            width: fit-content;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .inspire-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .inspire-snippet {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
         /* ═══════════════════════════════════════════
-           HISTÓRICO DE VERSÕES
+           HISTÓRICO E CÓDIGO
         ═══════════════════════════════════════════ */
         .history-list {
             display: flex;
@@ -609,9 +630,6 @@
             font-weight: 500;
         }
 
-        /* ═══════════════════════════════════════════
-           CODE EDITOR
-        ═══════════════════════════════════════════ */
         .code-editor-wrapper {
             position: relative;
         }
@@ -636,7 +654,7 @@
         }
 
         /* ═══════════════════════════════════════════
-           MAIN CONTENT
+           MAIN CONTENT E TOOLBAR
         ═══════════════════════════════════════════ */
         .main-content {
             flex: 1;
@@ -646,7 +664,6 @@
             overflow: hidden;
         }
 
-        /* Toolbar */
         .toolbar {
             height: 52px;
             background: var(--bg-card);
@@ -724,7 +741,6 @@
             border-radius: 20px;
         }
 
-        /* Preview area */
         .preview-container {
             flex: 1;
             display: flex;
@@ -759,13 +775,11 @@
             transition: width 0.3s ease, height 0.3s ease;
         }
 
-        /* Format dimensions */
         .format-9-16  iframe { width: 338px; height: 600px; }
         .format-1-1   iframe { width: 540px; height: 540px; }
         .format-16-9  iframe { width: 720px; height: 405px; }
         .format-4-5   iframe { width: 432px; height: 540px; }
 
-        /* Empty state */
         .empty-state {
             position: absolute;
             inset: 0;
@@ -797,7 +811,7 @@
         }
 
         /* ═══════════════════════════════════════════
-           LOADING
+           MODALS E TOASTS
         ═══════════════════════════════════════════ */
         .loading-overlay {
             display: none;
@@ -838,7 +852,6 @@
             color: var(--text-dim);
         }
 
-        /* Loading dots */
         .loading-dots::after {
             content: '';
             animation: dots 1.5s steps(4, end) infinite;
@@ -851,9 +864,6 @@
             75%  { content: '...'; }
         }
 
-        /* ═══════════════════════════════════════════
-           TOAST NOTIFICATIONS
-        ═══════════════════════════════════════════ */
         .toast-container {
             position: fixed;
             top: 16px;
@@ -905,9 +915,6 @@
         .toast.info    { border-left: 3px solid var(--blue); }
         .toast.warning { border-left: 3px solid var(--amber); }
 
-        /* ═══════════════════════════════════════════
-           FULLSCREEN PREVIEW
-        ═══════════════════════════════════════════ */
         .fullscreen-overlay {
             display: none;
             position: fixed;
@@ -948,7 +955,7 @@
         }
 
         /* ═══════════════════════════════════════════
-           STATUS BAR (bottom)
+           STATUS BAR E BOTTOM BUTTONS
         ═══════════════════════════════════════════ */
         .status-bar {
             height: 24px;
@@ -978,9 +985,6 @@
 
         .status-dot.offline { background: var(--red); }
 
-        /* ═══════════════════════════════════════════
-           GENERATE BUTTON (big)
-        ═══════════════════════════════════════════ */
         .generate-btn-wrapper {
             padding: 14px 16px;
             border-top: 1px solid var(--border);
@@ -1009,18 +1013,12 @@
             100% { left: 150%; }
         }
 
-        /* ═══════════════════════════════════════════
-           DIVIDER
-        ═══════════════════════════════════════════ */
         .divider {
             height: 1px;
             background: var(--border);
             margin: 4px 0;
         }
 
-        /* ═══════════════════════════════════════════
-           MISC UTILS
-        ═══════════════════════════════════════════ */
         .flex-row  { display: flex; align-items: center; }
         .gap-6     { gap: 6px; }
         .gap-8     { gap: 8px; }
@@ -1030,7 +1028,6 @@
         .text-10    { font-size: 10px; }
         .hidden     { display: none !important; }
 
-        /* Badge */
         .badge {
             font-size: 9px;
             padding: 2px 6px;
@@ -1059,6 +1056,7 @@
     <div class="sidebar-tabs">
         <button class="tab-btn active" onclick="switchTab('generate')">✦ Gerar</button>
         <button class="tab-btn" onclick="switchTab('templates')">⬚ Templates</button>
+        <button class="tab-btn" onclick="switchTab('inspire')">💡 Inspiração</button>
         <button class="tab-btn" onclick="switchTab('history')">↺ Histórico</button>
         <button class="tab-btn" onclick="switchTab('code')">⟨/⟩ Código</button>
     </div>
@@ -1066,6 +1064,16 @@
     <div class="sidebar-body">
 
         <div class="panel active" id="panel-generate">
+            
+            <div class="section">
+                <span class="section-label">Modo de Geração</span>
+                <select id="generationModeSelect">
+                    <option value="generate">Recriar do zero usando template como base (Criativo)</option>
+                    <option value="replace">Apenas substituir textos/imagens (Rápido, exige Template)</option>
+                </select>
+            </div>
+            
+            <div class="divider mt-6"></div>
 
             <div class="section">
                 <span class="section-label">Assets (imagens / vídeos)</span>
@@ -1160,6 +1168,20 @@
                 <span class="section-label">Clique para usar um template Base</span>
                 <div class="template-grid" id="templateGrid">
                     <div class="text-dim text-10" style="text-align:center; padding: 20px;">Carregando templates visuais...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="panel-inspire">
+            <div class="section">
+                <span class="section-label">Buscar Ideias de Posts (Nicho)</span>
+                <div class="flex-row gap-6">
+                    <input type="text" id="nicheInput" placeholder="Ex: dentista, moda, tecnologia..." style="margin:0; flex:1;">
+                    <button class="btn btn-secondary" onclick="searchInspiration()">Buscar</button>
+                </div>
+                <div class="divider mt-6"></div>
+                <div id="inspirationResults" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <div class="text-dim text-10" style="text-align:center; padding: 20px;">Digite um nicho para buscar ideias no Instagram e TikTok.</div>
                 </div>
             </div>
         </div>
@@ -1295,7 +1317,7 @@
    ESTADO GLOBAL
 ═══════════════════════════════════════════ */
 const state = {
-    assets:        [],          // { url, type, name }
+    assets:        [],
     currentHTML:   '',
     currentVersionId: null,
     zoomLevel:     100,
@@ -1331,7 +1353,7 @@ function getHeaders(extra = {}) {
 function switchTab(name) {
     state.activeTab = name;
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['generate','templates','history','code'][i] === name);
+        b.classList.toggle('active', ['generate','templates','inspire','history','code'][i] === name);
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById(`panel-${name}`).classList.add('active');
@@ -1343,7 +1365,6 @@ function switchTab(name) {
 /* ═══════════════════════════════════════════
    UPLOAD DE ASSETS
 ═══════════════════════════════════════════ */
-// Drag and drop
 const uploadZone = document.getElementById('uploadZone');
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
 uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
@@ -1510,6 +1531,73 @@ function updateAssetStatus() {
 }
 
 /* ═══════════════════════════════════════════
+   BUSCA INSPIRAÇÃO SERPAPI
+═══════════════════════════════════════════ */
+async function searchInspiration() {
+    const niche = document.getElementById('nicheInput').value.trim();
+    if (!niche) {
+        showToast('warning', 'Atenção', 'Digite um nicho primeiro.');
+        return;
+    }
+
+    const resultsDiv = document.getElementById('inspirationResults');
+    resultsDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center;">Buscando referências...</div>';
+
+    try {
+        const res = await fetch('/api/search_inspiration', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ niche })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            resultsDiv.innerHTML = '';
+            if (data.results.length === 0) {
+                resultsDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center;">Sem resultados encontrados para esse nicho.</div>';
+                return;
+            }
+
+            data.results.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'inspire-card';
+                card.innerHTML = `
+                    <div class="inspire-type">${item.type}</div>
+                    <div class="inspire-title">${item.title}</div>
+                    <div class="inspire-snippet">${item.snippet}</div>
+                    <button class="btn btn-secondary" style="font-size: 11px; padding: 6px; margin-top: 4px;" onclick="useInspiration(this)">💡 Usar essa ideia</button>
+                `;
+                card.dataset.title = item.title;
+                card.dataset.snippet = item.snippet;
+                card.dataset.type = item.type;
+                resultsDiv.appendChild(card);
+            });
+        } else {
+            resultsDiv.innerHTML = `<div class="text-dim text-10" style="text-align:center;color:var(--red)">Erro: ${data.error}</div>`;
+        }
+    } catch (e) {
+        resultsDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center;color:var(--red)">Erro de conexão.</div>';
+    }
+}
+
+function useInspiration(buttonEl) {
+    const card = buttonEl.closest('.inspire-card');
+    const title = card.dataset.title;
+    const snippet = card.dataset.snippet;
+    const type = card.dataset.type;
+
+    const promptInput = document.getElementById('promptInput');
+    let format = type === 'Reels' ? 'vídeo curto animado' : 'carrossel de fotos (estático, sem autoplay)';
+
+    const textToInsert = `Crie um ${format} inspirado nesta ideia:\nTítulo: ${title}\nContexto: ${snippet}\n\n`;
+    
+    promptInput.value = textToInsert + promptInput.value;
+    updateCharCounter();
+    switchTab('generate');
+    showToast('success', 'Ideia adicionada!', 'Edite o prompt se necessário e clique em Gerar.');
+}
+
+/* ═══════════════════════════════════════════
    CHAR COUNTER
 ═══════════════════════════════════════════ */
 function updateCharCounter() {
@@ -1539,17 +1627,18 @@ async function generateCode() {
     if (state.isGenerating) return;
 
     state.isGenerating = true;
-    setLoading(true, 'Gerando sua animação', 'O modelo de IA está criando o HTML...');
+    setLoading(true, 'Gerando sua animação', 'O modelo de IA está processando...');
     document.getElementById('generateBtn').disabled = true;
     setStatus('Gerando...', false);
 
     const payload = {
-        prompt:        prompt,
-        assets:        state.assets.map(a => a.url),
-        previous_code: state.currentHTML || null,
-        style_preset:  document.getElementById('styleSelect').value,
-        format_ratio:  document.getElementById('formatSelect').value,
-        ai_engine:     document.getElementById('aiEngineSelect').value,
+        prompt:          prompt,
+        assets:          state.assets.map(a => a.url),
+        previous_code:   state.currentHTML || null,
+        style_preset:    document.getElementById('styleSelect').value,
+        format_ratio:    document.getElementById('formatSelect').value,
+        ai_engine:       document.getElementById('aiEngineSelect').value,
+        generation_mode: document.getElementById('generationModeSelect').value,
     };
 
     try {
@@ -1597,7 +1686,7 @@ async function generateCode() {
 }
 
 /* ═══════════════════════════════════════════
-   PREVIEW
+   PREVIEW E FULLSCREEN
 ═══════════════════════════════════════════ */
 const FORMAT_DIMENSIONS = {
     '9:16':  { w: 338,  h: 600,  label: '338 × 600 — 9:16' },
@@ -1644,9 +1733,6 @@ function showPreview() {
     document.getElementById('previewWrapper').style.display = '';
 }
 
-/* ═══════════════════════════════════════════
-   ZOOM
-═══════════════════════════════════════════ */
 function changeZoom(delta) {
     state.zoomLevel = Math.min(200, Math.max(25, state.zoomLevel + delta));
     applyZoom(state.zoomLevel);
@@ -1664,9 +1750,6 @@ function applyZoom(level) {
     document.getElementById('zoomLabel').textContent = level + '%';
 }
 
-/* ═══════════════════════════════════════════
-   FULLSCREEN
-═══════════════════════════════════════════ */
 function openFullscreen() {
     if (!state.currentHTML) {
         showToast('warning', 'Atenção', 'Gere uma animação primeiro.');
@@ -1686,7 +1769,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ═══════════════════════════════════════════
-   CÓDIGO EDITOR
+   CÓDIGO EDITOR E TEMPLATES
 ═══════════════════════════════════════════ */
 let codeEditorTimer = null;
 
@@ -1721,9 +1804,6 @@ async function copyCode() {
     }
 }
 
-/* ═══════════════════════════════════════════
-   TEMPLATES DINÂMICOS
-═══════════════════════════════════════════ */
 let templatesLoaded = false;
 
 async function loadTemplates() {
@@ -1867,7 +1947,7 @@ async function clearHistory() {
 }
 
 /* ═══════════════════════════════════════════
-   DOWNLOAD HTML
+   MÍDIAS DOWNLOADS (HTML, FOTO, VIDEO)
 ═══════════════════════════════════════════ */
 function downloadHTML() {
     if (!state.currentHTML) {
@@ -1884,9 +1964,6 @@ function downloadHTML() {
     showToast('success', 'Download iniciado', 'Arquivo HTML salvo com sucesso!');
 }
 
-/* ═══════════════════════════════════════════
-   CAPTURAR FOTO (NOVO)
-═══════════════════════════════════════════ */
 async function captureImage() {
     if (!state.currentHTML) {
         showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
@@ -1899,7 +1976,7 @@ async function captureImage() {
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
         const script = doc.createElement('script');
-        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+        script.src = "[https://html2canvas.hertzen.com/dist/html2canvas.min.js](https://html2canvas.hertzen.com/dist/html2canvas.min.js)";
         doc.head.appendChild(script);
         
         await new Promise(resolve => {
@@ -1927,9 +2004,6 @@ async function captureImage() {
     }
 }
 
-/* ═══════════════════════════════════════════
-   GRAVAR TELA
-═══════════════════════════════════════════ */
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording   = false;
@@ -1941,7 +2015,6 @@ async function recordScreen() {
     }
 
     if (isRecording) {
-        // Para a gravação
         mediaRecorder.stop();
         return;
     }
@@ -1952,7 +2025,6 @@ async function recordScreen() {
             audio: false,
         });
 
-        // Aplicando a API CropTarget para isolar a área do iframe
         try {
             if (window.CropTarget) {
                 const iframe = document.getElementById('previewFrame');
@@ -2005,7 +2077,7 @@ async function recordScreen() {
 }
 
 /* ═══════════════════════════════════════════
-   TOAST NOTIFICATIONS
+   TOAST E STATUS
 ═══════════════════════════════════════════ */
 const TOAST_ICONS = {
     success: '✓',
@@ -2033,17 +2105,11 @@ function showToast(type, title, message, duration = 4000) {
     }, duration);
 }
 
-/* ═══════════════════════════════════════════
-   STATUS BAR
-═══════════════════════════════════════════ */
 function setStatus(text, ok = true) {
     document.getElementById('statusText').textContent = text;
     document.getElementById('statusDot').className = 'status-dot' + (ok ? '' : ' offline');
 }
 
-/* ═══════════════════════════════════════════
-   LOADING
-═══════════════════════════════════════════ */
 function setLoading(show, title = '', sub = '') {
     const overlay = document.getElementById('loadingOverlay');
     overlay.classList.toggle('show', show);
@@ -2053,9 +2119,6 @@ function setLoading(show, title = '', sub = '') {
     }
 }
 
-/* ═══════════════════════════════════════════
-   INICIALIZAÇÃO
-═══════════════════════════════════════════ */
 async function init() {
     updatePreviewFormat();
     updateCharCounter();
