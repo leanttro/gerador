@@ -135,7 +135,6 @@
             display: flex;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
-            overflow-x: auto;
         }
 
         .tab-btn {
@@ -152,7 +151,6 @@
             border-bottom: 2px solid transparent;
             transition: all var(--transition);
             font-family: inherit;
-            white-space: nowrap;
         }
 
         .tab-btn:hover {
@@ -220,16 +218,11 @@
             box-shadow: 0 0 0 3px var(--red-glow);
         }
 
-        textarea::placeholder, input[type="text"]::placeholder {
-            color: var(--text-dim);
-        }
-
         .char-counter {
             font-size: 10px;
             color: var(--text-dim);
             text-align: right;
         }
-
         .char-counter.warn { color: var(--amber); }
         .char-counter.error { color: var(--red); }
 
@@ -237,20 +230,17 @@
             display: flex;
             gap: 8px;
         }
-
         .select-group {
             flex: 1;
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-
         .select-group label {
             font-size: 10px;
             color: var(--text-muted);
             font-weight: 500;
         }
-
         select {
             width: 100%;
             padding: 8px 10px;
@@ -268,7 +258,6 @@
             background-repeat: no-repeat;
             background-position: right 8px center;
         }
-
         select:focus {
             border-color: var(--red);
         }
@@ -293,39 +282,29 @@
             white-space: nowrap;
             user-select: none;
         }
-
         .btn:disabled {
             opacity: 0.45;
             cursor: not-allowed;
         }
-
         .btn-primary {
             background: var(--red);
             color: #fff;
             box-shadow: 0 2px 8px var(--red-glow);
         }
-
         .btn-primary:hover:not(:disabled) {
             background: var(--red-hover);
             box-shadow: 0 4px 16px var(--red-glow);
             transform: translateY(-1px);
         }
-
-        .btn-primary:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
         .btn-secondary {
             background: var(--bg-input);
             color: var(--text-main);
             border: 1px solid var(--border);
         }
-
         .btn-secondary:hover:not(:disabled) {
             background: var(--bg-hover);
             border-color: var(--border-light);
         }
-
         .btn-ghost {
             background: none;
             color: var(--text-muted);
@@ -333,25 +312,21 @@
             padding: 6px 10px;
             font-size: 12px;
         }
-
         .btn-ghost:hover:not(:disabled) {
             color: var(--text-main);
             background: var(--bg-hover);
         }
-
         .btn-green {
             background: var(--green);
             color: #fff;
         }
-
         .btn-green:hover:not(:disabled) {
             background: #16a34a;
         }
-
         .btn-full { width: 100%; }
 
         /* ═══════════════════════════════════════════
-           FILE UPLOAD
+           FILE UPLOAD, ASSETS, TEMPLATES, HISTORY
         ═══════════════════════════════════════════ */
         .upload-zone {
             border: 2px dashed var(--border);
@@ -362,12 +337,10 @@
             transition: all var(--transition);
             position: relative;
         }
-
         .upload-zone:hover, .upload-zone.drag-over {
             border-color: var(--red);
             background: rgba(229,9,20,0.04);
         }
-
         .upload-zone input[type="file"] {
             position: absolute;
             inset: 0;
@@ -376,29 +349,15 @@
             width: 100%;
             height: 100%;
         }
-
-        .upload-icon {
-            font-size: 28px;
-            margin-bottom: 6px;
-            display: block;
-        }
-
-        .upload-text {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        .upload-text strong {
-            color: var(--red);
-        }
+        .upload-icon { font-size: 28px; margin-bottom: 6px; display: block; }
+        .upload-text { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+        .upload-text strong { color: var(--red); }
 
         .asset-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 6px;
         }
-
         .asset-card {
             background: var(--bg-input);
             border: 1px solid var(--border);
@@ -408,18 +367,13 @@
             cursor: pointer;
             transition: border-color var(--transition);
         }
-
-        .asset-card:hover {
-            border-color: var(--border-light);
-        }
-
+        .asset-card:hover { border-color: var(--border-light); }
         .asset-card .asset-thumb {
             width: 100%;
             height: 70px;
             object-fit: cover;
             display: block;
         }
-
         .asset-card .asset-video-thumb {
             width: 100%;
             height: 70px;
@@ -429,7 +383,6 @@
             justify-content: center;
             font-size: 24px;
         }
-
         .asset-card .asset-name {
             font-size: 9px;
             color: var(--text-muted);
@@ -438,7 +391,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
         .asset-card .asset-remove {
             position: absolute;
             top: 4px;
@@ -456,37 +408,14 @@
             justify-content: center;
             opacity: 0;
             transition: opacity var(--transition);
-            line-height: 1;
         }
+        .asset-card:hover .asset-remove { opacity: 1; }
 
-        .asset-card:hover .asset-remove {
-            opacity: 1;
-        }
-
-        .upload-progress {
-            height: 3px;
-            background: var(--border);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .upload-progress-bar {
-            height: 100%;
-            background: var(--red);
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* ═══════════════════════════════════════════
-           TEMPLATES E INSPIRAÇÃO
-        ═══════════════════════════════════════════ */
         .template-grid {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .template-card {
             background: var(--bg-input);
             border: 1px solid var(--border);
@@ -498,12 +427,10 @@
             align-items: center;
             gap: 14px;
         }
-
         .template-card:hover {
             border-color: var(--red);
             background: rgba(229,9,20,0.05);
         }
-
         .tmpl-preview-box {
             width: 50px;
             height: 88px;
@@ -515,7 +442,6 @@
             border: 1px solid var(--border-light);
             pointer-events: none;
         }
-
         .tmpl-preview-box iframe {
             width: 338px;
             height: 600px;
@@ -523,67 +449,15 @@
             transform-origin: top left;
             border: none;
         }
+        .template-card .tmpl-info { flex: 1; min-width: 0; }
+        .template-card .tmpl-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .template-card .tmpl-desc { font-size: 11px; color: var(--text-muted); }
 
-        .template-card .tmpl-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .template-card .tmpl-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .template-card .tmpl-desc {
-            font-size: 11px;
-            color: var(--text-muted);
-            line-height: 1.3;
-        }
-
-        .inspire-card {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .inspire-type {
-            font-size: 9px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: rgba(59,130,246,0.15);
-            color: var(--blue);
-            width: fit-content;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .inspire-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .inspire-snippet {
-            font-size: 11px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        /* ═══════════════════════════════════════════
-           HISTÓRICO E CÓDIGO
-        ═══════════════════════════════════════════ */
         .history-list {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
-
         .history-card {
             background: var(--bg-input);
             border: 1px solid var(--border);
@@ -592,35 +466,26 @@
             cursor: pointer;
             transition: all var(--transition);
         }
-
         .history-card:hover {
             border-color: var(--border-light);
             background: var(--bg-hover);
         }
-
         .history-card.active-version {
             border-color: var(--red);
             background: rgba(229,9,20,0.05);
         }
-
         .history-card .hist-prompt {
             font-size: 12px;
             color: var(--text-main);
             margin-bottom: 4px;
             line-height: 1.4;
         }
-
         .history-card .hist-meta {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-
-        .history-card .hist-time {
-            font-size: 10px;
-            color: var(--text-dim);
-        }
-
+        .history-card .hist-time { font-size: 10px; color: var(--text-dim); }
         .hist-tag {
             font-size: 9px;
             padding: 2px 6px;
@@ -630,12 +495,11 @@
             font-weight: 500;
         }
 
-        .code-editor-wrapper {
-            position: relative;
-        }
-
+        /* ═══════════════════════════════════════════
+           CODE EDITOR & PREVIEW
+        ═══════════════════════════════════════════ */
         .code-editor {
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-family: 'SF Mono', 'Fira Code', monospace;
             font-size: 11px;
             line-height: 1.5;
             background: #0a0a0a;
@@ -646,16 +510,12 @@
             resize: vertical;
             min-height: 120px;
         }
-
         .code-actions {
             display: flex;
             gap: 6px;
             margin-top: 6px;
         }
 
-        /* ═══════════════════════════════════════════
-           MAIN CONTENT E TOOLBAR
-        ═══════════════════════════════════════════ */
         .main-content {
             flex: 1;
             display: flex;
@@ -663,7 +523,6 @@
             background: #080808;
             overflow: hidden;
         }
-
         .toolbar {
             height: 52px;
             background: var(--bg-card);
@@ -674,20 +533,8 @@
             gap: 12px;
             flex-shrink: 0;
         }
-
-        .toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-
-        .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .toolbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
         .format-indicator {
             font-size: 11px;
             color: var(--text-muted);
@@ -696,7 +543,6 @@
             border-radius: 20px;
             border: 1px solid var(--border);
         }
-
         .zoom-controls {
             display: flex;
             align-items: center;
@@ -706,7 +552,6 @@
             border-radius: var(--radius);
             padding: 2px;
         }
-
         .zoom-btn {
             background: none;
             border: none;
@@ -716,15 +561,11 @@
             font-size: 14px;
             border-radius: 6px;
             transition: all var(--transition);
-            font-family: inherit;
-            line-height: 1;
         }
-
         .zoom-btn:hover {
             color: var(--text-main);
             background: var(--bg-hover);
         }
-
         .zoom-level {
             font-size: 11px;
             color: var(--text-muted);
@@ -732,7 +573,6 @@
             text-align: center;
             font-weight: 600;
         }
-
         .token-info {
             font-size: 10px;
             color: var(--text-dim);
@@ -740,7 +580,6 @@
             padding: 4px 8px;
             border-radius: 20px;
         }
-
         .preview-container {
             flex: 1;
             display: flex;
@@ -750,12 +589,10 @@
             overflow: auto;
             position: relative;
         }
-
         .preview-wrapper {
             position: relative;
             transition: transform 0.2s ease;
         }
-
         .preview-label {
             position: absolute;
             top: -22px;
@@ -765,16 +602,13 @@
             color: var(--text-dim);
             white-space: nowrap;
         }
-
         iframe#previewFrame {
             display: block;
             border: 1px solid var(--border);
-            background: #000; /* Fundo preto padrao para não conflitar com canvas escuros */
+            background: #fff;
             box-shadow: 0 8px 40px rgba(0,0,0,0.6);
             border-radius: 2px;
-            transition: width 0.3s ease, height 0.3s ease;
         }
-
         .format-9-16  iframe { width: 338px; height: 600px; }
         .format-1-1   iframe { width: 540px; height: 540px; }
         .format-16-9  iframe { width: 720px; height: 405px; }
@@ -790,29 +624,12 @@
             color: var(--text-dim);
             pointer-events: none;
         }
-
         .empty-state.hidden { display: none; }
+        .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+        .empty-text { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+        .empty-sub { font-size: 12px; opacity: 0.6; }
 
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.4;
-        }
-
-        .empty-text {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-
-        .empty-sub {
-            font-size: 12px;
-            opacity: 0.6;
-        }
-
-        /* ═══════════════════════════════════════════
-           MODALS E TOASTS
-        ═══════════════════════════════════════════ */
+        /* Loading, Toast, Fullscreen, Status Bar */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -825,11 +642,7 @@
             flex-direction: column;
             gap: 16px;
         }
-
-        .loading-overlay.show {
-            display: flex;
-        }
-
+        .loading-overlay.show { display: flex; }
         .spinner {
             width: 44px;
             height: 44px;
@@ -838,25 +651,13 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .loading-text {
-            font-size: 14px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .loading-sub {
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-
+        .loading-text { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .loading-sub { font-size: 12px; color: var(--text-dim); }
         .loading-dots::after {
             content: '';
             animation: dots 1.5s steps(4, end) infinite;
         }
-
         @keyframes dots {
             0%   { content: ''; }
             25%  { content: '.'; }
@@ -874,7 +675,6 @@
             gap: 8px;
             pointer-events: none;
         }
-
         .toast {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -890,26 +690,21 @@
             animation: toast-in 0.3s ease;
             font-size: 13px;
         }
-
         @keyframes toast-in {
             from { opacity: 0; transform: translateX(100%); }
             to   { opacity: 1; transform: translateX(0); }
         }
-
         .toast.removing {
             animation: toast-out 0.3s ease forwards;
         }
-
         @keyframes toast-out {
             from { opacity: 1; transform: translateX(0); }
             to   { opacity: 0; transform: translateX(100%); }
         }
-
         .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
         .toast-body { flex: 1; }
         .toast-title { font-weight: 600; margin-bottom: 2px; }
         .toast-msg { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-
         .toast.success { border-left: 3px solid var(--green); }
         .toast.error   { border-left: 3px solid var(--red); }
         .toast.info    { border-left: 3px solid var(--blue); }
@@ -924,15 +719,8 @@
             align-items: center;
             justify-content: center;
         }
-
-        .fullscreen-overlay.show {
-            display: flex;
-        }
-
-        .fullscreen-overlay iframe {
-            border: none;
-        }
-
+        .fullscreen-overlay.show { display: flex; }
+        .fullscreen-overlay iframe { border: none; width: 100%; height: 100%; }
         .fullscreen-close {
             position: fixed;
             top: 16px;
@@ -947,16 +735,8 @@
             font-size: 13px;
             cursor: pointer;
             backdrop-filter: blur(8px);
-            transition: all var(--transition);
         }
 
-        .fullscreen-close:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* ═══════════════════════════════════════════
-           STATUS BAR E BOTTOM BUTTONS
-        ═══════════════════════════════════════════ */
         .status-bar {
             height: 24px;
             background: var(--bg-card);
@@ -967,7 +747,6 @@
             gap: 16px;
             flex-shrink: 0;
         }
-
         .status-item {
             display: flex;
             align-items: center;
@@ -975,14 +754,12 @@
             font-size: 10px;
             color: var(--text-dim);
         }
-
         .status-dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
             background: var(--green);
         }
-
         .status-dot.offline { background: var(--red); }
 
         .generate-btn-wrapper {
@@ -990,12 +767,10 @@
             border-top: 1px solid var(--border);
             flex-shrink: 0;
         }
-
         #generateBtn {
             position: relative;
             overflow: hidden;
         }
-
         #generateBtn .btn-shine {
             position: absolute;
             top: 0;
@@ -1006,7 +781,6 @@
             transform: skewX(-15deg);
             animation: shine 3s infinite;
         }
-
         @keyframes shine {
             0%   { left: -100%; }
             50%  { left: 150%; }
@@ -1018,7 +792,6 @@
             background: var(--border);
             margin: 4px 0;
         }
-
         .flex-row  { display: flex; align-items: center; }
         .gap-6     { gap: 6px; }
         .gap-8     { gap: 8px; }
@@ -1027,7 +800,6 @@
         .text-dim   { color: var(--text-dim); }
         .text-10    { font-size: 10px; }
         .hidden     { display: none !important; }
-
         .badge {
             font-size: 9px;
             padding: 2px 6px;
@@ -1035,6 +807,37 @@
             font-weight: 700;
             background: var(--red);
             color: #fff;
+        }
+
+        /* Inspirações */
+        .inspiration-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+        .inspiration-item:hover {
+            border-color: var(--red);
+            background: rgba(229,9,20,0.05);
+        }
+        .inspiration-type {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--red);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .inspiration-title {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .inspiration-snippet {
+            font-size: 11px;
+            color: var(--text-muted);
         }
     </style>
 </head>
@@ -1050,13 +853,12 @@
                 <span class="logo-sub">Studio IA</span>
             </div>
         </div>
-        <span class="model-badge" id="modelBadge" title="Modelo de IA sendo usado">llama 3.3</span>
+        <span class="model-badge" id="modelBadge">llama 3.3</span>
     </div>
 
     <div class="sidebar-tabs">
         <button class="tab-btn active" onclick="switchTab('generate')">✦ Gerar</button>
         <button class="tab-btn" onclick="switchTab('templates')">⬚ Templates</button>
-        <button class="tab-btn" onclick="switchTab('inspire')">💡 Inspiração</button>
         <button class="tab-btn" onclick="switchTab('history')">↺ Histórico</button>
         <button class="tab-btn" onclick="switchTab('code')">⟨/⟩ Código</button>
     </div>
@@ -1064,16 +866,18 @@
     <div class="sidebar-body">
 
         <div class="panel active" id="panel-generate">
-            
+
+            <!-- SEÇÃO DE MODO DE CRIAÇÃO -->
             <div class="section">
                 <span class="section-label">Modo de Geração</span>
                 <select id="generationModeSelect">
-                    <option value="generate">Recriar do zero usando template como base (Criativo)</option>
-                    <option value="replace">Apenas substituir textos/imagens (Rápido, exige Template)</option>
+                    <option value="generate">✨ Criação Livre (IA cria do zero)</option>
+                    <option value="replace">🔧 Substituição Exata (baseado em template)</option>
                 </select>
+                <div class="text-10 text-dim">Criação Livre: ideal para ideias novas. Substituição Exata: use um template e a IA troca textos/imagens via CHAVE_.</div>
             </div>
-            
-            <div class="divider mt-6"></div>
+
+            <div class="divider"></div>
 
             <div class="section">
                 <span class="section-label">Assets (imagens / vídeos)</span>
@@ -1103,6 +907,18 @@
 
                 <div class="asset-grid" id="assetGrid"></div>
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
+            </div>
+
+            <!-- SEÇÃO DE INSPIRAÇÕES (NOVA) -->
+            <div class="section">
+                <span class="section-label">Buscar Inspirações (Serper)</span>
+                <div class="flex-row gap-6">
+                    <input type="text" id="inspirationNiche" placeholder="Ex: moda, tecnologia, fitness, viagem" style="flex:1; font-size:12px;">
+                    <button class="btn btn-secondary" onclick="fetchInspirations()" style="padding:8px 12px;">🔍 Buscar Ideias</button>
+                </div>
+                <div id="inspirationsList" class="inspirations-list" style="margin-top: 6px; max-height: 240px; overflow-y: auto;">
+                    <div class="text-dim text-10" style="text-align:center; padding: 8px;">Busque ideias de posts para o seu nicho</div>
+                </div>
             </div>
 
             <div class="divider"></div>
@@ -1147,7 +963,7 @@
             <div class="divider"></div>
 
             <div class="section">
-                <span class="section-label">Descreva a animação</span>
+                <span class="section-label">Descreva a animação / instrução</span>
                 <textarea
                     id="promptInput"
                     rows="6"
@@ -1168,20 +984,6 @@
                 <span class="section-label">Clique para usar um template Base</span>
                 <div class="template-grid" id="templateGrid">
                     <div class="text-dim text-10" style="text-align:center; padding: 20px;">Carregando templates visuais...</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel" id="panel-inspire">
-            <div class="section">
-                <span class="section-label">Buscar Ideias de Posts (Nicho)</span>
-                <div class="flex-row gap-6">
-                    <input type="text" id="nicheInput" placeholder="Ex: dentista, moda, tecnologia..." style="margin:0; flex:1;">
-                    <button class="btn btn-secondary" onclick="searchInspiration()">Buscar</button>
-                </div>
-                <div class="divider mt-6"></div>
-                <div id="inspirationResults" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                    <div class="text-dim text-10" style="text-align:center; padding: 20px;">Digite um nicho para buscar ideias no Instagram e TikTok.</div>
                 </div>
             </div>
         </div>
@@ -1237,17 +1039,14 @@
     <div class="toolbar">
         <div class="toolbar-left">
             <span class="format-indicator" id="formatIndicator">9:16 — Reels</span>
-
             <div class="zoom-controls">
                 <button class="zoom-btn" onclick="changeZoom(-10)" title="Diminuir zoom">−</button>
                 <span class="zoom-level" id="zoomLabel">100%</span>
                 <button class="zoom-btn" onclick="changeZoom(10)" title="Aumentar zoom">+</button>
                 <button class="zoom-btn" onclick="resetZoom()" title="Resetar zoom" style="font-size:11px;">↺</button>
             </div>
-
             <span class="token-info" id="tokenInfo" style="display:none"></span>
         </div>
-
         <div class="toolbar-right">
             <button class="btn btn-ghost" onclick="openFullscreen()" title="Preview em tela cheia">⛶ Fullscreen</button>
             <button class="btn btn-secondary" style="font-size:12px; padding:8px 12px; background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);" onclick="captureImage()">📸 Baixar Foto</button>
@@ -1265,7 +1064,7 @@
         </div>
 
         <div class="preview-wrapper format-9-16" id="previewWrapper" style="display:none;">
-            <span class="preview-label" id="previewLabel">360 × 640 — 9:16</span>
+            <span class="preview-label" id="previewLabel">338 × 600 — 9:16</span>
             <iframe
                 id="previewFrame"
                 sandbox="allow-scripts allow-same-origin allow-forms"
@@ -1301,23 +1100,17 @@
 
 <div class="fullscreen-overlay" id="fullscreenOverlay">
     <button class="fullscreen-close" onclick="closeFullscreen()">✕ Fechar</button>
-    <iframe
-        id="fullscreenFrame"
-        sandbox="allow-scripts allow-same-origin allow-forms"
-        style="width:100%; height:100%; border:none;"
-        title="Preview fullscreen"
-    ></iframe>
+    <iframe id="fullscreenFrame" sandbox="allow-scripts allow-same-origin allow-forms" title="Preview fullscreen"></iframe>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
-
 
 <script>
 /* ═══════════════════════════════════════════
    ESTADO GLOBAL
 ═══════════════════════════════════════════ */
 const state = {
-    assets:        [],
+    assets:        [],          // { url, type, name }
     currentHTML:   '',
     currentVersionId: null,
     zoomLevel:     100,
@@ -1353,7 +1146,7 @@ function getHeaders(extra = {}) {
 function switchTab(name) {
     state.activeTab = name;
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['generate','templates','inspire','history','code'][i] === name);
+        b.classList.toggle('active', ['generate','templates','history','code'][i] === name);
     });
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById(`panel-${name}`).classList.add('active');
@@ -1367,7 +1160,7 @@ function switchTab(name) {
 ═══════════════════════════════════════════ */
 const uploadZone = document.getElementById('uploadZone');
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
 uploadZone.addEventListener('drop', e => {
     e.preventDefault();
     uploadZone.classList.remove('drag-over');
@@ -1471,7 +1264,6 @@ function addPixabayAsset(url) {
     document.getElementById('pixabayInput').value = '';
 }
 
-
 function renderAssetGrid() {
     const grid = document.getElementById('assetGrid');
     const clearBtn = document.getElementById('clearAssetsBtn');
@@ -1531,70 +1323,60 @@ function updateAssetStatus() {
 }
 
 /* ═══════════════════════════════════════════
-   BUSCA INSPIRAÇÃO SERPAPI
+   INSPIRAÇÕES (SERPER)
 ═══════════════════════════════════════════ */
-async function searchInspiration() {
-    const niche = document.getElementById('nicheInput').value.trim();
+async function fetchInspirations() {
+    const niche = document.getElementById('inspirationNiche').value.trim();
     if (!niche) {
-        showToast('warning', 'Atenção', 'Digite um nicho primeiro.');
+        showToast('warning', 'Atenção', 'Digite um nicho (ex: moda, tecnologia).');
         return;
     }
-
-    const resultsDiv = document.getElementById('inspirationResults');
-    resultsDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center;">Buscando referências...</div>';
-
+    const listDiv = document.getElementById('inspirationsList');
+    listDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center; padding: 8px;">Buscando ideias...</div>';
     try {
-        const res = await fetch('/api/search_inspiration', {
+        const res = await fetch('/api/inspirations', {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify({ niche })
         });
         const data = await res.json();
-
-        if (data.success) {
-            resultsDiv.innerHTML = '';
-            if (data.results.length === 0) {
-                resultsDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center;">Sem resultados encontrados para esse nicho.</div>';
-                return;
-            }
-
-            data.results.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'inspire-card';
-                card.innerHTML = `
-                    <div class="inspire-type">${item.type}</div>
-                    <div class="inspire-title">${item.title}</div>
-                    <div class="inspire-snippet">${item.snippet}</div>
-                    <button class="btn btn-secondary" style="font-size: 11px; padding: 6px; margin-top: 4px;" onclick="useInspiration(this)">💡 Usar essa ideia</button>
+        if (data.success && data.inspirations.length > 0) {
+            listDiv.innerHTML = '';
+            data.inspirations.forEach(insp => {
+                const item = document.createElement('div');
+                item.className = 'inspiration-item';
+                item.innerHTML = `
+                    <div class="inspiration-type">${insp.type}</div>
+                    <div class="inspiration-title">${escapeHtml(insp.title)}</div>
+                    <div class="inspiration-snippet">${escapeHtml(insp.snippet)}</div>
                 `;
-                card.dataset.title = item.title;
-                card.dataset.snippet = item.snippet;
-                card.dataset.type = item.type;
-                resultsDiv.appendChild(card);
+                item.addEventListener('click', () => useInspiration(insp));
+                listDiv.appendChild(item);
             });
         } else {
-            resultsDiv.innerHTML = `<div class="text-dim text-10" style="text-align:center;color:var(--red)">Erro: ${data.error}</div>`;
+            listDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center; padding: 8px;">Nenhuma ideia encontrada. Tente outro nicho.</div>';
         }
     } catch (e) {
-        resultsDiv.innerHTML = '<div class="text-dim text-10" style="text-align:center;color:var(--red)">Erro de conexão.</div>';
+        listDiv.innerHTML = '<div class="text-dim text-10" style="color:var(--red); text-align:center; padding: 8px;">Erro ao buscar inspirações.</div>';
     }
 }
 
-function useInspiration(buttonEl) {
-    const card = buttonEl.closest('.inspire-card');
-    const title = card.dataset.title;
-    const snippet = card.dataset.snippet;
-    const type = card.dataset.type;
-
-    const promptInput = document.getElementById('promptInput');
-    let format = type === 'Reels' ? 'vídeo curto animado' : 'carrossel de fotos (estático, sem autoplay)';
-
-    const textToInsert = `Crie um ${format} inspirado nesta ideia:\nTítulo: ${title}\nContexto: ${snippet}\n\n`;
-    
-    promptInput.value = textToInsert + promptInput.value;
+function useInspiration(insp) {
+    const promptText = `Inspiração: ${insp.title}\n${insp.snippet}\n\nCrie uma animação ${insp.type.toLowerCase()} para o nicho ${document.getElementById('inspirationNiche').value} seguindo essas ideias.`;
+    document.getElementById('promptInput').value = promptText;
     updateCharCounter();
     switchTab('generate');
-    showToast('success', 'Ideia adicionada!', 'Edite o prompt se necessário e clique em Gerar.');
+    showToast('info', 'Inspiração aplicada', 'O prompt foi preenchido. Agora clique em Gerar.');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 /* ═══════════════════════════════════════════
@@ -1616,7 +1398,7 @@ function handlePromptKeydown(e) {
 }
 
 /* ═══════════════════════════════════════════
-   GERAÇÃO DE CÓDIGO
+   GERAÇÃO DE CÓDIGO (COM MODO)
 ═══════════════════════════════════════════ */
 async function generateCode() {
     const prompt = document.getElementById('promptInput').value.trim();
@@ -1626,19 +1408,25 @@ async function generateCode() {
     }
     if (state.isGenerating) return;
 
+    const generationMode = document.getElementById('generationModeSelect').value; // 'generate' ou 'replace'
+    if (generationMode === 'replace' && !state.currentHTML) {
+        showToast('warning', 'Atenção', 'Modo "Substituição Exata" requer um template base. Carregue um template antes ou mude o modo.');
+        return;
+    }
+
     state.isGenerating = true;
-    setLoading(true, 'Gerando sua animação', 'O modelo de IA está processando...');
+    setLoading(true, 'Gerando sua animação', 'O modelo de IA está criando o HTML...');
     document.getElementById('generateBtn').disabled = true;
     setStatus('Gerando...', false);
 
     const payload = {
-        prompt:          prompt,
-        assets:          state.assets.map(a => a.url),
-        previous_code:   state.currentHTML || null,
-        style_preset:    document.getElementById('styleSelect').value,
-        format_ratio:    document.getElementById('formatSelect').value,
-        ai_engine:       document.getElementById('aiEngineSelect').value,
-        generation_mode: document.getElementById('generationModeSelect').value,
+        prompt:        prompt,
+        assets:        state.assets.map(a => a.url),
+        previous_code: state.currentHTML || null,
+        style_preset:  document.getElementById('styleSelect').value,
+        format_ratio:  document.getElementById('formatSelect').value,
+        ai_engine:     document.getElementById('aiEngineSelect').value,
+        generation_mode: generationMode,   // NOVO
     };
 
     try {
@@ -1686,7 +1474,7 @@ async function generateCode() {
 }
 
 /* ═══════════════════════════════════════════
-   PREVIEW E FULLSCREEN
+   PREVIEW, ZOOM, FULLSCREEN
 ═══════════════════════════════════════════ */
 const FORMAT_DIMENSIONS = {
     '9:16':  { w: 338,  h: 600,  label: '338 × 600 — 9:16' },
@@ -1694,7 +1482,6 @@ const FORMAT_DIMENSIONS = {
     '16:9':  { w: 720,  h: 405,  label: '720 × 405 — 16:9' },
     '4:5':   { w: 432,  h: 540,  label: '432 × 540 — 4:5'  },
 };
-
 const FORMAT_LABELS = {
     '9:16':  '9:16 — Reels / Stories / TikTok',
     '1:1':   '1:1 — Feed Instagram / LinkedIn',
@@ -1769,17 +1556,15 @@ document.addEventListener('keydown', e => {
 });
 
 /* ═══════════════════════════════════════════
-   CÓDIGO EDITOR E TEMPLATES
+   CÓDIGO EDITOR
 ═══════════════════════════════════════════ */
 let codeEditorTimer = null;
-
 function onCodeEditorChange() {
     clearTimeout(codeEditorTimer);
     codeEditorTimer = setTimeout(() => {
         state.currentHTML = document.getElementById('codeEditor').value;
     }, 300);
 }
-
 function applyCodeEditorChanges() {
     state.currentHTML = document.getElementById('codeEditor').value;
     if (!state.currentHTML) {
@@ -1790,7 +1575,6 @@ function applyCodeEditorChanges() {
     showPreview();
     showToast('info', 'Código aplicado', 'Preview atualizado com o código do editor.');
 }
-
 async function copyCode() {
     if (!state.currentHTML) {
         showToast('warning', 'Atenção', 'Nenhum código para copiar.');
@@ -1800,27 +1584,25 @@ async function copyCode() {
         await navigator.clipboard.writeText(state.currentHTML);
         showToast('success', 'Copiado!', 'Código HTML copiado para a área de transferência.');
     } catch (e) {
-        showToast('error', 'Erro', 'Não foi possível copiar. Use Ctrl+A no editor.');
+        showToast('error', 'Erro', 'Não foi possível copiar.');
     }
 }
 
+/* ═══════════════════════════════════════════
+   TEMPLATES
+═══════════════════════════════════════════ */
 let templatesLoaded = false;
-
 async function loadTemplates() {
     if (templatesLoaded) return;
-
     try {
         const res  = await fetch('/api/templates');
         const data = await res.json();
-
         const grid = document.getElementById('templateGrid');
         grid.innerHTML = '';
-
         if (data.success && data.templates.length > 0) {
             data.templates.forEach(tmpl => {
                 const card = document.createElement('div');
                 card.className = 'template-card';
-
                 card.innerHTML = `
                     <div class="tmpl-preview-box">
                         <iframe src="${tmpl.url}" scrolling="no"></iframe>
@@ -1835,26 +1617,20 @@ async function loadTemplates() {
             });
             templatesLoaded = true;
         } else {
-            grid.innerHTML = '<div class="text-dim text-10" style="text-align:center;padding:20px;">Nenhum template disponível. Salve arquivos .html na pasta html_templates.</div>';
+            grid.innerHTML = '<div class="text-dim text-10" style="text-align:center;padding:20px;">Nenhum template disponível.</div>';
         }
     } catch (e) {
-        document.getElementById('templateGrid').innerHTML =
-            '<div class="text-dim text-10" style="text-align:center;padding:20px;">Erro ao carregar templates.</div>';
+        document.getElementById('templateGrid').innerHTML = '<div class="text-dim text-10" style="text-align:center;padding:20px;">Erro ao carregar templates.</div>';
     }
 }
-
 function useTemplate(tmpl) {
     if(!tmpl.html) return;
-
     document.getElementById('promptInput').value = tmpl.prompt;
     if (tmpl.style) document.getElementById('styleSelect').value = tmpl.style;
-    
     state.currentHTML = tmpl.html;
     document.getElementById('codeEditor').value = tmpl.html;
-    
     renderIframe(tmpl.html);
     showPreview();
-
     updateCharCounter();
     switchTab('generate');
     showToast('info', 'Template Carregado', tmpl.name + ' — Descreva o que deseja mudar e clique em gerar!');
@@ -1869,49 +1645,40 @@ async function loadHistory() {
         const data = await res.json();
         renderHistory(data.history || []);
     } catch (e) {
-        document.getElementById('historyList').innerHTML =
-            '<div class="text-dim text-10" style="text-align:center;padding:20px;">Erro ao carregar histórico.</div>';
+        document.getElementById('historyList').innerHTML = '<div class="text-dim text-10" style="text-align:center;padding:20px;">Erro ao carregar histórico.</div>';
     }
 }
-
 function renderHistory(history) {
     const list = document.getElementById('historyList');
     list.innerHTML = '';
-
     if (!history || history.length === 0) {
-        list.innerHTML = `
-            <div class="text-dim text-10" style="text-align:center;padding:20px;">
-                Nenhuma versão gerada ainda.<br>Gere uma animação para ver o histórico.
-            </div>`;
+        list.innerHTML = `<div class="text-dim text-10" style="text-align:center;padding:20px;">Nenhuma versão gerada ainda.<br>Gere uma animação para ver o histórico.</div>`;
         return;
     }
-
     history.forEach(v => {
         const card = document.createElement('div');
         card.className = 'history-card' + (v.id === state.currentVersionId ? ' active-version' : '');
         const date = new Date(v.timestamp * 1000);
         const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-
         card.innerHTML = `
             <div class="hist-prompt">${v.prompt}</div>
             <div class="hist-meta">
                 <span class="hist-time">${dateStr} ${timeStr}</span>
                 ${v.style ? `<span class="hist-tag">${v.style}</span>` : ''}
                 ${v.format ? `<span class="hist-tag">${v.format}</span>` : ''}
+                ${v.mode ? `<span class="hist-tag">${v.mode === 'replace' ? 'Replace' : 'Generate'}</span>` : ''}
             </div>
         `;
         card.addEventListener('click', () => restoreVersion(v.id));
         list.appendChild(card);
     });
 }
-
 async function restoreVersion(versionId) {
     setStatus('Carregando versão...', false);
     try {
         const res  = await fetch(`/api/history/${versionId}`, { headers: getHeaders() });
         const data = await res.json();
-
         if (data.success) {
             const v = data.version;
             state.currentHTML      = v.html;
@@ -1934,7 +1701,6 @@ async function restoreVersion(versionId) {
         showToast('error', 'Erro de conexão', 'Não foi possível restaurar a versão.');
     }
 }
-
 async function clearHistory() {
     if (!confirm('Deseja limpar todo o histórico de versões desta sessão?')) return;
     try {
@@ -1947,7 +1713,7 @@ async function clearHistory() {
 }
 
 /* ═══════════════════════════════════════════
-   MÍDIAS DOWNLOADS (HTML, FOTO, VIDEO)
+   DOWNLOAD, CAPTURA, GRAVAÇÃO
 ═══════════════════════════════════════════ */
 function downloadHTML() {
     if (!state.currentHTML) {
@@ -1969,36 +1735,30 @@ async function captureImage() {
         showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
         return;
     }
-    
     const iframe = document.getElementById('previewFrame');
     const doc = iframe.contentDocument || iframe.contentWindow.document;
-    
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
         const script = doc.createElement('script');
         script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
         doc.head.appendChild(script);
-        
         await new Promise(resolve => {
             script.onload = resolve;
-            setTimeout(resolve, 2000); 
+            setTimeout(resolve, 2000);
         });
     }
-    
     showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
-    
     try {
         const canvas = await iframe.contentWindow.html2canvas(doc.body, {
             useCORS: true,
             allowTaint: true,
             backgroundColor: null
         });
-        
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso. Pode pular pra próxima cena e baixar a próxima.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso.');
     } catch (e) {
         showToast('error', 'Erro', 'Não foi possível capturar a imagem.');
     }
@@ -2013,18 +1773,15 @@ async function recordScreen() {
         showToast('warning', 'Atenção', 'Gere uma animação antes de gravar.');
         return;
     }
-
     if (isRecording) {
         mediaRecorder.stop();
         return;
     }
-
     try {
         const stream = await navigator.mediaDevices.getDisplayMedia({
             video: { preferCurrentTab: true, frameRate: 30 },
             audio: false,
         });
-
         try {
             if (window.CropTarget) {
                 const iframe = document.getElementById('previewFrame');
@@ -2033,23 +1790,14 @@ async function recordScreen() {
                 await videoTrack.cropTo(target);
                 showToast('info', 'Área Isolada', 'A gravação será focada apenas na animação.');
             } else {
-                showToast('warning', 'Aviso', 'Navegador sem suporte para recorte automático. Selecione a área correta manualmente.');
+                showToast('warning', 'Aviso', 'Navegador sem suporte para recorte automático.');
             }
-        } catch (cropErr) {
-            console.warn('Erro ao aplicar CropTarget:', cropErr);
-        }
+        } catch (cropErr) { console.warn(cropErr); }
 
         recordedChunks = [];
-        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-            ? 'video/webm;codecs=vp9'
-            : 'video/webm';
-
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
         mediaRecorder = new MediaRecorder(stream, { mimeType });
-
-        mediaRecorder.ondataavailable = e => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
             const blob = new Blob(recordedChunks, { type: 'video/webm' });
             const url  = URL.createObjectURL(blob);
@@ -2063,29 +1811,19 @@ async function recordScreen() {
             document.querySelector('.btn-green').textContent = '⏺ Gravar Vídeo';
             showToast('success', 'Vídeo salvo!', 'Arquivo .webm baixado com sucesso.');
         };
-
         mediaRecorder.start(100);
         isRecording = true;
         document.querySelector('.btn-green').textContent = '⏹ Parar Gravação';
         showToast('info', 'Gravação iniciada', 'Clique em "Parar Gravação" quando finalizar.');
-
     } catch (err) {
-        if (err.name !== 'NotAllowedError') {
-            showToast('error', 'Erro na gravação', String(err));
-        }
+        if (err.name !== 'NotAllowedError') showToast('error', 'Erro na gravação', String(err));
     }
 }
 
 /* ═══════════════════════════════════════════
-   TOAST E STATUS
+   TOAST, STATUS, LOADING
 ═══════════════════════════════════════════ */
-const TOAST_ICONS = {
-    success: '✓',
-    error:   '✕',
-    info:    'ℹ',
-    warning: '⚠',
-};
-
+const TOAST_ICONS = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
 function showToast(type, title, message, duration = 4000) {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -2098,7 +1836,6 @@ function showToast(type, title, message, duration = 4000) {
         </div>
     `;
     container.appendChild(toast);
-
     setTimeout(() => {
         toast.classList.add('removing');
         toast.addEventListener('animationend', () => toast.remove());
@@ -2122,18 +1859,12 @@ function setLoading(show, title = '', sub = '') {
 async function init() {
     updatePreviewFormat();
     updateCharCounter();
-
     try {
         const res  = await fetch('/api/status');
         const data = await res.json();
-        if (data.success) {
-            const badge = document.getElementById('modelBadge');
-            badge.textContent = 'IA Pronta ✓';
-        }
-    } catch (e) {
-    }
+        if (data.success) document.getElementById('modelBadge').textContent = 'IA Pronta ✓';
+    } catch(e) {}
 }
-
 init();
 </script>
 </body>
