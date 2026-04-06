@@ -4,6 +4,7 @@ import uuid
 import json
 import requests
 import urllib.parse
+import re
 from flask import Flask, request, jsonify, render_template, send_from_directory, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -37,7 +38,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
-SERPER_API_KEY = os.environ.get("SERPER_API_KEY")          # NOVA CHAVE
+SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 
 BEST_FREE_MODEL = "llama-3.3-70b-versatile"
 
@@ -315,7 +316,12 @@ Regras de processamento
                     "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}
                 }
                 res = requests.post(url, json=payload).json()
-                generated_json_str = res['candidates'][0]['content']['parts'][0]['text']
+                try:
+                    if 'error' in res:
+                        raise Exception(f"Gemini Error: {res['error']['message']}")
+                    generated_json_str = res['candidates'][0]['content']['parts'][0]['text']
+                except (KeyError, IndexError):
+                    raise Exception(f"Erro na resposta do Gemini: {res}")
 
             elif ai_engine == 'openrouter':
                 if not OPENROUTER_API_KEY:
@@ -333,8 +339,13 @@ Regras de processamento
                     "temperature": 0.1
                 }
                 res = requests.post(url, headers=headers, json=payload).json()
-                generated_json_str = res['choices'][0]['message']['content']
-                tokens_used = res.get('usage', {}).get('total_tokens', 0)
+                try:
+                    if 'error' in res:
+                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
+                    generated_json_str = res['choices'][0]['message']['content']
+                    tokens_used = res.get('usage', {}).get('total_tokens', 0)
+                except (KeyError, IndexError):
+                    raise Exception(f"Erro na resposta do OpenRouter: {res}")
 
             else:  # groq
                 if not groq_client:
@@ -352,7 +363,21 @@ Regras de processamento
                 generated_json_str = response.choices[0].message.content
                 tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
 
-            substituicoes = json.loads(generated_json_str.strip())
+            # Limpeza rigorosa para evitar falha de parse JSON
+            generated_json_str = generated_json_str.strip()
+            if generated_json_str.startswith("```json"):
+                generated_json_str = generated_json_str[7:]
+            elif generated_json_str.startswith("```"):
+                generated_json_str = generated_json_str[3:]
+            if generated_json_str.endswith("```"):
+                generated_json_str = generated_json_str[:-3]
+            generated_json_str = generated_json_str.strip()
+
+            try:
+                substituicoes = json.loads(generated_json_str)
+            except json.JSONDecodeError as e:
+                raise Exception(f"A IA não retornou um JSON válido. Erro: {str(e)} Retorno: {generated_json_str[:100]}")
+
             html_final = previous_code
             for chave, valor in substituicoes.items():
                 html_final = html_final.replace(str(chave), str(valor))
@@ -493,7 +518,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not GEMINI_API_KEY:
                     return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
                 
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+                url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){GEMINI_API_KEY}"
                 payload = {
                     "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
                     "contents": [{"parts": [{"text": user_content_generate}]}],
@@ -511,7 +536,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not OPENROUTER_API_KEY:
                     return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
                 
-                url = "https://openrouter.ai/api/v1/chat/completions"
+                url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
                     "model": "google/gemini-2.0-flash-001",
