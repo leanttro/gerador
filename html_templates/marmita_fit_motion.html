@@ -200,16 +200,6 @@
             z-index: 10;
         }
 
-        .price-tag {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--cor-destaque);
-            opacity: 0;
-            
-            /* Rota da IA: Animação de entrada rápida */
-            animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards;
-        }
-
         .cta-text {
             color: var(--cor-destaque-secundaria);
             font-weight: 300;
@@ -306,7 +296,6 @@
 
         <footer class="template-footer" id="footer-container">
             <span class="cta-text" id="cta-footer-text">Peça pelo WhatsApp</span>
-            <div class="price-tag" id="price-tag-value">{{PRECO}}</div>
         </footer>
 
     </div>
@@ -345,9 +334,6 @@
             
             // Macros Info
             document.getElementById('macros-info-tags').innerText = data.macros_info_string || "420 kcal | P: 35g | C: 45g | G: 10g";
-            
-            // Preço
-            document.getElementById('price-tag-value').innerText = data.product_price || "R$ 29,90";
         }
 
         // --- EXEMPLO DE USO AUTOMÁTICO PARA TESTE ---
@@ -359,8 +345,7 @@
             product_video_url: "", // MUDAR VÍDEO (Ex: https://seusite.com/assets/salmao-loop.mp4)
             product_name: "Salmão Grelhado no Limão", // MUDAR TÍTULO
             product_description: "Filé de salmão com aspargos assados, cenouras baby caramelizadas e quinoa real.", // MUDAR LISTA
-            macros_info_string: "480 kcal | P: 40g | C: 30g | G: 20g", // MUDAR MACROS
-            product_price: "R$ 49,90" // MUDAR PREÇO
+            macros_info_string: "480 kcal | P: 40g | C: 30g | G: 20g" // MUDAR MACROS
         };
 
         // Chame a função após o carregamento para testar os placeholders
