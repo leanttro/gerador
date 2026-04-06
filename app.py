@@ -285,43 +285,41 @@ MISSÃO ABSOLUTA
 Gerar um arquivo HTML 100% autocontido (CSS + JS embutidos), criando uma animação cinematográfica de altíssimo nível, digna de uma agência top de mercado. O código deve criar um motor de renderização fluído na própria página.
 
 ═══════════════════════════════════════════
-ESPECIFICAÇÕES DE FORMATO
+ESPECIFICAÇÕES DE FORMATO E ESTRUTURA
 ═══════════════════════════════════════════
 {format_guide}
-O container principal deve usar: width: 100%; height: 100%; overflow: hidden; sem scrollbar.
+O container principal deve usar: width: 100%; height: 100%; overflow: hidden; position: relative.
 
 ═══════════════════════════════════════════
-IDENTIDADE VISUAL
+IDENTIDADE VISUAL E CORES
 ═══════════════════════════════════════════
 {style_guide}
-Use variáveis CSS (:root) para todas as cores e tamanhos. Crie uma paleta coesa com pelo menos 5 variáveis de cor.
+Use variáveis CSS (:root) para todas as cores e tamanhos. Crie uma paleta coesa com pelo menos 5 variáveis de cor. Use cores claras ou brancas para os textos principais para garantir legibilidade.
 
 ═══════════════════════════════════════════
 REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
 ═══════════════════════════════════════════
-1. MOTOR DE CENAS: Use um sistema de Cenas (divs com class="scene") que aparecem e desaparecem. Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none para transições de cena.
-2. TIMING (JS): Use um script JS no final com requestAnimationFrame, setTimeout ou Promises para controlar o tempo exato de entrada e saída de cada cena, criando um fluxo narrativo perfeito e sincronizado.
-3. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: `max-width: 100%; max-height: 100%; object-fit: contain;` para NUNCA serem cortadas ou distorcidas.
-4. EFEITOS CANVAS (Obrigatório): Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 <canvas> (ex: brilhos, pétalas, poeira, estrelas, formas flutuantes).
-5. TIPOGRAFIA CINEMATOGRÁFICA: Importe fontes elegantes do Google Fonts (ex: Cormorant Garamond, DM Sans, Inter, Playfair Display) e use tamanhos responsivos dinâmicos com clamp() (ex: clamp(2rem, 5vw, 5rem)).
-6. TRANSIÇÕES SUAVES: Crie transições (ease-in-out ou cubic-bezier) longas e suaves de pelo menos 1.2 segundos entre os elementos e camadas.
-7. PROFUNDIDADE E LAYERS: Use box-shadow, text-shadow, drop-shadow (em SVGs ou PNGs), e backdrop-filter: blur() para criar camadas ricas e texturas sofisticadas. 
-8. CARROSSEL / POST ESTÁTICO (CRÍTICO): Se o usuário pedir um carrossel de fotos para postar, ou uma imagem estática, NUNCA USE auto-play rápido. Crie botões visíveis de navegação (Próximo/Anterior) ou permita troca de cena por clique, para que o usuário possa tirar print de cada tela com calma. Pare o temporizador automático!
+1. Z-INDEX CRÍTICO (FALHA FATAL SE IGNORAR): O <canvas> de fundo DEVE ter position: absolute, top: 0, left: 0 e z-index: 0. O container das cenas e textos DEVE ter position: relative e z-index: 10 para que NUNCA fique escondido atrás do canvas.
+2. VISIBILIDADE INICIAL OBRIGATÓRIA: A primeira cena (class="scene") DEVE estar visível imediatamente no carregamento. Defina opacity: 1 e z-index: 20 no CSS para a classe ativa. NUNCA deixe a tela preta inicial.
+3. MOTOR DE CENAS: Use divs com class="scene". Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none.
+4. TIMING (JS): Inicie o loop de animação imediatamente no evento DOMContentLoaded.
+5. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: max-width: 100%; max-height: 100%; object-fit: contain.
+6. EFEITOS CANVAS: Adicione um efeito dinâmico no fundo usando HTML5 <canvas> (ex: poeira cósmica, partículas, malha digital).
+7. TIPOGRAFIA CINEMATOGRÁFICA: Importe fontes elegantes do Google Fonts. Use sombras nos textos (text-shadow) para destacar do fundo.
+8. CARROSSEL / POST ESTÁTICO: Se o usuário pedir um carrossel ou imagem estática, NUNCA USE auto-play rápido. Crie botões de navegação e permita troca por clique. Pare o temporizador automático!
 
 ═══════════════════════════════════════════
 REGRAS DE CONTEÚDO E ASSETS
 ═══════════════════════════════════════════
-- NUNCA use "Lorem ipsum" — crie conteúdo coerente e persuasivo com a instrução.
+- NUNCA use Lorem ipsum — crie conteúdo persuasivo com a instrução.
 - NUNCA deixe regiões vazias sem intenção visual.
-- SEMPRE crie hierarquia visual (hero element, suporte, background animado).
-- Se houver assets do usuário (logos, fotos, vídeos): ELES SÃO O ELEMENTO CENTRAL DO DESIGN.
-- Aplique as imagens/logos do usuário com destaque absoluto, centralizado ou no topo das cenas aplicáveis. NUNCA distorça essas imagens.
-- Vídeos do usuário: use <video autoplay muted loop playsinline style="object-fit: contain; max-width: 100%; max-height: 100%;">.
+- Se houver assets do usuário, eles são O ELEMENTO CENTRAL DO DESIGN.
+- Aplique as imagens/logos do usuário com destaque absoluto.
 
 ═══════════════════════════════════════════
 SAÍDA ESPERADA
 ═══════════════════════════════════════════
-Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZERO texto antes ou depois do código. ZERO explicações. Comece com <!DOCTYPE html> e termine com </html>'''
+Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZERO texto antes ou depois do código. Comece com <!DOCTYPE html> e termine com </html>'''
 
         user_content = f'INSTRUÇÃO CRIATIVA: {prompt}\n\n'
         if assets:
