@@ -839,6 +839,54 @@
             font-size: 11px;
             color: var(--text-muted);
         }
+
+        /* ═════════ NOVO: OVERLAY DE SELEÇÃO DE REGIÃO PARA GRAVAÇÃO ═════════ */
+        .region-select-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            cursor: crosshair;
+            backdrop-filter: blur(2px);
+        }
+        .region-select-overlay.active {
+            display: block;
+        }
+        .region-selection-rect {
+            position: absolute;
+            border: 2px solid var(--red);
+            background: rgba(229, 9, 20, 0.2);
+            pointer-events: none;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+            transition: none;
+        }
+        .region-select-cancel {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 32px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            z-index: 10001;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+        .region-select-cancel:hover {
+            background: var(--red);
+            border-color: var(--red);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -1051,7 +1099,7 @@
             <button class="btn btn-ghost" onclick="openFullscreen()" title="Preview em tela cheia">⛶ Fullscreen</button>
             <button class="btn btn-secondary" style="font-size:12px; padding:8px 12px; background-color: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);" onclick="captureImage()">📸 Baixar Foto</button>
             <button class="btn btn-secondary" style="font-size:12px; padding:8px 12px;" onclick="downloadHTML()">⬇ Baixar HTML</button>
-            <button class="btn btn-green" style="font-size:12px; padding:8px 12px;" onclick="recordScreen()">⏺ Gravar Vídeo</button>
+            <button class="btn btn-green" style="font-size:12px; padding:8px 12px;" id="recordBtn" onclick="startRegionSelection()">⏺ Gravar Vídeo (selecionar área)</button>
         </div>
     </div>
 
@@ -1104,6 +1152,12 @@
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- OVERLAY DE SELEÇÃO DE REGIÃO -->
+<div id="regionSelectOverlay" class="region-select-overlay">
+    <div id="regionSelectionRect" class="region-selection-rect"></div>
+    <button id="regionCancelBtn" class="region-select-cancel">✕ Cancelar seleção (ESC)</button>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════
@@ -1426,7 +1480,7 @@ async function generateCode() {
         style_preset:  document.getElementById('styleSelect').value,
         format_ratio:  document.getElementById('formatSelect').value,
         ai_engine:     document.getElementById('aiEngineSelect').value,
-        generation_mode: generationMode,   // NOVO
+        generation_mode: generationMode,
     };
 
     try {
@@ -1713,7 +1767,7 @@ async function clearHistory() {
 }
 
 /* ═══════════════════════════════════════════
-   DOWNLOAD, CAPTURA, GRAVAÇÃO
+   DOWNLOAD, CAPTURA, GRAVAÇÃO COM SELEÇÃO DE ÁREA
 ═══════════════════════════════════════════ */
 function downloadHTML() {
     if (!state.currentHTML) {
@@ -1764,61 +1818,191 @@ async function captureImage() {
     }
 }
 
-let mediaRecorder = null;
-let recordedChunks = [];
-let isRecording   = false;
+// ---------- NOVO SISTEMA DE GRAVAÇÃO COM SELEÇÃO DE ÁREA ----------
+let mediaRecorderRegion = null;
+let recordedChunksRegion = [];
+let isRecordingRegion = false;
+let currentRegionRect = null; // { x, y, width, height }
+let selectionActive = false;
+let selectionStartPoint = null;
+let selectionRectDiv = null;
+let selectionOverlay = null;
 
-async function recordScreen() {
-    if (!state.currentHTML) {
-        showToast('warning', 'Atenção', 'Gere uma animação antes de gravar.');
+function startRegionSelection() {
+    if (isRecordingRegion) {
+        // Se já está gravando, para a gravação
+        if (mediaRecorderRegion && mediaRecorderRegion.state === 'recording') {
+            mediaRecorderRegion.stop();
+        }
         return;
     }
-    if (isRecording) {
-        mediaRecorder.stop();
+    // Ativar overlay de seleção
+    selectionOverlay = document.getElementById('regionSelectOverlay');
+    selectionRectDiv = document.getElementById('regionSelectionRect');
+    selectionOverlay.classList.add('active');
+    selectionActive = true;
+    selectionStartPoint = null;
+    selectionRectDiv.style.display = 'none';
+    
+    // Adicionar eventos
+    selectionOverlay.addEventListener('mousedown', onRegionMouseDown);
+    selectionOverlay.addEventListener('mousemove', onRegionMouseMove);
+    selectionOverlay.addEventListener('mouseup', onRegionMouseUp);
+    document.addEventListener('keydown', onRegionKeyDown);
+    
+    showToast('info', 'Selecione a área', 'Clique e arraste para definir a região que deseja gravar. Pressione ESC para cancelar.');
+}
+
+function onRegionKeyDown(e) {
+    if (e.key === 'Escape' && selectionActive) {
+        cancelRegionSelection();
+    }
+}
+
+function onRegionMouseDown(e) {
+    if (!selectionActive) return;
+    selectionStartPoint = { x: e.clientX, y: e.clientY };
+    selectionRectDiv.style.display = 'block';
+    selectionRectDiv.style.left = selectionStartPoint.x + 'px';
+    selectionRectDiv.style.top = selectionStartPoint.y + 'px';
+    selectionRectDiv.style.width = '0px';
+    selectionRectDiv.style.height = '0px';
+    e.preventDefault();
+}
+
+function onRegionMouseMove(e) {
+    if (!selectionActive || !selectionStartPoint) return;
+    const left = Math.min(selectionStartPoint.x, e.clientX);
+    const top = Math.min(selectionStartPoint.y, e.clientY);
+    const width = Math.abs(e.clientX - selectionStartPoint.x);
+    const height = Math.abs(e.clientY - selectionStartPoint.y);
+    selectionRectDiv.style.left = left + 'px';
+    selectionRectDiv.style.top = top + 'px';
+    selectionRectDiv.style.width = width + 'px';
+    selectionRectDiv.style.height = height + 'px';
+}
+
+function onRegionMouseUp(e) {
+    if (!selectionActive || !selectionStartPoint) {
+        cancelRegionSelection();
+        return;
+    }
+    const finalRect = {
+        x: Math.min(selectionStartPoint.x, e.clientX),
+        y: Math.min(selectionStartPoint.y, e.clientY),
+        width: Math.abs(e.clientX - selectionStartPoint.x),
+        height: Math.abs(e.clientY - selectionStartPoint.y)
+    };
+    if (finalRect.width < 10 || finalRect.height < 10) {
+        showToast('warning', 'Área muito pequena', 'Selecione uma região maior (mínimo 10x10 pixels).');
+        cancelRegionSelection();
+        return;
+    }
+    currentRegionRect = finalRect;
+    cancelRegionSelectionUI(); // remove overlay mas mantém a região
+    startRecordingWithRegion();
+}
+
+function cancelRegionSelection() {
+    cancelRegionSelectionUI();
+    showToast('info', 'Seleção cancelada', 'Você pode tentar novamente.');
+}
+
+function cancelRegionSelectionUI() {
+    if (selectionOverlay) selectionOverlay.classList.remove('active');
+    selectionActive = false;
+    selectionStartPoint = null;
+    if (selectionOverlay) {
+        selectionOverlay.removeEventListener('mousedown', onRegionMouseDown);
+        selectionOverlay.removeEventListener('mousemove', onRegionMouseMove);
+        selectionOverlay.removeEventListener('mouseup', onRegionMouseUp);
+    }
+    document.removeEventListener('keydown', onRegionKeyDown);
+}
+
+async function startRecordingWithRegion() {
+    if (!currentRegionRect) {
+        showToast('error', 'Erro', 'Nenhuma região selecionada.');
         return;
     }
     try {
         const stream = await navigator.mediaDevices.getDisplayMedia({
-            video: { preferCurrentTab: true, frameRate: 30 },
+            video: true,
             audio: false,
         });
-        try {
-            if (window.CropTarget) {
-                const iframe = document.getElementById('previewFrame');
-                const target = await window.CropTarget.fromElement(iframe);
-                const [videoTrack] = stream.getVideoTracks();
-                await videoTrack.cropTo(target);
-                showToast('info', 'Área Isolada', 'A gravação será focada apenas na animação.');
-            } else {
-                showToast('warning', 'Aviso', 'Navegador sem suporte para recorte automático.');
-            }
-        } catch (cropErr) { console.warn(cropErr); }
-
-        recordedChunks = [];
+        const videoTrack = stream.getVideoTracks()[0];
+        const settings = videoTrack.getSettings();
+        const deviceWidth = settings.width || window.screen.width;
+        const deviceHeight = settings.height || window.screen.height;
+        
+        // Criar canvas para recortar a região
+        const canvas = document.createElement('canvas');
+        canvas.width = currentRegionRect.width;
+        canvas.height = currentRegionRect.height;
+        const ctx = canvas.getContext('2d');
+        const videoElement = document.createElement('video');
+        videoElement.srcObject = stream;
+        videoElement.play();
+        
+        // Aguardar o vídeo estar pronto
+        await new Promise(resolve => { videoElement.onloadedmetadata = resolve; });
+        
+        // Capturar frames e desenhar apenas a região
+        let animationId;
+        const processFrame = () => {
+            if (!isRecordingRegion) return;
+            ctx.drawImage(
+                videoElement,
+                currentRegionRect.x, currentRegionRect.y, currentRegionRect.width, currentRegionRect.height,
+                0, 0, currentRegionRect.width, currentRegionRect.height
+            );
+            animationId = requestAnimationFrame(processFrame);
+        };
+        
+        const canvasStream = canvas.captureStream(30);
+        recordedChunksRegion = [];
         const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
-        mediaRecorder = new MediaRecorder(stream, { mimeType });
-        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url  = URL.createObjectURL(blob);
-            const a    = document.createElement('a');
+        mediaRecorderRegion = new MediaRecorder(canvasStream, { mimeType });
+        mediaRecorderRegion.ondataavailable = e => { if (e.data.size > 0) recordedChunksRegion.push(e.data); };
+        mediaRecorderRegion.onstop = () => {
+            cancelAnimationFrame(animationId);
+            videoElement.pause();
+            videoElement.srcObject = null;
+            stream.getTracks().forEach(t => t.stop());
+            const blob = new Blob(recordedChunksRegion, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
             a.href = url;
-            a.download = `motordark_video_${Date.now()}.webm`;
+            a.download = `motordark_recording_${Date.now()}.webm`;
             a.click();
             URL.revokeObjectURL(url);
-            stream.getTracks().forEach(t => t.stop());
-            isRecording = false;
-            document.querySelector('.btn-green').textContent = '⏺ Gravar Vídeo';
-            showToast('success', 'Vídeo salvo!', 'Arquivo .webm baixado com sucesso.');
+            isRecordingRegion = false;
+            const recordBtn = document.getElementById('recordBtn');
+            recordBtn.textContent = '⏺ Gravar Vídeo (selecionar área)';
+            recordBtn.classList.remove('btn-green');
+            recordBtn.classList.add('btn-green');
+            showToast('success', 'Gravação finalizada', 'Vídeo salvo com sucesso!');
+            currentRegionRect = null;
         };
-        mediaRecorder.start(100);
-        isRecording = true;
-        document.querySelector('.btn-green').textContent = '⏹ Parar Gravação';
-        showToast('info', 'Gravação iniciada', 'Clique em "Parar Gravação" quando finalizar.');
+        mediaRecorderRegion.start(100);
+        isRecordingRegion = true;
+        processFrame();
+        const recordBtn = document.getElementById('recordBtn');
+        recordBtn.textContent = '⏹ Parar Gravação';
+        recordBtn.classList.remove('btn-green');
+        recordBtn.classList.add('btn-green');
+        showToast('success', 'Gravando apenas a área selecionada', 'Clique novamente no botão para parar.');
     } catch (err) {
-        if (err.name !== 'NotAllowedError') showToast('error', 'Erro na gravação', String(err));
+        if (err.name !== 'NotAllowedError') {
+            showToast('error', 'Erro na gravação', err.message);
+        }
+        currentRegionRect = null;
+        cancelRegionSelectionUI();
     }
 }
+
+// Sobrescrever o comportamento do botão antigo (recordScreen) para usar nova lógica
+window.recordScreen = startRegionSelection;
 
 /* ═══════════════════════════════════════════
    TOAST, STATUS, LOADING
