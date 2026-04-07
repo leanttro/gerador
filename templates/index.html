@@ -1426,7 +1426,7 @@ async function generateCode() {
         style_preset:  document.getElementById('styleSelect').value,
         format_ratio:  document.getElementById('formatSelect').value,
         ai_engine:     document.getElementById('aiEngineSelect').value,
-        generation_mode: generationMode,   // NOVO
+        generation_mode: generationMode,
     };
 
     try {
@@ -1730,37 +1730,70 @@ function downloadHTML() {
     showToast('success', 'Download iniciado', 'Arquivo HTML salvo com sucesso!');
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// FUNÇÃO CAPTUREIMAGE CORRIGIDA – CAPTURA TODO O CONTEÚDO VISÍVEL DO IFRAME
+// ═══════════════════════════════════════════════════════════════════════
 async function captureImage() {
     if (!state.currentHTML) {
         showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
         return;
     }
+
     const iframe = document.getElementById('previewFrame');
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    if (!iframe.contentWindow.html2canvas) {
-        showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
-        const script = doc.createElement('script');
-        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
-        doc.head.appendChild(script);
-        await new Promise(resolve => {
-            script.onload = resolve;
-            setTimeout(resolve, 2000);
-        });
-    }
-    showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+    // Aguarda o carregamento completo das fontes e imagens dentro do iframe
     try {
-        const canvas = await iframe.contentWindow.html2canvas(doc.body, {
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: null
+        await iframeDoc.fonts.ready;
+        const images = iframeDoc.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => { img.onload = img.onerror = resolve; });
+        }));
+    } catch(e) { console.warn("Erro aguardando fontes/imagens", e); }
+
+    // Garante que html2canvas esteja injetado no iframe
+    if (!iframe.contentWindow.html2canvas) {
+        showToast('info', 'Preparando', 'Carregando engine de captura...');
+        const script = iframeDoc.createElement('script');
+        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+        iframeDoc.head.appendChild(script);
+        await new Promise(resolve => { script.onload = resolve; setTimeout(resolve, 2000); });
+    }
+
+    showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
+
+    try {
+        // Captura o body inteiro do iframe com alta qualidade e sem cortes
+        const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
+            scale: 3,               // Alta resolução (textos ficam nítidos)
+            backgroundColor: '#ffffff',  // Fundo branco para evitar transparência
+            useCORS: true,          // Permite imagens externas
+            allowTaint: false,
+            logging: false,
+            windowWidth: iframeDoc.body.scrollWidth,
+            windowHeight: iframeDoc.body.scrollHeight,
+            onclone: (clonedDoc, element) => {
+                // Força estilos visuais no clone (evita opacidade acidental)
+                clonedDoc.body.style.opacity = '1';
+                clonedDoc.body.style.visibility = 'visible';
+                const allElements = clonedDoc.querySelectorAll('*');
+                allElements.forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.visibility = 'visible';
+                });
+            }
         });
+
+        // Cria link para download
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com todos os textos visíveis.');
     } catch (e) {
-        showToast('error', 'Erro', 'Não foi possível capturar a imagem.');
+        console.error(e);
+        showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
 
