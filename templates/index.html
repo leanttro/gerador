@@ -1764,7 +1764,7 @@ async function captureImage() {
     try {
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,
-            backgroundColor: '#ffffff',
+            backgroundColor: null,
             useCORS: true,
             allowTaint: false,
             logging: false,
@@ -1775,11 +1775,6 @@ async function captureImage() {
             onclone: (clonedDoc, element) => {
                 clonedDoc.body.style.opacity = '1';
                 clonedDoc.body.style.visibility = 'visible';
-                const allElements = clonedDoc.querySelectorAll('*');
-                allElements.forEach(el => {
-                    el.style.opacity = '1';
-                    el.style.visibility = 'visible';
-                });
             }
         });
 
