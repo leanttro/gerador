@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Marmita Fit Ultra-Clean Motion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+            --fonte-principal: 'Montserrat', sans-serif;
+
+            --velocidade-animacao-fast: 0.25s;
+            --velocidade-animacao-normal: 0.5s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            font-family: var(--fonte-principal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ==============================
+           CONTAINER PRINCIPAL - PROPORÇÃO 4:5
+           ============================== */
+        .template-motion-container {
+            width: 400px;
+            height: 500px;
+            background-color: var(--cor-fundo);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        /* Linha decorativa vertical esquerda */
+        .side-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--cor-destaque) 30%,
+                var(--cor-destaque) 70%,
+                transparent 100%
+            );
+            opacity: 0.35;
+            z-index: 1;
+            animation: fadeInTop 0.8s ease-out forwards;
+        }
+
+        /* ==============================
+           HEADER - LOGO DA CLIENTE (CENTRALIZADO E MAIOR)
+           ============================== */
+        .template-header {
+            width: 100%;
+            height: 85px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2px 20px 6px;
+            position: relative;
+            z-index: 10;
+            animation: fadeInTop var(--velocidade-animacao-fast) ease-out forwards;
+        }
+
+        .cliente-logo {
+            max-width: 240px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        /* ==============================
+           IMAGEM DO PRODUTO — ÁREA PRINCIPAL
+           ============================== */
+        .template-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 4px 20px 0 20px;
+        }
+
+        .motion-scene-container {
+            width: 100%;
+            height: 255px;
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            animation: fadeInFast var(--velocidade-animacao-normal) ease-out forwards,
+                       bob 3s ease-in-out infinite alternate 1.2s;
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.07),
+                0 1px 4px rgba(0,0,0,0.04);
+        }
+
+        .main-product-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+            display: block;
+        }
+
+        /* Shimmer sutil sobre a imagem */
+        .motion-scene-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 14px;
+            background: linear-gradient(
+                160deg,
+                rgba(255,255,255,0.10) 0%,
+                transparent 50%,
+                rgba(0,0,0,0.06) 100%
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Elementos decorativos flutuantes sobre a imagem */
+        .layered-graphic-element {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            pointer-events: none;
+            border: 1.5px solid var(--cor-destaque);
+            border-radius: 8px;
+            opacity: 0.18;
+            z-index: 3;
+            animation: rotateLoop 7s linear infinite,
+                       pulseFast 1.6s ease-in-out infinite alternate;
+        }
+
+        .element-top-right  { top: 12px; right: 12px; animation-delay: 0s; }
+        .element-bottom-left { bottom: 12px; left: 12px; animation-delay: 0.5s; width: 28px; height: 28px; border-radius: 50%; }
+
+        /* ==============================
+           TEXTOS DO PRATO
+           ============================== */
+        .text-details {
+            width: 100%;
+            text-align: left;
+            position: relative;
+            z-index: 10;
+            padding-left: 2px;
+        }
+
+        .dish-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--cor-texto-principal);
+            margin-bottom: 5px;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
+        }
+
+        .ingredients-list {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--cor-texto-principal);
+            line-height: 1.5;
+            margin-bottom: 10px;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards;
+        }
+
+        /* MACROS — TAGS MINIMALISTAS */
+        .macros-info {
+            display: flex;
+            gap: 7px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: var(--cor-destaque-secundaria);
+            margin-bottom: 4px;
+            opacity: 0;
+            flex-wrap: wrap;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.3s) forwards;
+        }
+
+        .macro-tag {
+            background-color: transparent;
+            border: 1px solid var(--cor-destaque);
+            color: var(--cor-destaque);
+            padding: 2px 8px;
+            border-radius: 20px;
+            opacity: 0.7;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==============================
+           DIVISOR ELEGANTE
+           ============================== */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                var(--cor-destaque) 0%,
+                transparent 100%
+            );
+            opacity: 0.18;
+            margin: 0 0 10px 0;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.35s) forwards;
+        }
+
+        /* ==============================
+           FOOTER
+           ============================== */
+        .template-footer {
+            padding: 0 20px 16px 22px;
+            text-align: left;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--cor-destaque-secundaria);
+            position: relative;
+            z-index: 10;
+        }
+
+        .cta-text {
+            color: var(--cor-destaque-secundaria);
+            font-weight: 500;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            opacity: 0;
+            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards;
+        }
+
+        /* Pequeno ícone decorativo no footer */
+        .footer-accent {
+            width: 20px;
+            height: 1px;
+            background: var(--cor-destaque);
+            opacity: 0.3;
+            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.45s) forwards;
+        }
+
+        /* ==============================
+           ANIMAÇÕES
+           ============================== */
+        @keyframes fadeInFast {
+            from { opacity: 0; transform: scale(0.98); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fadeInTop {
+            from { opacity: 0; transform: translateY(-16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInText {
+            from { opacity: 0; transform: translateX(8px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(16px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-16px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes bob {
+            from { transform: translateY(0px); }
+            to   { transform: translateY(4px); }
+        }
+
+        @keyframes pulseFast {
+            from { opacity: 0.12; }
+            to   { opacity: 0.3; }
+        }
+
+        @keyframes rotateLoop {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        @keyframes breathe {
+            from { transform: scale(1); }
+            to   { transform: scale(1.15); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="template-motion-container" id="fit-marmita-app">
+
+        <div class="side-line"></div>
+
+        <header class="template-header" id="logo-container">
+            <img src="CHAVE_LOGO" alt="Logo Cliente" class="cliente-logo" id="client-logo-img">
+        </header>
+
+        <main class="template-main" id="motion-main-content">
+
+            <div class="motion-scene-container" id="video-scene">
+                <img src="CHAVE_IMAGEM" id="main-product-video" class="main-product-video" alt="Produto">
+
+                <div class="layered-graphic-element element-top-right"></div>
+                <div class="layered-graphic-element element-bottom-left"></div>
+            </div>
+
+            <div class="text-details" id="text-details-container">
+                <h1 class="dish-title" id="dish-title-text">CHAVE_TITULO</h1>
+
+                <p class="ingredients-list" id="ingredients-list-text">
+                    CHAVE_INGREDIENTES
+                </p>
+
+                <div class="macros-info" id="macros-info-tags">
+                    CHAVE_MACROS
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="template-footer" id="footer-container">
+            <span class="cta-text" id="cta-footer-text">CHAVE_CTA</span>
+            <div class="footer-accent"></div>
+        </footer>
+
+    </div>
+
+    <script>
+        /* O JavaScript original foi desativado/comentado porque o backend em Flask
+        (seu app.py) já faz a substituição das CHAVES via replace string.
+        Se este JS rodar, ele vai apagar as chaves e quebrar a automação.
+
+        function updateMotionTemplate(data) { ... }
+        const novoPratoMotionData = { ... };
+        updateMotionTemplate(novoPratoMotionData);
+        */
+    </script>
+
+</body>
+</html>
