@@ -1799,11 +1799,11 @@ async function captureImage() {
         // Pequeno delay para garantir que todas as fontes e imagens estejam renderizadas
         await new Promise(r => setTimeout(r, 600));
         
-        const canvas = await iframe.contentWindow.html2canvas(doc.body, {
+        const canvas = await iframe.contentWindow.html2canvas(doc.documentElement, {
             useCORS: true,
             allowTaint: false,
-            backgroundColor: '#ffffff', // Força fundo branco para evitar opacidade errada
-            scale: 2, // Aumenta a qualidade
+            backgroundColor: null,
+            scale: 2,
             logging: false
         });
         const link = document.createElement('a');
