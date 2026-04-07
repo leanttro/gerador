@@ -1796,13 +1796,14 @@ async function captureImage() {
     }
     showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
     try {
-        await new Promise(r => setTimeout(r, 1500));
+        // Pequeno delay para garantir que todas as fontes e imagens estejam renderizadas
+        await new Promise(r => setTimeout(r, 600));
         
         const canvas = await iframe.contentWindow.html2canvas(doc.body, {
             useCORS: true,
             allowTaint: false,
-            backgroundColor: '#ffffff',
-            scale: 2,
+            backgroundColor: '#ffffff', // Força fundo branco para evitar opacidade errada
+            scale: 2, // Aumenta a qualidade
             logging: false
         });
         const link = document.createElement('a');
@@ -1812,7 +1813,6 @@ async function captureImage() {
         showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso com texto e cores.');
     } catch (e) {
         showToast('error', 'Erro', 'Não foi possível capturar a imagem.');
-        console.error(e);
     }
 }
 
@@ -1830,18 +1830,23 @@ async function recordScreen() {
         return;
     }
     try {
+        // 1. tenta capturar apenas a região do iframe via CropTarget
         const iframe = document.getElementById('previewFrame');
+        // Aguarda um pouco para garantir que o iframe esteja pronto
         await new Promise(r => setTimeout(r, 200));
         
         let stream = null;
         let cropSupported = false;
         
+        // Tenta obter stream com cropTo se disponível
         try {
+            // Usa getDisplayMedia com preferCurrentTab para minimizar escolha manual
             stream = await navigator.mediaDevices.getDisplayMedia({
                 video: { preferCurrentTab: true, frameRate: 30 },
                 audio: false,
             });
             
+            // Verifica suporte a CropTarget
             if (window.CropTarget && typeof window.CropTarget.fromElement === 'function') {
                 const cropTarget = await window.CropTarget.fromElement(iframe);
                 const [videoTrack] = stream.getVideoTracks();
@@ -1856,6 +1861,7 @@ async function recordScreen() {
                 showToast('warning', 'Aviso', 'Seu navegador não suporta CropTarget. Selecione a janela do preview manualmente.');
             }
         } catch (err) {
+            // Fallback: se falhar, tenta novamente sem preferCurrentTab
             if (err.name !== 'NotAllowedError') {
                 stream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
@@ -1879,6 +1885,7 @@ async function recordScreen() {
         
         recordedChunks = [];
         
+        // Define codec MP4 prioritário
         let mimeType = '';
         const mimeTypes = [
             'video/mp4;codecs=h264',
