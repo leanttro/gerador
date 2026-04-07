@@ -1796,12 +1796,11 @@ async function captureImage() {
     }
     showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
     try {
-        // Pequeno delay para garantir que todas as fontes e imagens estejam renderizadas
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 1500));
         
-        const canvas = await iframe.contentWindow.html2canvas(doc.documentElement, {
+        const canvas = await iframe.contentWindow.html2canvas(doc.body, {
             useCORS: true,
-            allowTaint: false,
+            allowTaint: true,
             backgroundColor: null,
             scale: 2,
             logging: false
@@ -1830,23 +1829,18 @@ async function recordScreen() {
         return;
     }
     try {
-        // 1. tenta capturar apenas a região do iframe via CropTarget
         const iframe = document.getElementById('previewFrame');
-        // Aguarda um pouco para garantir que o iframe esteja pronto
         await new Promise(r => setTimeout(r, 200));
         
         let stream = null;
         let cropSupported = false;
         
-        // Tenta obter stream com cropTo se disponível
         try {
-            // Usa getDisplayMedia com preferCurrentTab para minimizar escolha manual
             stream = await navigator.mediaDevices.getDisplayMedia({
                 video: { preferCurrentTab: true, frameRate: 30 },
                 audio: false,
             });
             
-            // Verifica suporte a CropTarget
             if (window.CropTarget && typeof window.CropTarget.fromElement === 'function') {
                 const cropTarget = await window.CropTarget.fromElement(iframe);
                 const [videoTrack] = stream.getVideoTracks();
@@ -1861,7 +1855,6 @@ async function recordScreen() {
                 showToast('warning', 'Aviso', 'Seu navegador não suporta CropTarget. Selecione a janela do preview manualmente.');
             }
         } catch (err) {
-            // Fallback: se falhar, tenta novamente sem preferCurrentTab
             if (err.name !== 'NotAllowedError') {
                 stream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
@@ -1885,7 +1878,6 @@ async function recordScreen() {
         
         recordedChunks = [];
         
-        // Define codec MP4 prioritário
         let mimeType = '';
         const mimeTypes = [
             'video/mp4;codecs=h264',
