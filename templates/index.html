@@ -867,6 +867,7 @@
 
         <div class="panel active" id="panel-generate">
 
+            <!-- SEÇÃO DE MODO DE CRIAÇÃO -->
             <div class="section">
                 <span class="section-label">Modo de Geração</span>
                 <select id="generationModeSelect">
@@ -908,6 +909,7 @@
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
             </div>
 
+            <!-- SEÇÃO DE INSPIRAÇÕES (NOVA) -->
             <div class="section">
                 <span class="section-label">Buscar Inspirações (Serper)</span>
                 <div class="flex-row gap-6">
@@ -1745,12 +1747,9 @@ async function captureImage() {
         const images = iframeDoc.querySelectorAll('img');
         await Promise.all(Array.from(images).map(img => {
             if (img.complete) return Promise.resolve();
-            return new Promise(resolve => { 
-                img.onload = resolve; 
-                img.onerror = resolve; 
-            });
+            return new Promise(resolve => { img.onload = img.onerror = resolve; });
         }));
-    } catch(e) { console.warn("Erro aguardando fontes/imagens", e); }
+    } catch(e) { console.warn(e); }
 
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Preparando', 'Carregando engine de captura...');
@@ -1764,28 +1763,20 @@ async function captureImage() {
 
     try {
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
-            scale: 3,               
-            backgroundColor: null, 
-            useCORS: true,          
+            scale: 3,
+            backgroundColor: null,
+            useCORS: true,
             allowTaint: false,
             logging: false,
-            windowWidth: iframeDoc.body.scrollWidth,  
-            windowHeight: iframeDoc.body.scrollHeight, 
+            windowWidth: iframeDoc.body.scrollWidth,
+            windowHeight: iframeDoc.body.scrollHeight,
             onclone: (clonedDoc) => {
-                const style = clonedDoc.createElement('style');
-                style.innerHTML = `
-                    html, body {
-                        background-color: transparent !important;
-                        background: transparent !important;
-                    }
-                    * {
-                        visibility: visible !important;
-                        opacity: 1 !important;
-                        animation: none !important;
-                        transition: none !important;
-                    }
-                `;
-                clonedDoc.head.appendChild(style);
+                const stClone = clonedDoc.getElementById('scrolling-text');
+                if (stClone) {
+                    stClone.style.maskImage = 'none';
+                    stClone.style.webkitMaskImage = 'none';
+                    stClone.style.opacity = '0.15';
+                }
             }
         });
 
@@ -1793,10 +1784,10 @@ async function captureImage() {
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada com fundo transparente.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada mantendo a transparência.');
     } catch (e) {
         console.error(e);
-        showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
+        showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem.');
     }
 }
 let mediaRecorder = null;
