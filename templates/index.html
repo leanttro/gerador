@@ -1764,7 +1764,7 @@ async function captureImage() {
     try {
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,
-            backgroundColor: null,
+            backgroundColor: '#0d0d0d',
             useCORS: true,
             allowTaint: false,
             logging: false,
@@ -1773,9 +1773,7 @@ async function captureImage() {
             onclone: (clonedDoc) => {
                 const stClone = clonedDoc.getElementById('scrolling-text');
                 if (stClone) {
-                    stClone.style.maskImage = 'none';
-                    stClone.style.webkitMaskImage = 'none';
-                    stClone.style.opacity = '0.15';
+                    stClone.style.display = 'none';
                 }
             }
         });
@@ -1784,7 +1782,7 @@ async function captureImage() {
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada mantendo a transparência.');
+        showToast('success', 'Foto salva!', 'Imagem gerada sem o fundo animado.');
     } catch (e) {
         console.error(e);
         showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem.');
