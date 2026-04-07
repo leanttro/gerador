@@ -867,6 +867,7 @@
 
         <div class="panel active" id="panel-generate">
 
+            <!-- SEÇÃO DE MODO DE CRIAÇÃO -->
             <div class="section">
                 <span class="section-label">Modo de Geração</span>
                 <select id="generationModeSelect">
@@ -908,6 +909,7 @@
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
             </div>
 
+            <!-- SEÇÃO DE INSPIRAÇÕES (NOVA) -->
             <div class="section">
                 <span class="section-label">Buscar Inspirações (Serper)</span>
                 <div class="flex-row gap-6">
@@ -1762,31 +1764,49 @@ async function captureImage() {
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
 
     try {
+        // Remove mask do scrolling-text dentro do iframe antes de capturar
+        const scrollingTextEl = iframeDoc.getElementById('scrolling-text');
+        let savedMask = null;
+        let savedWebkitMask = null;
+        if (scrollingTextEl) {
+            savedMask = scrollingTextEl.style.maskImage;
+            savedWebkitMask = scrollingTextEl.style.webkitMaskImage;
+            scrollingTextEl.style.maskImage = 'none';
+            scrollingTextEl.style.webkitMaskImage = 'none';
+        }
+
         // Captura o body inteiro do iframe com alta qualidade e sem cortes
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,               // Alta resolução (textos ficam nítidos)
-            backgroundColor: null,  // Mantém a cor de fundo nativa do iframe
+            backgroundColor: '#ffffff',  // Fundo branco para evitar transparência
             useCORS: true,          // Permite imagens externas
             allowTaint: false,
             logging: false,
             windowWidth: iframeDoc.body.scrollWidth,
             windowHeight: iframeDoc.body.scrollHeight,
             onclone: (clonedDoc, element) => {
+                // Força estilos visuais no clone (evita opacidade acidental)
+                clonedDoc.body.style.opacity = '1';
                 clonedDoc.body.style.visibility = 'visible';
                 const allElements = clonedDoc.querySelectorAll('*');
                 allElements.forEach(el => {
-                    // Garante visibilidade sem forçar opacity: 1 que destrói a transparência
+                    el.style.opacity = '1';
                     el.style.visibility = 'visible';
-                    // Remove animações para capturar o frame estático final sem os textos sumirem
-                    el.style.animation = 'none';
-                    el.style.transition = 'none';
-                    // Se o elemento estiver totalmente invisível via inline style, revelamos
-                    if (el.style.opacity === '0') {
-                        el.style.opacity = '1';
-                    }
                 });
+                // Garante que o scrolling-text também está sem mask no clone
+                const stClone = clonedDoc.getElementById('scrolling-text');
+                if (stClone) {
+                    stClone.style.maskImage = 'none';
+                    stClone.style.webkitMaskImage = 'none';
+                }
             }
         });
+
+        // Restaura mask do scrolling-text após captura
+        if (scrollingTextEl) {
+            scrollingTextEl.style.maskImage = savedMask;
+            scrollingTextEl.style.webkitMaskImage = savedWebkitMask;
+        }
 
         // Cria link para download
         const link = document.createElement('a');
