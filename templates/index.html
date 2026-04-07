@@ -1761,7 +1761,6 @@ async function clearHistory() {
 
 /* ═══════════════════════════════════════════
    DOWNLOAD, CAPTURA, GRAVAÇÃO (MP4 + ÁREA CORRETA)
-   CAPTURA CORRIGIDA: remove transparência e força visibilidade do texto
 ═══════════════════════════════════════════ */
 function downloadHTML() {
     if (!state.currentHTML) {
@@ -1784,18 +1783,9 @@ async function captureImage() {
         return;
     }
     const iframe = document.getElementById('previewFrame');
-    // Aguarda o iframe estar completamente carregado
-    await new Promise(resolve => {
-        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
-            resolve();
-        } else {
-            iframe.addEventListener('load', resolve, { once: true });
-        }
-    });
-    // Garante que o html2canvas esteja disponível no iframe
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     if (!iframe.contentWindow.html2canvas) {
-        showToast('info', 'Preparando motor', 'Carregando biblioteca de captura...');
+        showToast('info', 'Aguarde', 'Preparando motor fotográfico...');
         const script = doc.createElement('script');
         script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
         doc.head.appendChild(script);
@@ -1804,62 +1794,25 @@ async function captureImage() {
             setTimeout(resolve, 2000);
         });
     }
-    showToast('info', 'Capturando...', 'Processando a imagem com texto visível.');
+    showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
     try {
-        // Aguarda mais um pouco para garantir que fontes e estilos estejam prontos
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 1500));
         
-        // Usa html2canvas com onclone para corrigir cores transparentes e garantir texto visível
         const canvas = await iframe.contentWindow.html2canvas(doc.body, {
             useCORS: true,
             allowTaint: false,
             backgroundColor: '#ffffff',
             scale: 2,
-            logging: false,
-            onclone: (clonedDoc, element) => {
-                // Remove qualquer estilo que torne o texto transparente ou invisível
-                const allElements = clonedDoc.querySelectorAll('*');
-                allElements.forEach(el => {
-                    const computed = clonedDoc.defaultView.getComputedStyle(el);
-                    // Se a cor for transparent, seta para preto (ou uma cor que contraste com fundo)
-                    if (computed.color === 'transparent' || computed.color === 'rgba(0, 0, 0, 0)') {
-                        el.style.color = '#000000';
-                    }
-                    // Se o fundo for transparente, define fundo branco para elementos de texto
-                    if (computed.backgroundColor === 'transparent' || computed.backgroundColor === 'rgba(0, 0, 0, 0)') {
-                        // Aplica apenas se não for um elemento com fundo próprio
-                        if (el.tagName !== 'BODY' && el.tagName !== 'HTML') {
-                            el.style.backgroundColor = '#ffffff';
-                        }
-                    }
-                    // Remove opacity zero ou muito baixa
-                    if (parseFloat(computed.opacity) < 0.1) {
-                        el.style.opacity = '1';
-                    }
-                    // Força texto de elementos de conteúdo a ter contraste
-                    if (el.innerText && el.innerText.trim().length > 0) {
-                        // Se a cor atual for muito clara em fundo claro, ajusta
-                        const bg = computed.backgroundColor;
-                        const isLightBg = bg === 'rgb(255, 255, 255)' || bg === 'white' || bg === '#ffffff';
-                        if (isLightBg && (computed.color === 'rgb(255, 255, 255)' || computed.color === 'white')) {
-                            el.style.color = '#000000';
-                        }
-                    }
-                });
-                // Força o body a ter fundo branco para evitar transparência geral
-                clonedDoc.body.style.backgroundColor = '#ffffff';
-                clonedDoc.body.style.color = '#000000';
-            }
+            logging: false
         });
-        
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
-        showToast('success', 'Foto salva!', 'Imagem capturada com todos os textos visíveis.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso com texto e cores.');
     } catch (e) {
-        console.error('Erro na captura:', e);
-        showToast('error', 'Erro', 'Não foi possível capturar a imagem. Tente novamente.');
+        showToast('error', 'Erro', 'Não foi possível capturar a imagem.');
+        console.error(e);
     }
 }
 
@@ -1877,23 +1830,18 @@ async function recordScreen() {
         return;
     }
     try {
-        // 1. tenta capturar apenas a região do iframe via CropTarget
         const iframe = document.getElementById('previewFrame');
-        // Aguarda um pouco para garantir que o iframe esteja pronto
         await new Promise(r => setTimeout(r, 200));
         
         let stream = null;
         let cropSupported = false;
         
-        // Tenta obter stream com cropTo se disponível
         try {
-            // Usa getDisplayMedia com preferCurrentTab para minimizar escolha manual
             stream = await navigator.mediaDevices.getDisplayMedia({
                 video: { preferCurrentTab: true, frameRate: 30 },
                 audio: false,
             });
             
-            // Verifica suporte a CropTarget
             if (window.CropTarget && typeof window.CropTarget.fromElement === 'function') {
                 const cropTarget = await window.CropTarget.fromElement(iframe);
                 const [videoTrack] = stream.getVideoTracks();
@@ -1908,7 +1856,6 @@ async function recordScreen() {
                 showToast('warning', 'Aviso', 'Seu navegador não suporta CropTarget. Selecione a janela do preview manualmente.');
             }
         } catch (err) {
-            // Fallback: se falhar, tenta novamente sem preferCurrentTab
             if (err.name !== 'NotAllowedError') {
                 stream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
@@ -1932,7 +1879,6 @@ async function recordScreen() {
         
         recordedChunks = [];
         
-        // Define codec MP4 prioritário
         let mimeType = '';
         const mimeTypes = [
             'video/mp4;codecs=h264',
