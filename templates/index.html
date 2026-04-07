@@ -1713,7 +1713,7 @@ async function clearHistory() {
 }
 
 /* ═══════════════════════════════════════════
-   DOWNLOAD, CAPTURA, GRAVAÇÃO (MP4 + ÁREA CORRETA)
+   DOWNLOAD, CAPTURA, GRAVAÇÃO
 ═══════════════════════════════════════════ */
 function downloadHTML() {
     if (!state.currentHTML) {
@@ -1778,117 +1778,45 @@ async function recordScreen() {
         return;
     }
     try {
-        // 1. tenta capturar apenas a região do iframe via CropTarget
-        const iframe = document.getElementById('previewFrame');
-        // Aguarda um pouco para garantir que o iframe esteja pronto
-        await new Promise(r => setTimeout(r, 200));
-        
-        let stream = null;
-        let cropSupported = false;
-        
-        // Tenta obter stream com cropTo se disponível
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { preferCurrentTab: true, frameRate: 30 },
+            audio: false,
+        });
         try {
-            // Usa getDisplayMedia com preferCurrentTab para minimizar escolha manual
-            stream = await navigator.mediaDevices.getDisplayMedia({
-                video: { preferCurrentTab: true, frameRate: 30 },
-                audio: false,
-            });
-            
-            // Verifica suporte a CropTarget
-            if (window.CropTarget && typeof window.CropTarget.fromElement === 'function') {
-                const cropTarget = await window.CropTarget.fromElement(iframe);
+            if (window.CropTarget) {
+                const iframe = document.getElementById('previewFrame');
+                const target = await window.CropTarget.fromElement(iframe);
                 const [videoTrack] = stream.getVideoTracks();
-                if (videoTrack && typeof videoTrack.cropTo === 'function') {
-                    await videoTrack.cropTo(cropTarget);
-                    cropSupported = true;
-                    showToast('info', 'Área isolada', 'Gravação focada apenas na animação.');
-                } else {
-                    showToast('warning', 'Aviso', 'Seu navegador não suporta cropTo, grave manualmente a área do preview.');
-                }
+                await videoTrack.cropTo(target);
+                showToast('info', 'Área Isolada', 'A gravação será focada apenas na animação.');
             } else {
-                showToast('warning', 'Aviso', 'Seu navegador não suporta CropTarget. Selecione a janela do preview manualmente.');
+                showToast('warning', 'Aviso', 'Navegador sem suporte para recorte automático.');
             }
-        } catch (err) {
-            // Fallback: se falhar, tenta novamente sem preferCurrentTab
-            if (err.name !== 'NotAllowedError') {
-                stream = await navigator.mediaDevices.getDisplayMedia({
-                    video: true,
-                    audio: false,
-                });
-                if (window.CropTarget && typeof window.CropTarget.fromElement === 'function') {
-                    const cropTarget = await window.CropTarget.fromElement(iframe);
-                    const [videoTrack] = stream.getVideoTracks();
-                    if (videoTrack && typeof videoTrack.cropTo === 'function') {
-                        await videoTrack.cropTo(cropTarget);
-                        cropSupported = true;
-                        showToast('info', 'Área isolada', 'Gravação focada apenas na animação.');
-                    }
-                }
-            } else {
-                throw err;
-            }
-        }
-        
-        if (!stream) throw new Error('Não foi possível obter a stream da tela.');
-        
+        } catch (cropErr) { console.warn(cropErr); }
+
         recordedChunks = [];
-        
-        // Define codec MP4 prioritário
-        let mimeType = '';
-        const mimeTypes = [
-            'video/mp4;codecs=h264',
-            'video/mp4;codecs=avc1',
-            'video/mp4',
-            'video/webm;codecs=vp9',
-            'video/webm'
-        ];
-        for (const mt of mimeTypes) {
-            if (MediaRecorder.isTypeSupported(mt)) {
-                mimeType = mt;
-                break;
-            }
-        }
-        
-        if (!mimeType) mimeType = 'video/webm';
-        
-        const isMp4 = mimeType.includes('mp4');
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
         mediaRecorder = new MediaRecorder(stream, { mimeType });
-        
-        mediaRecorder.ondataavailable = e => {
-            if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-        
+        mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
             a.href = url;
-            const ext = isMp4 ? 'mp4' : 'webm';
-            a.download = `motordark_video_${Date.now()}.${ext}`;
+            a.download = `motordark_video_${Date.now()}.webm`;
             a.click();
             URL.revokeObjectURL(url);
             stream.getTracks().forEach(t => t.stop());
             isRecording = false;
-            const btn = document.querySelector('.btn-green');
-            if (btn) btn.textContent = '⏺ Gravar Vídeo';
-            showToast('success', `Vídeo salvo (${ext.toUpperCase()})`, `Arquivo ${ext.toUpperCase()} baixado com sucesso.`);
+            document.querySelector('.btn-green').textContent = '⏺ Gravar Vídeo';
+            showToast('success', 'Vídeo salvo!', 'Arquivo .webm baixado com sucesso.');
         };
-        
         mediaRecorder.start(100);
         isRecording = true;
-        const btn = document.querySelector('.btn-green');
-        if (btn) btn.textContent = '⏹ Parar Gravação';
-        showToast('info', 'Gravação iniciada', cropSupported ? 'Apenas a área da animação será gravada.' : 'Selecione a janela/área do preview para gravar.');
-        
+        document.querySelector('.btn-green').textContent = '⏹ Parar Gravação';
+        showToast('info', 'Gravação iniciada', 'Clique em "Parar Gravação" quando finalizar.');
     } catch (err) {
-        if (err.name !== 'NotAllowedError') {
-            showToast('error', 'Erro na gravação', String(err.message || err));
-        } else {
-            showToast('warning', 'Permissão negada', 'Você precisa permitir a gravação de tela.');
-        }
-        isRecording = false;
-        const btn = document.querySelector('.btn-green');
-        if (btn) btn.textContent = '⏺ Gravar Vídeo';
+        if (err.name !== 'NotAllowedError') showToast('error', 'Erro na gravação', String(err));
     }
 }
 
