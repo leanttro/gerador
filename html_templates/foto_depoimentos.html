@@ -21,6 +21,7 @@
 
         body {
             background-color: var(--cor-fundo);
+            background-image: linear-gradient(to bottom, rgba(255,255,255,0.0) 0%, rgba(0,0,0,0.8) 100%);
             color: var(--cor-texto-principal);
             font-family: var(--fonte-principal);
             display: flex;
@@ -36,57 +37,11 @@
 
         .template-motion-container {
             background-color: var(--cor-fundo);
+            background-image: linear-gradient(to bottom, rgba(255,255,255,0.0) 0%, rgba(0,0,0,0.8) 100%);
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-        }
-
-        .static-elements-wrapper {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 2; /* acima da side-line, abaixo do conteúdo principal */
-        }
-
-        .icon {
-            position: absolute;
-            color: var(--cor-texto-principal);
-            opacity: 0.15;
-            fill: currentColor;
-            stroke: none; /* garante chapado */
-        }
-
-        .heart-top-left {
-            top: 15%;
-            left: 10%;
-            transform: rotate(-10deg);
-            width: 24px;
-            height: 24px;
-        }
-
-        .like-top-right {
-            top: 18%;
-            right: 12%;
-            transform: rotate(15deg);
-            width: 28px;
-            height: 28px;
-        }
-
-        .heart-bottom-left {
-            bottom: 20%;
-            left: 8%;
-            transform: rotate(-15deg);
-            width: 22px;
-            height: 22px;
-        }
-
-        .like-bottom-right {
-            bottom: 22%;
-            right: 10%;
-            transform: rotate(10deg);
-            width: 26px;
-            height: 26px;
         }
 
         .side-line {
@@ -99,13 +54,31 @@
             animation: fadeInTop 0.8s ease-out forwards;
         }
 
+        .floating-icons {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .icon {
+            position: absolute;
+            color: var(--cor-texto-principal);
+            opacity: 0.15;
+        }
+
+        .pos-1 { top: 22%; left: 8%; transform: rotate(-15deg); width: 28px; height: 28px; }
+        .pos-2 { top: 28%; right: 10%; transform: rotate(12deg); width: 32px; height: 32px; }
+        .pos-3 { bottom: 16%; left: 12%; transform: rotate(-10deg); width: 24px; height: 24px; }
+        .pos-4 { bottom: 20%; right: 8%; transform: rotate(15deg); width: 26px; height: 26px; }
+
         .template-header {
             width: 100%;
-            height: 75px;
+            min-height: 90px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2px 20px 4px;
+            padding: 80px 20px 5px;
             position: relative;
             z-index: 10;
             animation: fadeInTop var(--velocidade-animacao-fast) ease-out forwards;
@@ -123,6 +96,8 @@
             flex-direction: column;
             justify-content: center;
             padding: 0 24px;
+            padding-bottom: 60px;
+            margin-top: -120px;
             position: relative;
             z-index: 10;
         }
@@ -140,7 +115,7 @@
 
         .template-motion-container[data-ratio="9:16"] .testimonial-card { 
             padding: 28px; 
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
 
         .quote-icon {
@@ -177,24 +152,26 @@
 
         .print-wrapper {
             width: 100%;
-            height: 140px;
+            height: auto;
+            max-height: 200px;
             border-radius: 8px;
             overflow: hidden;
             border: 2px solid rgba(0,0,0,0.05);
             margin-bottom: 16px;
             opacity: 0;
-            background-color: rgba(0,0,0,0.02);
+            background-color: transparent;
             animation: fadeInTop var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards;
         }
 
         .template-motion-container[data-ratio="9:16"] .print-wrapper { 
-            height: 240px; 
+            max-height: 380px; 
         }
 
         .print-img {
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: 380px;
+            object-fit: contain;
             display: block;
         }
 
@@ -257,22 +234,22 @@
 
     <div class="template-motion-container" data-ratio="CHAVE_PROPORCAO" id="depoimento-app">
 
-        <div class="static-elements-wrapper" aria-hidden="true">
-            <svg class="icon heart-top-left" viewBox="0 0 24 24">
+        <div class="side-line"></div>
+
+        <div class="floating-icons" aria-hidden="true">
+            <svg class="icon icon-heart pos-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
-            <svg class="icon like-top-right" viewBox="0 0 24 24">
+            <svg class="icon icon-like pos-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
             </svg>
-            <svg class="icon heart-bottom-left" viewBox="0 0 24 24">
+            <svg class="icon icon-heart pos-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
-            <svg class="icon like-bottom-right" viewBox="0 0 24 24">
+            <svg class="icon icon-like pos-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
             </svg>
         </div>
-
-        <div class="side-line"></div>
 
         <header class="template-header">
             <img src="CHAVE_LOGO" alt="Logo" class="cliente-logo">
