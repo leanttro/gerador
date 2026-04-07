@@ -1742,6 +1742,7 @@ async function captureImage() {
     const iframe = document.getElementById('previewFrame');
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
+    // Aguarda o carregamento completo das fontes e imagens dentro do iframe
     try {
         await iframeDoc.fonts.ready;
         const images = iframeDoc.querySelectorAll('img');
@@ -1749,8 +1750,9 @@ async function captureImage() {
             if (img.complete) return Promise.resolve();
             return new Promise(resolve => { img.onload = img.onerror = resolve; });
         }));
-    } catch(e) {}
+    } catch(e) { console.warn("Erro aguardando fontes/imagens", e); }
 
+    // Garante que html2canvas esteja injetado no iframe
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Preparando', 'Carregando engine de captura...');
         const script = iframeDoc.createElement('script');
@@ -1761,52 +1763,63 @@ async function captureImage() {
 
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
 
-    const scrollingTextEl = iframeDoc.getElementById('scrolling-text');
-    let originalDisplay = '';
-    if (scrollingTextEl) {
-        originalDisplay = scrollingTextEl.style.display;
-        scrollingTextEl.style.display = 'none';
-    }
-
     try {
+        // Remove mask do scrolling-text dentro do iframe antes de capturar
+        const scrollingTextEl = iframeDoc.getElementById('scrolling-text');
+        let savedMask = null;
+        let savedWebkitMask = null;
+        if (scrollingTextEl) {
+            savedMask = scrollingTextEl.style.maskImage;
+            savedWebkitMask = scrollingTextEl.style.webkitMaskImage;
+            scrollingTextEl.style.maskImage = 'none';
+            scrollingTextEl.style.webkitMaskImage = 'none';
+        }
+
+        // Captura o body inteiro do iframe com alta qualidade e sem cortes
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
-            scale: 3,
-            backgroundColor: '#0d0d0d',
-            useCORS: true,
+            scale: 3,               // Alta resolução (textos ficam nítidos)
+            backgroundColor: '#ffffff',  // Fundo branco para evitar transparência
+            useCORS: true,          // Permite imagens externas
             allowTaint: false,
             logging: false,
             windowWidth: iframeDoc.body.scrollWidth,
             windowHeight: iframeDoc.body.scrollHeight,
-            onclone: (clonedDoc) => {
+            onclone: (clonedDoc, element) => {
+                // Força estilos visuais no clone (evita opacidade acidental)
                 clonedDoc.body.style.opacity = '1';
                 clonedDoc.body.style.visibility = 'visible';
                 const allElements = clonedDoc.querySelectorAll('*');
                 allElements.forEach(el => {
-                    if (el.id !== 'scrolling-text') {
-                        el.style.opacity = '1';
-                        el.style.visibility = 'visible';
-                    }
+                    el.style.opacity = '1';
+                    el.style.visibility = 'visible';
                 });
+                // Garante que o scrolling-text também está sem mask no clone
+                const stClone = clonedDoc.getElementById('scrolling-text');
+                if (stClone) {
+                    stClone.style.maskImage = 'none';
+                    stClone.style.webkitMaskImage = 'none';
+                }
             }
         });
 
+        // Restaura mask do scrolling-text após captura
         if (scrollingTextEl) {
-            scrollingTextEl.style.display = originalDisplay;
+            scrollingTextEl.style.maskImage = savedMask;
+            scrollingTextEl.style.webkitMaskImage = savedWebkitMask;
         }
 
+        // Cria link para download
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada sem o fundo animado.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com todos os textos visíveis.');
     } catch (e) {
-        if (scrollingTextEl) {
-            scrollingTextEl.style.display = originalDisplay;
-        }
         console.error(e);
-        showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem.');
+        showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
+
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording   = false;
