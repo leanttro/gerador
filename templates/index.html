@@ -1742,7 +1742,6 @@ async function captureImage() {
     const iframe = document.getElementById('previewFrame');
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-    // Aguarda o carregamento completo das fontes e imagens dentro do iframe
     try {
         await iframeDoc.fonts.ready;
         const images = iframeDoc.querySelectorAll('img');
@@ -1750,9 +1749,8 @@ async function captureImage() {
             if (img.complete) return Promise.resolve();
             return new Promise(resolve => { img.onload = img.onerror = resolve; });
         }));
-    } catch(e) { console.warn("Erro aguardando fontes/imagens", e); }
+    } catch(e) { console.warn(e); }
 
-    // Garante que html2canvas esteja injetado no iframe
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Preparando', 'Carregando engine de captura...');
         const script = iframeDoc.createElement('script');
@@ -1764,17 +1762,17 @@ async function captureImage() {
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
 
     try {
-        // Captura o body inteiro do iframe com alta qualidade e sem cortes
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
-            scale: 3,               // Alta resolução (textos ficam nítidos)
-            backgroundColor: '#ffffff',  // Fundo branco para evitar transparência
-            useCORS: true,          // Permite imagens externas
+            scale: 3,
+            backgroundColor: '#ffffff',
+            useCORS: true,
             allowTaint: false,
             logging: false,
-            windowWidth: iframeDoc.body.scrollWidth,
-            windowHeight: iframeDoc.body.scrollHeight,
+            width: iframe.clientWidth,
+            height: iframe.clientHeight,
+            windowWidth: iframe.clientWidth,
+            windowHeight: iframe.clientHeight,
             onclone: (clonedDoc, element) => {
-                // Força estilos visuais no clone (evita opacidade acidental)
                 clonedDoc.body.style.opacity = '1';
                 clonedDoc.body.style.visibility = 'visible';
                 const allElements = clonedDoc.querySelectorAll('*');
@@ -1785,7 +1783,6 @@ async function captureImage() {
             }
         });
 
-        // Cria link para download
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
@@ -1796,7 +1793,6 @@ async function captureImage() {
         showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
-
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording   = false;
