@@ -867,7 +867,6 @@
 
         <div class="panel active" id="panel-generate">
 
-            <!-- SEÇÃO DE MODO DE CRIAÇÃO -->
             <div class="section">
                 <span class="section-label">Modo de Geração</span>
                 <select id="generationModeSelect">
@@ -909,7 +908,6 @@
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
             </div>
 
-            <!-- SEÇÃO DE INSPIRAÇÕES (NOVA) -->
             <div class="section">
                 <span class="section-label">Buscar Inspirações (Serper)</span>
                 <div class="flex-row gap-6">
@@ -1767,22 +1765,12 @@ async function captureImage() {
         // Captura o body inteiro do iframe com alta qualidade e sem cortes
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,               // Alta resolução (textos ficam nítidos)
-            backgroundColor: '#ffffff',  // Fundo branco para evitar transparência
+            backgroundColor: 'transparent',  // Fundo transparente para preservar a opacidade
             useCORS: true,          // Permite imagens externas
             allowTaint: false,
             logging: false,
             windowWidth: iframeDoc.body.scrollWidth,
-            windowHeight: iframeDoc.body.scrollHeight,
-            onclone: (clonedDoc, element) => {
-                // Força estilos visuais no clone (evita opacidade acidental)
-                clonedDoc.body.style.opacity = '1';
-                clonedDoc.body.style.visibility = 'visible';
-                const allElements = clonedDoc.querySelectorAll('*');
-                allElements.forEach(el => {
-                    el.style.opacity = '1';
-                    el.style.visibility = 'visible';
-                });
-            }
+            windowHeight: iframeDoc.body.scrollHeight
         });
 
         // Cria link para download
