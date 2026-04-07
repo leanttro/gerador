@@ -1764,17 +1764,6 @@ async function captureImage() {
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
 
     try {
-        // Remove mask do scrolling-text dentro do iframe antes de capturar
-        const scrollingTextEl = iframeDoc.getElementById('scrolling-text');
-        let savedMask = null;
-        let savedWebkitMask = null;
-        if (scrollingTextEl) {
-            savedMask = scrollingTextEl.style.maskImage;
-            savedWebkitMask = scrollingTextEl.style.webkitMaskImage;
-            scrollingTextEl.style.maskImage = 'none';
-            scrollingTextEl.style.webkitMaskImage = 'none';
-        }
-
         // Captura o body inteiro do iframe com alta qualidade e sem cortes
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,               // Alta resolução (textos ficam nítidos)
@@ -1793,20 +1782,8 @@ async function captureImage() {
                     el.style.opacity = '1';
                     el.style.visibility = 'visible';
                 });
-                // Garante que o scrolling-text também está sem mask no clone
-                const stClone = clonedDoc.getElementById('scrolling-text');
-                if (stClone) {
-                    stClone.style.maskImage = 'none';
-                    stClone.style.webkitMaskImage = 'none';
-                }
             }
         });
-
-        // Restaura mask do scrolling-text após captura
-        if (scrollingTextEl) {
-            scrollingTextEl.style.maskImage = savedMask;
-            scrollingTextEl.style.webkitMaskImage = savedWebkitMask;
-        }
 
         // Cria link para download
         const link = document.createElement('a');
