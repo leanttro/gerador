@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Produto Cinematográfico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+            --fonte-principal: 'Montserrat', sans-serif;
+            
+            /* Velocidades Cinematográficas - Mais lentas e suaves */
+            --time-slow: 1.5s;
+            --time-normal: 0.8s;
+            --ease-cinematic: cubic-bezier(0.23, 1, 0.32, 1); /* Ease Out Quint */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            font-family: var(--fonte-principal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            perspective: 1000px; /* Necessário para efeitos 3D */
+        }
+
+        /* ==============================
+           PROPORÇÕES
+           ============================== */
+        .template-motion-container[data-ratio="4:5"]  { width: 400px; height: 500px; }
+        .template-motion-container[data-ratio="1:1"]  { width: 500px; height: 500px; }
+        .template-motion-container[data-ratio="9:16"] { width: 405px; height: 720px; }
+
+        .template-motion-container {
+            background-color: var(--cor-fundo);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        /* ==============================
+           FUNDO MARQUEE (Mantido do produto.html)
+           ============================== */
+        .bg-marquee-wrapper {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+        }
+
+        .bg-marquee-row { display: flex; white-space: nowrap; width: max-content; }
+        .bg-marquee-row:nth-child(odd)  { animation: marqueeLeft 25s linear infinite; }
+        .bg-marquee-row:nth-child(even) { animation: marqueeRight 30s linear infinite; }
+
+        .bg-marquee-text {
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            color: var(--cor-destaque);
+            opacity: 0.05;
+            padding-right: 60px;
+        }
+
+        @keyframes marqueeLeft  { from { transform: translateX(0); }    to { transform: translateX(-50%); } }
+        @keyframes marqueeRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+
+        /* ==============================
+           HEADER — LOGO (Fade In Suave)
+           ============================== */
+        .template-header {
+            width: 100%;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 20px;
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            animation: fadeIn var(--time-normal) var(--ease-cinematic) 0.5s forwards;
+        }
+
+        .cliente-logo {
+            max-width: 180px;
+            max-height: 50px;
+            object-fit: contain;
+        }
+
+        /* ==============================
+           MAIN — FOCO NO PRODUTO E VÍDEO
+           ============================== */
+        .template-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Container da Imagem com Zoom Cinematográfico */
+        .product-image-wrapper {
+            width: 100%;
+            height: 60%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-bottom: 20px;
+            overflow: hidden; /* Corta o zoom */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: scale(1.1) translateY(20px);
+            animation: productReveal var(--time-slow) var(--ease-cinematic) forwards;
+        }
+
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Efeito Ken Burns (Zoom lento e constante) */
+            animation: kenBurns 10s linear infinite alternate;
+        }
+        
+        /* Overlay de Vinheta (Darken edges) */
+        .cinematic-vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 100%);
+            pointer-events: none;
+        }
+
+        /* ==============================
+           INFO DO PRODUTO (Animação em Cascata)
+           ============================== */
+        .product-info {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .product-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--cor-texto-principal);
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            line-height: 1.1;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp var(--time-normal) var(--ease-cinematic) 0.8s forwards;
+        }
+
+        .product-details {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--cor-texto-principal);
+            opacity: 0.8;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp var(--time-normal) var(--ease-cinematic) 1.0s forwards;
+        }
+
+        /* Badges/Macros com animação pop */
+        .product-macros {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+            opacity: 0;
+            animation: fadeIn var(--time-normal) var(--ease-cinematic) 1.2s forwards;
+        }
+
+        .macro-tag {
+            background-color: var(--cor-destaque);
+            color: var(--cor-fundo);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==============================
+           FOOTER — CTA (Slide In lateral)
+           ============================== */
+        .template-footer {
+            width: 100%;
+            padding: 15px 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: fadeInRight var(--time-normal) var(--ease-cinematic) 1.4s forwards;
+        }
+
+        .cta-text {
+            color: var(--cor-destaque-secundaria);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ==============================
+           ANIMAÇÕES CINEMATOGRÁFICAS
+           ============================== */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        @keyframes fadeInUp { 
+            from { opacity: 0; transform: translateY(15px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        @keyframes fadeInRight { 
+            from { opacity: 0; transform: translateX(-20px); } 
+            to { opacity: 1; transform: translateX(0); } 
+        }
+
+        @keyframes productReveal {
+            from { opacity: 0; transform: scale(1.1) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @keyframes kenBurns {
+            0%   { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="template-motion-container" data-ratio="CHAVE_PROPORCAO" id="produto-cinematico-app">
+
+        <div class="bg-marquee-wrapper" aria-hidden="true">
+            <div class="bg-marquee-row"><span class="bg-marquee-text">CHAVE_NOME_EMPRESA</span><span class="bg-marquee-text">CHAVE_NOME_EMPRESA</span></div>
+            <div class="bg-marquee-row"><span class="bg-marquee-text">CHAVE_NOME_EMPRESA</span><span class="bg-marquee-text">CHAVE_NOME_EMPRESA</span></div>
+            <div class="bg-marquee-row"><span class="bg-marquee-text">CHAVE_NOME_EMPRESA</span><span class="bg-marquee-text">CHAVE_NOME_EMPRESA</span></div>
+        </div>
+
+        <header class="template-header">
+            <img src="CHAVE_LOGO" alt="Logo" class="cliente-logo">
+        </header>
+
+        <main class="template-main">
+            
+            <div class="product-image-wrapper">
+                <img src="CHAVE_IMAGEM" alt="Produto" class="product-img">
+                <div class="cinematic-vignette"></div>
+            </div>
+
+            <div class="product-info">
+                <h1 class="product-title">CHAVE_TITULO</h1>
+                <p class="product-details">CHAVE_INGREDIENTES</p>
+                
+                <div class="product-macros">
+                    <span class="macro-tag">CHAVE_MACROS</span>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="template-footer">
+            <span class="cta-text">CHAVE_CTA</span>
+        </footer>
+
+    </div>
+
+</body>
+</html>
