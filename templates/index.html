@@ -1749,7 +1749,7 @@ async function captureImage() {
             if (img.complete) return Promise.resolve();
             return new Promise(resolve => { img.onload = img.onerror = resolve; });
         }));
-    } catch(e) { console.warn(e); }
+    } catch(e) {}
 
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Preparando', 'Carregando engine de captura...');
@@ -1761,6 +1761,13 @@ async function captureImage() {
 
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
 
+    const scrollingTextEl = iframeDoc.getElementById('scrolling-text');
+    let originalDisplay = '';
+    if (scrollingTextEl) {
+        originalDisplay = scrollingTextEl.style.display;
+        scrollingTextEl.style.display = 'none';
+    }
+
     try {
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,
@@ -1771,19 +1778,31 @@ async function captureImage() {
             windowWidth: iframeDoc.body.scrollWidth,
             windowHeight: iframeDoc.body.scrollHeight,
             onclone: (clonedDoc) => {
-                const stClone = clonedDoc.getElementById('scrolling-text');
-                if (stClone) {
-                    stClone.style.display = 'none';
-                }
+                clonedDoc.body.style.opacity = '1';
+                clonedDoc.body.style.visibility = 'visible';
+                const allElements = clonedDoc.querySelectorAll('*');
+                allElements.forEach(el => {
+                    if (el.id !== 'scrolling-text') {
+                        el.style.opacity = '1';
+                        el.style.visibility = 'visible';
+                    }
+                });
             }
         });
+
+        if (scrollingTextEl) {
+            scrollingTextEl.style.display = originalDisplay;
+        }
 
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'Imagem gerada sem o fundo animado.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada sem o fundo animado.');
     } catch (e) {
+        if (scrollingTextEl) {
+            scrollingTextEl.style.display = originalDisplay;
+        }
         console.error(e);
         showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem.');
     }
