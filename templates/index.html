@@ -839,55 +839,6 @@
             font-size: 11px;
             color: var(--text-muted);
         }
-        
-        /* ═══════════════════════════════════════════
-           MODO MOBILE RESPONSIVO
-        ═══════════════════════════════════════════ */
-        @media (max-width: 768px) {
-            html, body {
-                overflow: auto !important;
-                height: auto !important;
-            }
-            body {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100% !important;
-                min-width: 100% !important;
-                border-right: none;
-                border-bottom: 1px solid var(--border);
-                flex: none;
-            }
-            .main-content {
-                width: 100%;
-                flex: none;
-                overflow: visible;
-                min-height: 800px;
-            }
-            .toolbar {
-                height: auto;
-                flex-wrap: wrap;
-                padding: 12px;
-                gap: 12px;
-            }
-            .toolbar-left, .toolbar-right {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            .preview-container {
-                padding: 20px 10px;
-                overflow: visible;
-            }
-            .generate-btn-wrapper {
-                position: sticky;
-                bottom: 0;
-                background: var(--bg-card);
-                z-index: 100;
-                border-top: 1px solid var(--border);
-            }
-        }
     </style>
 </head>
 <body>
@@ -916,6 +867,7 @@
 
         <div class="panel active" id="panel-generate">
 
+            <!-- SEÇÃO DE MODO DE CRIAÇÃO -->
             <div class="section">
                 <span class="section-label">Modo de Geração</span>
                 <select id="generationModeSelect">
@@ -957,6 +909,7 @@
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
             </div>
 
+            <!-- SEÇÃO DE INSPIRAÇÕES (NOVA) -->
             <div class="section">
                 <span class="section-label">Buscar Inspirações (Serper)</span>
                 <div class="flex-row gap-6">
@@ -1796,21 +1749,16 @@ async function captureImage() {
     }
     showToast('info', 'Capturando...', 'Isso pode demorar um segundo.');
     try {
-        // Pequeno delay para garantir que todas as fontes e imagens estejam renderizadas
-        await new Promise(r => setTimeout(r, 600));
-        
         const canvas = await iframe.contentWindow.html2canvas(doc.body, {
             useCORS: true,
-            allowTaint: false,
-            backgroundColor: '#ffffff', // Força fundo branco para evitar opacidade errada
-            scale: 2, // Aumenta a qualidade
-            logging: false
+            allowTaint: true,
+            backgroundColor: null
         });
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png', 1.0);
+        link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso com texto e cores.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso.');
     } catch (e) {
         showToast('error', 'Erro', 'Não foi possível capturar a imagem.');
     }
