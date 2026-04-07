@@ -1765,12 +1765,27 @@ async function captureImage() {
         // Captura o body inteiro do iframe com alta qualidade e sem cortes
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,               // Alta resolução (textos ficam nítidos)
-            backgroundColor: 'transparent',  // Fundo transparente para preservar a opacidade
+            backgroundColor: null,  // Mantém a cor de fundo nativa do iframe
             useCORS: true,          // Permite imagens externas
             allowTaint: false,
             logging: false,
             windowWidth: iframeDoc.body.scrollWidth,
-            windowHeight: iframeDoc.body.scrollHeight
+            windowHeight: iframeDoc.body.scrollHeight,
+            onclone: (clonedDoc, element) => {
+                clonedDoc.body.style.visibility = 'visible';
+                const allElements = clonedDoc.querySelectorAll('*');
+                allElements.forEach(el => {
+                    // Garante visibilidade sem forçar opacity: 1 que destrói a transparência
+                    el.style.visibility = 'visible';
+                    // Remove animações para capturar o frame estático final sem os textos sumirem
+                    el.style.animation = 'none';
+                    el.style.transition = 'none';
+                    // Se o elemento estiver totalmente invisível via inline style, revelamos
+                    if (el.style.opacity === '0') {
+                        el.style.opacity = '1';
+                    }
+                });
+            }
         });
 
         // Cria link para download
