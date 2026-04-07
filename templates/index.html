@@ -1774,6 +1774,10 @@ async function captureImage() {
             onclone: (clonedDoc) => {
                 const style = clonedDoc.createElement('style');
                 style.innerHTML = `
+                    html, body {
+                        background-color: transparent !important;
+                        background: transparent !important;
+                    }
                     * {
                         visibility: visible !important;
                         opacity: 1 !important;
@@ -1789,13 +1793,12 @@ async function captureImage() {
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'A imagem foi baixada com sucesso.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com fundo transparente.');
     } catch (e) {
         console.error(e);
         showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
-
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording   = false;
