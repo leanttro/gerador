@@ -867,7 +867,6 @@
 
         <div class="panel active" id="panel-generate">
 
-            <!-- SEÇÃO DE MODO DE CRIAÇÃO -->
             <div class="section">
                 <span class="section-label">Modo de Geração</span>
                 <select id="generationModeSelect">
@@ -909,7 +908,6 @@
                 <button class="btn btn-ghost text-10" onclick="clearAllAssets()" id="clearAssetsBtn" style="display:none">✕ Remover todos os assets</button>
             </div>
 
-            <!-- SEÇÃO DE INSPIRAÇÕES (NOVA) -->
             <div class="section">
                 <span class="section-label">Buscar Inspirações (Serper)</span>
                 <div class="flex-row gap-6">
@@ -1730,9 +1728,6 @@ function downloadHTML() {
     showToast('success', 'Download iniciado', 'Arquivo HTML salvo com sucesso!');
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// FUNÇÃO CAPTUREIMAGE CORRIGIDA – CAPTURA TODO O CONTEÚDO VISÍVEL DO IFRAME
-// ═══════════════════════════════════════════════════════════════════════
 async function captureImage() {
     if (!state.currentHTML) {
         showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
@@ -1764,7 +1759,7 @@ async function captureImage() {
     try {
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
             scale: 3,
-            backgroundColor: '#ffffff',
+            backgroundColor: null,
             useCORS: true,
             allowTaint: false,
             logging: false,
@@ -1772,13 +1767,18 @@ async function captureImage() {
             height: iframe.clientHeight,
             windowWidth: iframe.clientWidth,
             windowHeight: iframe.clientHeight,
-            onclone: (clonedDoc, element) => {
-                clonedDoc.body.style.opacity = '1';
-                clonedDoc.body.style.visibility = 'visible';
+            onclone: (clonedDoc) => {
                 const allElements = clonedDoc.querySelectorAll('*');
                 allElements.forEach(el => {
-                    el.style.opacity = '1';
-                    el.style.visibility = 'visible';
+                    const style = clonedDoc.defaultView.getComputedStyle(el);
+                    if (style.opacity === '0') {
+                        el.style.opacity = '1';
+                    }
+                    if (style.visibility === 'hidden') {
+                        el.style.visibility = 'visible';
+                    }
+                    el.style.animation = 'none';
+                    el.style.transition = 'none';
                 });
             }
         });
@@ -1793,6 +1793,7 @@ async function captureImage() {
         showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
+
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording   = false;
