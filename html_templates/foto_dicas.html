@@ -2,11 +2,12 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Template Dicas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Template Dicas · Placeholders Dinâmicos</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* ----- VARIÁVEIS VINDAS DAS CHAVES (NÃO ALTERAR) ----- */
         :root {
             --cor-fundo: CHAVE_COR_FUNDO;
             --cor-texto-principal: CHAVE_COR_TEXTO;
@@ -17,110 +18,122 @@
             --velocidade-animacao-normal: 0.5s;
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            -webkit-font-smoothing: antialiased;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: var(--cor-fundo);
-        }
-
+        /* CORPO OCUPA A TELA INTEIRA SEM BARRA DE ROLAGEM HORIZONTAL */
         body {
-            color: var(--cor-texto-principal);
+            background-color: var(--cor-fundo);
             font-family: var(--fonte-principal);
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
 
+        /* CONTAINER PRINCIPAL: AGORA OCUPA 100% DA VIEWPORT (PÁGINA TODA) */
         .template-motion-container {
-            width: 100%;
-            height: 100%;
             background-color: var(--cor-fundo);
+            width: 100vw;
+            min-height: 100vh;
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
+        /* ATENÇÃO: O data-ratio é mantido para compatibilidade, mas NÃO afeta mais o tamanho */
+        .template-motion-container[data-ratio="4:5"],
+        .template-motion-container[data-ratio="1:1"],
+        .template-motion-container[data-ratio="9:16"] {
+            width: 100vw;
+            height: auto;
+            min-height: 100vh;
+        }
+
+        /* LINHA LATERAL ESQUERDA */
         .side-line {
             position: absolute;
-            left: 0; 
+            left: 0;
             top: 0;
-            width: 4px; 
+            width: 3px;
             height: 100%;
             background: linear-gradient(to bottom, transparent 0%, var(--cor-destaque) 30%, var(--cor-destaque) 70%, transparent 100%);
-            opacity: 0.6;
+            opacity: 0.35;
             z-index: 1;
             animation: fadeInTop 0.8s ease-out forwards;
         }
 
+        /* HEADER */
         .template-header {
             width: 100%;
-            height: 12%;
+            padding: 24px 28px 12px 28px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px 20px 0;
             position: relative;
             z-index: 10;
             animation: fadeInTop var(--velocidade-animacao-fast) ease-out forwards;
         }
 
         .cliente-logo {
-            max-width: 180px;
-            max-height: 70px;
+            max-width: 200px;
+            max-height: 65px;
             object-fit: contain;
         }
 
+        /* MAIN FLEXÍVEL */
         .template-main {
-            flex-grow: 1;
+            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 0 10%;
+            padding: 16px 28px 32px 28px;
             position: relative;
             z-index: 10;
         }
 
         .title-block {
-            margin-bottom: 25px;
+            margin-bottom: 28px;
             opacity: 0;
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
         }
 
         .tips-title {
-            font-size: 7.5vw;
+            font-size: clamp(26px, 6vw, 44px);
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1.2;
             color: var(--cor-texto-principal);
             text-transform: uppercase;
             letter-spacing: -0.5px;
+            word-break: break-word;
         }
 
         .tips-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         .tip-item {
             display: flex;
             align-items: flex-start;
-            gap: 14px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px;
-            border-radius: 14px;
-            border-left: 5px solid var(--cor-destaque);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            gap: 16px;
+            background: rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 18px 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--cor-destaque);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             opacity: 0;
         }
 
@@ -129,14 +142,16 @@
         .tip-3 { animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards; }
 
         .tip-number {
-            font-size: 8vw;
+            font-size: clamp(24px, 5vw, 34px);
             font-weight: 900;
             color: var(--cor-destaque);
             line-height: 1;
+            opacity: 0.9;
+            min-width: 48px;
         }
 
         .tip-text {
-            font-size: 4vw;
+            font-size: clamp(13px, 4vw, 17px);
             font-weight: 600;
             color: var(--cor-texto-principal);
             line-height: 1.4;
@@ -144,51 +159,63 @@
         }
 
         .template-footer {
-            height: 10%;
-            padding: 0 10% 30px;
+            padding: 16px 28px 28px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: relative;
             z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 10px;
         }
 
         .cta-text {
             color: var(--cor-destaque-secundaria);
-            font-weight: 700;
-            font-size: 3.2vw;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 600;
+            font-size: clamp(11px, 3vw, 14px);
+            letter-spacing: 0.3px;
             opacity: 0;
             animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.5s) forwards;
         }
 
         .footer-accent {
-            width: 35px;
-            height: 2px;
+            width: 40px;
+            height: 1px;
             background: var(--cor-destaque);
-            opacity: 0.5;
+            opacity: 0.3;
         }
 
-        /* Desktop Preview */
-        @media (min-width: 600px) {
-            .tips-title { font-size: 36px; }
-            .tip-number { font-size: 42px; }
-            .tip-text { font-size: 18px; }
-            .cta-text { font-size: 14px; }
-            .template-main { padding: 0 40px; }
-            .template-footer { padding: 0 40px 30px; }
-        }
+        /* ANIMAÇÕES ORIGINAIS */
+        @keyframes fadeInTop   { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInText  { from { opacity: 0; transform: translateX(8px); }  to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInLeft  { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
 
-        @keyframes fadeInTop   { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInText  { from { opacity: 0; transform: translateX(10px); }  to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes fadeInLeft  { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        /* RESPONSIVO EXTRA */
+        @media (max-width: 550px) {
+            .template-main {
+                padding: 12px 20px 24px 20px;
+            }
+            .tip-item {
+                padding: 14px 16px;
+                gap: 12px;
+            }
+            .tips-list {
+                gap: 16px;
+            }
+            .template-header {
+                padding: 20px 20px 8px 20px;
+            }
+            .template-footer {
+                padding: 14px 20px 22px 20px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="template-motion-container" id="dicas-app">
+    <!-- CONTAINER PRINCIPAL: MANTÉM O data-ratio COMO CHAVE, MAS SEM RESTRIÇÃO DE TAMANHO -->
+    <div class="template-motion-container" data-ratio="CHAVE_PROPORCAO" id="dicas-app">
 
         <div class="side-line"></div>
 
