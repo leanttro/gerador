@@ -540,22 +540,19 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  aspect-ratio: 9/16;
-  width: 100%;
-  display: block;
+  aspect-ratio: 4/5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
 }
 
 .preview-box iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 300%;
   height: 300%;
-  transform: scale(0.3333);
+  transform: scale(0.333);
   transform-origin: top left;
   border: none;
-  pointer-events: none;
 }
 
 .preview-placeholder {
@@ -785,6 +782,103 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── CART / ADD TO LIST ── */
+.btn-add-cart {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 13px 28px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-add-cart:hover {
+  background: var(--accent2);
+}
+
+.cart-item {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.cart-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cart-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cart-item-meta {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  line-height: 1.6;
+}
+
+.cart-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cart-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.cart-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.cart-btn.danger:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.cart-item-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-right: 6px;
+}
+
 </style>
 </head>
 <body>
@@ -947,7 +1041,7 @@ html, body {
     </div>
 
     <div class="section" id="section-3">
-      <div class="section-title">Cores & finalizar</div>
+      <div class="section-title">Cores &amp; finalizar</div>
       <div class="section-sub">Escolha as cores da identidade visual. Clique em um quadradinho ou use o seletor personalizado.</div>
 
       <div class="color-grid">
@@ -988,19 +1082,38 @@ html, body {
         </div>
       </div>
 
+      <!-- BOTAO ADICIONAR A LISTA -->
       <div style="margin-top:28px">
+        <button class="btn-add-cart" id="btnAddCart" onclick="adicionarNaLista()">
+          + Adicionar esta arte à lista
+        </button>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center">
+          Adicione quantas artes quiser. Você pode duplicar e editar cada uma antes de enviar.
+        </div>
+      </div>
+
+      <!-- LISTA DE ARTES ADICIONADAS -->
+      <div id="listaArtes" style="margin-top:24px;display:none">
+        <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px">
+          Lista de artes — <span id="countArtes">0</span> arte(s)
+        </div>
+        <div id="cartItems"></div>
+      </div>
+
+      <!-- BOTAO ENVIAR TUDO -->
+      <div style="margin-top:20px">
         <div class="success-box" id="successBox">
-          <div class="success-icon">✅</div>
-          <div class="success-title">Arte enviada!</div>
-          <div class="success-sub">Seu pedido foi recebido. Em breve você receberá a arte pronta.</div>
+          <div class="success-icon">&#x2705;</div>
+          <div class="success-title">Pedido enviado!</div>
+          <div class="success-sub">Seu pedido foi recebido. O Excel foi gerado e baixado. Em breve você receberá as artes prontas.</div>
         </div>
 
-        <button class="btn-submit" id="btnSubmit" onclick="submitForm()">
-          🎨 Gerar minha arte agora
+        <button class="btn-submit" id="btnSubmit" onclick="submitForm()" style="display:none">
+          &#127912; Enviar pedido completo e baixar Excel
         </button>
       </div>
 
-      <div class="nav-row" style="justify-content:flex-start;margin-top:0">
+      <div class="nav-row" style="justify-content:flex-start;margin-top:12px">
         <button class="btn-back" onclick="goToStep(2)">← Voltar</button>
       </div>
     </div>
@@ -1313,7 +1426,6 @@ function updatePrompt() {
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
     iframe.scrolling = "no";
-    iframe.style.cssText = "position:absolute;top:0;left:0;width:300%;height:300%;transform:scale(0.3333);transform-origin:top left;border:none;pointer-events:none;";
     
     // Usando srcdoc para evitar erro de Blob URL (tela preta)
     iframe.srcdoc = html;
@@ -1354,40 +1466,253 @@ function copyPrompt() {
 /* ═══════════════════════════════════
    SUBMIT
    ═══════════════════════════════════ */
-async function submitForm() {
-  const payload = {
+/* ═══════════════════════════════════
+   CARRINHO DE ARTES (LISTA)
+   ═══════════════════════════════════ */
+let listaDeArtes = [];
+
+function getCurrentArtData() {
+  return {
+    id: Date.now(),
     template_id: selectedTemplate?.id || '',
+    template_name: selectedTemplate?.name || 'Sem template',
+    template_html: selectedTemplate?.html || '',
     prompt: getPromptText(),
-    assets: [uploadedFiles.logo?.url, uploadedFiles.img?.url].filter(Boolean),
-    colors,
+    assets: {
+      logo: uploadedFiles.logo ? { url: uploadedFiles.logo.url, filename: uploadedFiles.logo.filename } : null,
+      img:  uploadedFiles.img  ? { url: uploadedFiles.img.url,  filename: uploadedFiles.img.filename  } : null,
+    },
+    colors: { ...colors },
     fields: {
-      nicho:        document.getElementById('f_nicho').value,
-      objetivo:     document.getElementById('f_objetivo').value,
-      empresa:      document.getElementById('f_empresa').value,
-      cliente:      document.getElementById('f_cliente').value,
-      titulo:       document.getElementById('f_titulo').value,
-      ingredientes: document.getElementById('f_ingredientes').value,
-      resultado:    document.getElementById('f_resultado').value,
-      macros:       document.getElementById('f_macros').value,
-      cta:          document.getElementById('f_cta').value,
+      nicho:        document.getElementById('f_nicho')?.value || '',
+      objetivo:     document.getElementById('f_objetivo')?.value || '',
+      empresa:      document.getElementById('f_empresa')?.value || '',
+      cliente:      document.getElementById('f_cliente')?.value || '',
+      titulo:       document.getElementById('f_titulo')?.value || '',
+      ingredientes: document.getElementById('f_ingredientes')?.value || '',
+      resultado:    document.getElementById('f_resultado')?.value || '',
+      macros:       document.getElementById('f_macros')?.value || '',
+      cta:          document.getElementById('f_cta')?.value || '',
     }
   };
+}
+
+function adicionarNaLista() {
+  if (!selectedTemplate) {
+    alert('Selecione um template primeiro (Passo 1).');
+    return;
+  }
+  const arte = getCurrentArtData();
+  listaDeArtes.push(arte);
+  renderCartItems();
+  document.getElementById('listaArtes').style.display = 'block';
+  document.getElementById('btnSubmit').style.display = 'block';
+
+  // Feedback visual no botão
+  const btn = document.getElementById('btnAddCart');
+  const originalText = btn.textContent;
+  btn.textContent = '\u2713 Adicionada!';
+  btn.style.background = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = '+ Adicionar esta arte \u00e0 lista';
+    btn.style.background = '';
+  }, 1500);
+}
+
+function duplicarArte(idx) {
+  const original = listaDeArtes[idx];
+  const copia = JSON.parse(JSON.stringify(original));
+  copia.id = Date.now();
+  listaDeArtes.splice(idx + 1, 0, copia);
+  renderCartItems();
+  // Carregar a c\u00f3pia no formul\u00e1rio para edi\u00e7\u00e3o
+  carregarArteNoForm(idx + 1);
+}
+
+function removerArte(idx) {
+  listaDeArtes.splice(idx, 1);
+  renderCartItems();
+  if (listaDeArtes.length === 0) {
+    document.getElementById('listaArtes').style.display = 'none';
+    document.getElementById('btnSubmit').style.display = 'none';
+  }
+}
+
+function carregarArteNoForm(idx) {
+  const arte = listaDeArtes[idx];
+  if (!arte) return;
+
+  // Restaurar campos de texto
+  const fieldMap = {
+    f_nicho:        arte.fields.nicho,
+    f_objetivo:     arte.fields.objetivo,
+    f_empresa:      arte.fields.empresa,
+    f_cliente:      arte.fields.cliente,
+    f_titulo:       arte.fields.titulo,
+    f_ingredientes: arte.fields.ingredientes,
+    f_resultado:    arte.fields.resultado,
+    f_macros:       arte.fields.macros,
+    f_cta:          arte.fields.cta,
+  };
+  for (const [id, val] of Object.entries(fieldMap)) {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  }
+
+  // Restaurar cores
+  colors.fundo      = arte.colors.fundo;
+  colors.texto      = arte.colors.texto;
+  colors.destaque   = arte.colors.destaque;
+  colors.secundaria = arte.colors.secundaria;
+  ['fundo','texto','destaque','secundaria'].forEach(k => {
+    document.getElementById(`hex-${k}`).textContent = arte.colors[k];
+    document.getElementById(`custom-${k}`).value = arte.colors[k];
+    document.querySelectorAll(`#palette-${k} .color-swatch`).forEach(s => {
+      s.classList.toggle('selected', s.style.background === arte.colors[k] || s.title === arte.colors[k]);
+    });
+  });
+
+  // Restaurar arquivos
+  uploadedFiles.logo = arte.assets.logo;
+  uploadedFiles.img  = arte.assets.img;
+
+  // Restaurar template selecionado
+  if (arte.template_id) {
+    document.querySelectorAll('.tpl-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.id === arte.template_id);
+    });
+    selectedTemplate = { id: arte.template_id, name: arte.template_name, html: arte.template_html };
+    document.getElementById('btnNext0').disabled = false;
+  }
+
+  updatePrompt();
+  goToStep(2);
+}
+
+function renderCartItems() {
+  const container = document.getElementById('cartItems');
+  document.getElementById('countArtes').textContent = listaDeArtes.length;
+
+  if (!listaDeArtes.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = listaDeArtes.map((arte, idx) => {
+    const logoNome = arte.assets.logo?.filename || '\u2014';
+    const imgNome  = arte.assets.img?.filename  || '\u2014';
+    const meta = [
+      `Template: ${arte.template_name}`,
+      `Empresa: ${arte.fields.empresa || '\u2014'}`,
+      `T\u00edtulo: ${arte.fields.titulo || '\u2014'}`,
+      `Logo: ${logoNome}`,
+      `Imagem: ${imgNome}`,
+    ].join(' \u00b7 ');
+
+    return `<div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-title">
+          <span class="cart-item-num">${idx + 1}</span>
+          ${arte.fields.empresa || arte.template_name || 'Arte ' + (idx + 1)}
+          ${arte.fields.titulo ? ' \u2014 ' + arte.fields.titulo : ''}
+        </div>
+        <div class="cart-item-meta">${meta}</div>
+      </div>
+      <div class="cart-item-actions">
+        <button class="cart-btn" onclick="carregarArteNoForm(${idx})" title="Carregar no formul\u00e1rio para editar">&#9998; Editar</button>
+        <button class="cart-btn" onclick="duplicarArte(${idx})" title="Duplicar esta arte">&#10064; Duplicar</button>
+        <button class="cart-btn danger" onclick="removerArte(${idx})" title="Remover">&#10005;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════
+   GERAR EXCEL NO FORMATO DO ROB\u00d4
+   Colunas: A=prompt | B=logo | C=imagem | D=template
+   ═══════════════════════════════════ */
+function gerarExcel() {
+  if (!listaDeArtes.length) return;
+
+  // Montar linhas CSV com ponto-e-v\u00edrgula (padr\u00e3o PT-BR Excel)
+  const rows = [];
+
+  // Linha de cabe\u00e7alho
+  rows.push(['prompt', 'logo', 'imagem', 'template'].join('\t'));
+
+  listaDeArtes.forEach(arte => {
+    const promptLines = [
+      `CHAVE_COR_FUNDO: ${arte.colors.fundo}`,
+      `CHAVE_COR_TEXTO: ${arte.colors.texto}`,
+      `CHAVE_COR_DESTAQUE: ${arte.colors.destaque}`,
+      `CHAVE_COR_SECUNDARIA: ${arte.colors.secundaria}`,
+      `CHAVE_NOME_EMPRESA: ${arte.fields.empresa}`,
+      `CHAVE_LOGO: ${arte.assets.logo?.filename || 'logo'}`,
+      `CHAVE_IMAGEM: ${arte.assets.img?.filename || 'imagem'}`,
+      `CHAVE_TITULO: ${arte.fields.titulo}`,
+      `CHAVE_INGREDIENTES: ${arte.fields.ingredientes}`,
+      `CHAVE_RESULTADO: ${arte.fields.resultado}`,
+      `CHAVE_MACROS: ${arte.fields.macros}`,
+      `CHAVE_CTA: ${arte.fields.cta}`,
+    ].join('\n');
+
+    const promptCell = '"' + promptLines.replace(/"/g, '""') + '"';
+    const logoCell   = arte.assets.logo?.filename || '';
+    const imagemCell = arte.assets.img?.filename  || '';
+    const templateCell = arte.template_name || arte.template_id || '';
+
+    rows.push([promptCell, logoCell, imagemCell, templateCell].join('\t'));
+  });
+
+  const tsvContent = '\uFEFF' + rows.join('\n'); // BOM para Excel reconhecer UTF-8
+  const blob = new Blob([tsvContent], { type: 'text/tab-separated-values;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `pedido_artes_${Date.now()}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function submitForm() {
+  if (!listaDeArtes.length) {
+    alert('Adicione pelo menos uma arte \u00e0 lista antes de enviar.');
+    return;
+  }
 
   showLoading('Enviando pedido...');
+  let sucesso = true;
+
   try {
-    const res = await fetch('/api/form-pedido', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    hideLoading();
-    if (data.success) {
-      document.getElementById('btnSubmit').style.display = 'none';
-      document.getElementById('successBox').classList.add('visible');
+    for (const arte of listaDeArtes) {
+      const payload = {
+        template_id: arte.template_id,
+        prompt:      arte.prompt,
+        assets:      [arte.assets.logo?.url, arte.assets.img?.url].filter(Boolean),
+        colors:      arte.colors,
+        fields:      arte.fields,
+      };
+      const res = await fetch('/api/form-pedido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.success) { sucesso = false; break; }
     }
   } catch(e) {
-    hideLoading();
+    sucesso = false;
+  }
+
+  hideLoading();
+
+  if (sucesso) {
+    gerarExcel();
+    document.getElementById('btnSubmit').style.display = 'none';
+    document.getElementById('successBox').classList.add('visible');
+  } else {
     alert('Erro ao enviar. Tente novamente.');
   }
 }
