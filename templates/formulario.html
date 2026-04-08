@@ -1103,6 +1103,7 @@ function renderTemplates(templates) {
 
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
+    iframe.scrolling = "no";
     
     // Substituição rigorosa de todas as chaves possíveis para evitar erro de layout
     let mockHtml = tpl.html
@@ -1118,9 +1119,8 @@ function renderTemplates(templates) {
       .replace(/CHAVE_LOGO/g, 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO')
       .replace(/CHAVE_IMAGEM/g, 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO');
       
-    // Utilizando Blob URL para garantir carregamento perfeito como no index.html
-    const blob = new Blob([mockHtml], { type: 'text/html' });
-    iframe.src = URL.createObjectURL(blob);
+    // Utilizando srcdoc para garantir carregamento perfeito (substituindo Blob URL que causava tela preta)
+    iframe.srcdoc = mockHtml;
     previewDiv.appendChild(iframe);
 
     const infoDiv = document.createElement('div');
@@ -1309,9 +1309,10 @@ function updatePrompt() {
     preview.innerHTML = '';
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
+    iframe.scrolling = "no";
     
-    const blob = new Blob([html], { type: 'text/html' });
-    iframe.src = URL.createObjectURL(blob);
+    // Usando srcdoc para evitar erro de Blob URL (tela preta)
+    iframe.srcdoc = html;
     preview.appendChild(iframe);
   }
 }
