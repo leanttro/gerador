@@ -540,19 +540,22 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  aspect-ratio: 4/5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 9/16;
+  width: 100%;
+  display: block;
   position: relative;
 }
 
 .preview-box iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 300%;
   height: 300%;
-  transform: scale(0.333);
+  transform: scale(0.3333);
   transform-origin: top left;
   border: none;
+  pointer-events: none;
 }
 
 .preview-placeholder {
@@ -1104,8 +1107,23 @@ function renderTemplates(templates) {
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
     iframe.scrolling = "no";
-    iframe.src = tpl.url;
-
+    
+    // Substituição rigorosa de todas as chaves possíveis para evitar erro de layout
+    let mockHtml = tpl.html
+      .replace(/CHAVE_COR_FUNDO/g, '#181818')
+      .replace(/CHAVE_COR_TEXTO/g, '#ffffff')
+      .replace(/CHAVE_COR_DESTAQUE/g, '#7C3AED')
+      .replace(/CHAVE_COR_SECUNDARIA/g, '#a855f7')
+      .replace(/CHAVE_TITULO/g, 'TITULO AQUI')
+      .replace(/CHAVE_INGREDIENTES/g, 'Beneficio Principal')
+      .replace(/CHAVE_RESULTADO/g, 'Muito bom!')
+      .replace(/CHAVE_MACROS/g, 'DESTAQUE')
+      .replace(/CHAVE_CTA/g, 'SAIBA MAIS')
+      .replace(/CHAVE_LOGO/g, 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO')
+      .replace(/CHAVE_IMAGEM/g, 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO');
+      
+    // Utilizando srcdoc para garantir carregamento perfeito (substituindo Blob URL que causava tela preta)
+    iframe.srcdoc = mockHtml;
     previewDiv.appendChild(iframe);
 
     const infoDiv = document.createElement('div');
@@ -1280,12 +1298,10 @@ function updatePrompt() {
       CHAVE_TITULO:           document.getElementById('f_titulo')?.value || 'Seu Título Aqui',
       CHAVE_INGREDIENTES:     document.getElementById('f_ingredientes')?.value || 'Os benefícios ou detalhes aparecerão aqui.',
       CHAVE_RESULTADO:        document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui.',
-      CHAVE_PRINT_MENSAGEM:   document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui.',
       CHAVE_MACROS:           document.getElementById('f_macros')?.value || 'TAGS',
       CHAVE_CTA:              document.getElementById('f_cta')?.value || 'Ação do Rodapé',
-      CHAVE_LOGO:             uploadedFiles.logo?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><rect width="200" height="80" fill="%23222"/><text x="50%" y="50%" fill="%23fff" font-family="sans-serif" font-size="20" text-anchor="middle" dy=".3em">LOGO</text></svg>',
-      CHAVE_IMG_LOGO:         uploadedFiles.logo?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80"><rect width="200" height="80" fill="%23222"/><text x="50%" y="50%" fill="%23fff" font-family="sans-serif" font-size="20" text-anchor="middle" dy=".3em">LOGO</text></svg>',
-      CHAVE_IMAGEM:           uploadedFiles.img?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500"><rect width="400" height="500" fill="%23222"/><text x="50%" y="50%" fill="%23fff" font-family="sans-serif" font-size="30" text-anchor="middle" dy=".3em">FOTO</text></svg>'
+      CHAVE_LOGO:             uploadedFiles.logo?.url || 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO',
+      CHAVE_IMAGEM:           uploadedFiles.img?.url || 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO'
     };
 
     for (const [k, v] of Object.entries(liveKeys)) {
@@ -1296,7 +1312,10 @@ function updatePrompt() {
     preview.innerHTML = '';
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
+    iframe.scrolling = "no";
+    iframe.style.cssText = "position:absolute;top:0;left:0;width:300%;height:300%;transform:scale(0.3333);transform-origin:top left;border:none;pointer-events:none;";
     
+    // Usando srcdoc para evitar erro de Blob URL (tela preta)
     iframe.srcdoc = html;
     preview.appendChild(iframe);
   }
