@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Pedidos | Motor Dark Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --border: rgba(255,255,255,0.1);
+  --text: #f0f0f0;
+  --muted: #888;
+  --accent: #7C3AED;
+  --green: #22c55e;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+h1 { font-size: 24px; font-weight: 700; }
+
+.btn {
+  background: var(--green);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.btn:hover { background: #16a34a; }
+
+.table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th, td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+tr:last-child td { border-bottom: none; }
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(124,58,237,0.2);
+  color: #a855f7;
+  text-transform: uppercase;
+}
+
+a { color: var(--accent); text-decoration: none; font-weight: 500; }
+a:hover { text-decoration: underline; }
+
+.empty { text-align: center; padding: 40px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Pedidos Recebidos</h1>
+  <button class="btn" onclick="exportCSV()">⬇ Exportar CSV</button>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Empresa</th>
+        <th>Template</th>
+        <th>Mídias</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr><td colspan="7" class="empty">Carregando pedidos...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+let pedidosData = [];
+
+async function carregarPedidos() {
+  try {
+    const res = await fetch('/api/pedidos');
+    const data = await res.json();
+    
+    if (data.success) {
+      pedidosData = data.pedidos;
+      renderTable();
+    } else {
+      document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" class="empty">Erro ao carregar: ${data.error}</td></tr>`;
+    }
+  } catch (e) {
+    document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" class="empty">Erro de conexão.</td></tr>`;
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  
+  if (pedidosData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum pedido encontrado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = pedidosData.map(p => {
+    const dataObj = new Date(p.timestamp * 1000);
+    const dataFormatada = dataObj.toLocaleDateString('pt-BR') + ' ' + dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+    
+    const assetsLinks = (p.assets || []).map((url, i) => `<a href="${url}" target="_blank" download>Baixar ${i+1}</a>`).join('<br>');
+    
+    return `
+      <tr>
+        <td>${dataFormatada}</td>
+        <td style="font-family:monospace">${p.id}</td>
+        <td>${p.fields?.cliente || '—'}</td>
+        <td>${p.fields?.empresa || '—'}</td>
+        <td>${p.template_id || '—'}</td>
+        <td>${assetsLinks || 'Nenhuma'}</td>
+        <td><span class="status">${p.status || 'Pendente'}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function escapeCSV(str) {
+  if (!str) return '""';
+  const cleanStr = String(str).replace(/"/g, '""');
+  return `"${cleanStr}"`;
+}
+
+function exportCSV() {
+  if (pedidosData.length === 0) return alert('Não há dados para exportar.');
+
+  const headers = [
+    'COR_FUNDO', 'COR_TEXTO', 'COR_DESTAQUE', 'COR_SECUNDARIA',
+    'NOME_EMPRESA', 'NOME_CLIENTE', 'TITULO', 'INGREDIENTES',
+    'RESULTADO', 'MACROS', 'CTA', 'LOGO', 'IMAGEM'
+  ];
+
+  const rows = pedidosData.map(p => {
+    const colors = p.colors || {};
+    const fields = p.fields || {};
+    const assets = p.assets || [];
+
+    const logo = assets.length > 0 ? window.location.origin + assets[0] : '';
+    const img = assets.length > 1 ? window.location.origin + assets[1] : '';
+
+    return [
+      escapeCSV(colors.fundo),
+      escapeCSV(colors.texto),
+      escapeCSV(colors.destaque),
+      escapeCSV(colors.secundaria),
+      escapeCSV(fields.empresa),
+      escapeCSV(fields.cliente),
+      escapeCSV(fields.titulo),
+      escapeCSV(fields.ingredientes),
+      escapeCSV(fields.resultado),
+      escapeCSV(fields.macros),
+      escapeCSV(fields.cta),
+      escapeCSV(logo),
+      escapeCSV(img)
+    ].join(',');
+  });
+
+  const csvContent = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute("href", url);
+  link.setAttribute("download", `pedidos_motor_dark_${new Date().getTime()}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+carregarPedidos();
+</script>
+</body>
+</html>
