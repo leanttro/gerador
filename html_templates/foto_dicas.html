@@ -75,12 +75,16 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             padding: 10px 24px;
             position: relative;
             z-index: 10;
+            width: 100%;
         }
 
         .title-block {
+            width: 100%;
+            text-align: center;
             margin-bottom: 20px;
             opacity: 0;
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
@@ -104,6 +108,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            width: 100%;
         }
 
         .template-motion-container[data-ratio="9:16"] .tips-list { 
@@ -121,6 +126,7 @@
             border-left: 4px solid var(--cor-destaque);
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             opacity: 0;
+            text-align: left;
         }
 
         .tip-1 { animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards; }
