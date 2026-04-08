@@ -43,6 +43,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
         }
 
         .side-line {
@@ -81,6 +82,7 @@
             padding: 20px 20px 0px;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
             animation: fadeInTop var(--velocidade-animacao-fast) ease-out forwards;
         }
 
@@ -94,11 +96,14 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            width: 100%;
             padding: 0 24px;
             margin-top: 20px;
             margin-bottom: 20px;
             position: relative;
             z-index: 10;
+            min-height: 0;
         }
 
         .testimonial-card {
@@ -107,6 +112,11 @@
             border-radius: 16px;
             padding: 20px;
             position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 0;
             box-shadow: 0 8px 32px rgba(0,0,0,0.05);
             animation: fadeInFast var(--velocidade-animacao-normal) ease-out forwards,
                        bob 4s ease-in-out infinite alternate 1s;
@@ -140,6 +150,7 @@
             position: relative;
             z-index: 2;
             letter-spacing: -0.2px;
+            text-align: center;
             opacity: 0;
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
         }
@@ -159,6 +170,10 @@
             margin-bottom: 16px;
             opacity: 0;
             background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 0;
             animation: fadeInTop var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards;
         }
 
@@ -167,17 +182,21 @@
         }
 
         .print-img {
-            width: 100%;
+            width: auto;
+            max-width: 100%;
             height: auto;
-            max-height: 380px;
+            max-height: 100%;
             object-fit: contain;
             display: block;
+            margin: 0 auto;
         }
 
         .client-info {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
             opacity: 0;
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.3s) forwards;
         }
@@ -197,10 +216,13 @@
         }
 
         .template-footer {
-            padding: 0 20px 16px 22px;
+            width: 100%;
+            padding: 0 20px 16px 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
             position: relative;
             z-index: 10;
         }
