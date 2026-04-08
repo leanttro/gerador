@@ -29,7 +29,6 @@
 
 html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; font-size: 15px; }
 
-/* ── HEADER ── */
 .topbar {
   position: sticky; top: 0; z-index: 100;
   background: rgba(10,10,10,0.92); backdrop-filter: blur(16px);
@@ -41,7 +40,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .topbar-logo span { color: var(--accent2); }
 .topbar-step { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
-/* ── STEPS ── */
 .steps-bar {
   display: flex; align-items: center; gap: 0;
   padding: 20px 40px; border-bottom: 1px solid var(--border);
@@ -65,18 +63,15 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .step-item.done .step-num { background: var(--green); border-color: var(--green); color: #fff; }
 .step-connector { width: 32px; height: 1px; background: var(--border2); margin: 0 6px; flex-shrink: 0; }
 
-/* ── LAYOUT ── */
 .layout { display: grid; grid-template-columns: 1fr 400px; min-height: calc(100vh - 110px); }
 .main-col { padding: 32px 40px; border-right: 1px solid var(--border); overflow-y: auto; }
 .side-col { padding: 24px; background: var(--surface); display: flex; flex-direction: column; gap: 16px; overflow-y: auto; position: sticky; top: 57px; height: calc(100vh - 57px); }
 
-/* ── SECTION ── */
 .section { display: none; }
 .section.active { display: block; }
 .section-title { font-size: 22px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 6px; }
 .section-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
 
-/* ── TEMPLATE GRID ── */
 .template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
 .tpl-card {
   border: 1.5px solid var(--border); border-radius: var(--radius);
@@ -86,7 +81,7 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .tpl-card:hover { border-color: var(--border2); transform: translateY(-2px); }
 .tpl-card.selected { border-color: var(--accent); }
 .tpl-card.selected::after {
-  content: '✓'; position: absolute; top: 8px; right: 8px;
+  content: '\2713'; position: absolute; top: 8px; right: 8px;
   width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; color: #fff; font-weight: 700;
@@ -102,7 +97,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .tpl-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
 .tpl-keys { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; line-height: 1.5; }
 
-/* ── FORM FIELDS ── */
 .field { margin-bottom: 20px; }
 .field label { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,.7); margin-bottom: 8px; letter-spacing: .01em; }
 .field label span { color: var(--muted); font-weight: 400; }
@@ -114,7 +108,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .field input:focus, .field textarea:focus { border-color: var(--accent); }
 .field textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 
-/* ── AI HELPER ── */
 .ai-helper-wrap { position: relative; }
 .ai-btn {
   position: absolute; right: 8px; top: 8px;
@@ -135,7 +128,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 }
 .suggestion-item:hover { border-color: var(--accent); }
 
-/* ── UPLOAD ── */
 .upload-area {
   border: 1.5px dashed var(--border2); border-radius: var(--radius);
   padding: 28px; text-align: center; cursor: pointer;
@@ -158,7 +150,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 }
 .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* ── COLOR PICKER ── */
 .color-section { margin-bottom: 20px; }
 .color-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.7); margin-bottom: 10px; display: block; }
 
@@ -177,7 +168,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 
 .color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-/* ── SIDE PANEL ── */
 .side-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .preview-box {
   background: var(--surface2); border: 1px solid var(--border);
@@ -208,7 +198,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .copy-btn:hover { border-color: var(--accent); color: var(--text); }
 .copy-btn.copied { border-color: var(--green); color: var(--green); }
 
-/* ── NAVIGATION ── */
 .nav-row { display: flex; gap: 12px; margin-top: 32px; justify-content: flex-end; }
 .btn-back {
   background: transparent; border: 1px solid var(--border2);
@@ -232,7 +221,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 }
 .btn-submit:hover { background: #16a34a; }
 
-/* ── SUCCESS ── */
 .success-box {
   background: rgba(34,197,94,.07); border: 1px solid rgba(34,197,94,.25);
   border-radius: var(--radius); padding: 20px; text-align: center;
@@ -243,10 +231,8 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .success-title { font-size: 18px; font-weight: 700; color: var(--green); }
 .success-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-/* ── FIELD GRID ── */
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
 
-/* ── LOADING ── */
 .loading-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center; z-index: 999; flex-direction: column; gap: 16px;
@@ -260,7 +246,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 .loading-text { font-size: 14px; color: var(--muted); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── MOBILE ── */
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .side-col { position: static; height: auto; border-top: 1px solid var(--border); }
@@ -310,7 +295,7 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       </div>
       <div class="nav-row">
         <button class="btn-next" id="btnNext0" onclick="goToStep(1)" disabled>
-          Próximo <span>→</span>
+          Próximo
         </button>
       </div>
     </div>
@@ -324,13 +309,13 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
           <label>Logo da empresa</label>
           <div class="upload-area" id="logoArea" onclick="document.getElementById('logoInput').click()"
             ondragover="handleDrag(event,'logoArea')" ondragleave="handleDragLeave(event,'logoArea')" ondrop="handleDrop(event,'logo')">
-            <div class="upload-icon">🏷️</div>
+            <div class="upload-icon">&#127991;&#65039;</div>
             <div class="upload-label"><strong>Clique</strong> ou arraste aqui</div>
             <div style="font-size:12px;color:var(--muted)">PNG transparente ideal</div>
           </div>
           <div class="upload-preview" id="logoPreview">
             <img id="logoPreviewImg" src="" alt="Logo">
-            <button class="remove-btn" onclick="removeFile('logo')">✕ Remover</button>
+            <button class="remove-btn" onclick="removeFile('logo')">&#10005; Remover</button>
           </div>
           <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleFileSelect(this,'logo')">
         </div>
@@ -339,27 +324,27 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
           <label>Imagem principal <span>(produto, print ou foto)</span></label>
           <div class="upload-area" id="imgArea" onclick="document.getElementById('imgInput').click()"
             ondragover="handleDrag(event,'imgArea')" ondragleave="handleDragLeave(event,'imgArea')" ondrop="handleDrop(event,'img')">
-            <div class="upload-icon">🖼️</div>
+            <div class="upload-icon">&#128444;&#65039;</div>
             <div class="upload-label"><strong>Clique</strong> ou arraste aqui</div>
             <div style="font-size:12px;color:var(--muted)">Foto do produto ou print</div>
           </div>
           <div class="upload-preview" id="imgPreview">
             <img id="imgPreviewImg" src="" alt="Produto">
-            <button class="remove-btn" onclick="removeFile('img')">✕ Remover</button>
+            <button class="remove-btn" onclick="removeFile('img')">&#10005; Remover</button>
           </div>
           <input type="file" id="imgInput" accept="image/*,video/*" style="display:none" onchange="handleFileSelect(this,'img')">
         </div>
       </div>
 
       <div class="nav-row">
-        <button class="btn-back" onclick="goToStep(0)">← Voltar</button>
-        <button class="btn-next" id="btnNext1" onclick="goToStep(2)">Próximo →</button>
+        <button class="btn-back" onclick="goToStep(0)">Voltar</button>
+        <button class="btn-next" id="btnNext1" onclick="goToStep(2)">Próximo</button>
       </div>
     </div>
 
     <div class="section" id="section-2">
       <div class="section-title">Textos da arte</div>
-      <div class="section-sub">Preencha as informações. Use o botão <strong style="color:var(--accent2)">✦ IA</strong> para receber sugestões automáticas.</div>
+      <div class="section-sub">Preencha as informações. Use o botão <strong style="color:var(--accent2)">IA</strong> para receber sugestões automáticas.</div>
 
       <div class="field-grid">
         <div class="field">
@@ -381,7 +366,7 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
         <label>Ingredientes / descrição do produto</label>
         <div class="ai-helper-wrap">
           <textarea id="f_ingredientes" placeholder="Ex: Frango grelhado, quinoa vermelha, cenoura ralada..." oninput="updatePrompt()" style="padding-right:90px"></textarea>
-          <button class="ai-btn" onclick="gerarSugestaoIA('ingredientes')" id="aiBtnIng">✦ IA</button>
+          <button class="ai-btn" onclick="gerarSugestaoIA('ingredientes')" id="aiBtnIng">IA</button>
         </div>
         <div class="ai-suggestions" id="suggestionsIng"></div>
       </div>
@@ -389,8 +374,8 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       <div class="field">
         <label>Texto de destaque / depoimento <span>(aparece em cima da foto)</span></label>
         <div class="ai-helper-wrap">
-          <textarea id="f_resultado" placeholder='Ex: "Achei lindo!! Já abri o site umas 500 vezes" — Luana' oninput="updatePrompt()" style="padding-right:90px"></textarea>
-          <button class="ai-btn" onclick="gerarSugestaoIA('resultado')" id="aiBtnRes">✦ IA</button>
+          <textarea id="f_resultado" placeholder="Ex: Achei lindo Já abri o site umas 500 vezes Luana" oninput="updatePrompt()" style="padding-right:90px"></textarea>
+          <button class="ai-btn" onclick="gerarSugestaoIA('resultado')" id="aiBtnRes">IA</button>
         </div>
         <div class="ai-suggestions" id="suggestionsRes"></div>
       </div>
@@ -403,15 +388,15 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       <div class="field">
         <label>Texto do rodapé / CTA</label>
         <div class="ai-helper-wrap">
-          <input type="text" id="f_cta" placeholder="Ex: Peça já no link da bio 🔥" oninput="updatePrompt()" style="padding-right:90px">
-          <button class="ai-btn" style="top:50%;transform:translateY(-50%)" onclick="gerarSugestaoIA('cta')" id="aiBtnCta">✦ IA</button>
+          <input type="text" id="f_cta" placeholder="Ex: Peça já no link da bio" oninput="updatePrompt()" style="padding-right:90px">
+          <button class="ai-btn" style="top:50%;transform:translateY(-50%)" onclick="gerarSugestaoIA('cta')" id="aiBtnCta">IA</button>
         </div>
         <div class="ai-suggestions" id="suggestionsCta"></div>
       </div>
 
       <div class="nav-row">
-        <button class="btn-back" onclick="goToStep(1)">← Voltar</button>
-        <button class="btn-next" onclick="goToStep(3)">Próximo →</button>
+        <button class="btn-back" onclick="goToStep(1)">Voltar</button>
+        <button class="btn-next" onclick="goToStep(3)">Próximo</button>
       </div>
     </div>
 
@@ -459,22 +444,24 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 
       <div style="margin-top:28px">
         <div class="success-box" id="successBox">
-          <div class="success-icon">✅</div>
+          <div class="success-icon">&#9989;</div>
           <div class="success-title">Arte enviada!</div>
           <div class="success-sub">Seu pedido foi recebido. Em breve você receberá a arte pronta no WhatsApp ou e-mail.</div>
         </div>
 
         <button class="btn-submit" id="btnSubmit" onclick="submitForm()">
-          🎨 Gerar minha arte agora
+          Gerar minha arte agora
         </button>
       </div>
 
       <div class="nav-row" style="justify-content:flex-start;margin-top:0">
-        <button class="btn-back" onclick="goToStep(2)">← Voltar</button>
+        <button class="btn-back" onclick="goToStep(2)">Voltar</button>
       </div>
     </div>
 
-  </div><div class="side-col">
+  </div>
+
+  <div class="side-col">
     <div class="side-title">Prévia do template</div>
     <div class="preview-box" id="sidePreview">
       <div class="preview-placeholder">Selecione um template<br>para ver a prévia aqui</div>
@@ -489,9 +476,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 </div>
 
 <script>
-/* ═══════════════════════════════════
-   STATE
-   ═══════════════════════════════════ */
 let currentStep = 0;
 let selectedTemplate = null;
 let uploadedFiles = { logo: null, img: null };
@@ -502,9 +486,6 @@ let colors = {
   secundaria: '#a855f7',
 };
 
-/* ═══════════════════════════════════
-   PALETAS DE CORES
-   ═══════════════════════════════════ */
 const PALETTES = {
   fundo: ['#0a0a0a','#0d0d0d','#111827','#1e1e2e','#0f0f23','#fff','#f8f9fa','#f0f4f0','#fdf6ec','#0a1628'],
   texto: ['#ffffff','#f0f0f0','#1a1a1a','#111827','#2d2d2d','#f5f5f5','#e5e7eb','#1d2939','#374151'],
@@ -543,9 +524,6 @@ function setCustomColor(key, hex) {
   updatePrompt();
 }
 
-/* ═══════════════════════════════════
-   TEMPLATES
-   ═══════════════════════════════════ */
 async function loadTemplates() {
   try {
     const res = await fetch('/api/templates');
@@ -579,7 +557,8 @@ function renderTemplates(templates) {
     let mockHtml = tpl.html
       .replace(/CHAVE_COR_FUNDO/g, '#181818')
       .replace(/CHAVE_COR_TEXTO/g, '#ffffff')
-      .replace(/CHAVE_COR_DESTAQUE/g, '#7C3AED');
+      .replace(/CHAVE_COR_DESTAQUE/g, '#7C3AED')
+      .replace(/CHAVE_COR_SECUNDARIA/g, '#a855f7');
       
     iframe.srcdoc = mockHtml;
     previewDiv.appendChild(iframe);
@@ -594,7 +573,7 @@ function renderTemplates(templates) {
     card.appendChild(previewDiv);
     card.appendChild(infoDiv);
 
-    card.onclick = () => selectTemplate(tpl, card, mockHtml);
+    card.onclick = () => selectTemplate(tpl, card);
     grid.appendChild(card);
   });
 }
@@ -604,26 +583,14 @@ function extractKeys(html) {
   return matches ? [...new Set(matches)] : [];
 }
 
-function selectTemplate(tpl, cardEl, mockHtml) {
+function selectTemplate(tpl, cardEl) {
   document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
   cardEl.classList.add('selected');
   selectedTemplate = tpl;
   document.getElementById('btnNext0').disabled = false;
-
-  const preview = document.getElementById('sidePreview');
-  preview.innerHTML = '';
-  
-  const iframe = document.createElement('iframe');
-  iframe.sandbox = "allow-scripts allow-same-origin";
-  iframe.srcdoc = mockHtml;
-  preview.appendChild(iframe);
-
   updatePrompt();
 }
 
-/* ═══════════════════════════════════
-   UPLOAD
-   ═══════════════════════════════════ */
 function handleDrag(e, areaId) { e.preventDefault(); document.getElementById(areaId).classList.add('drag'); }
 function handleDragLeave(e, areaId) { document.getElementById(areaId).classList.remove('drag'); }
 function handleDrop(e, type) {
@@ -644,7 +611,6 @@ function processFile(file, type) {
     previewEl.style.display = 'block';
     document.getElementById(type === 'logo' ? 'logoArea' : 'imgArea').style.display = 'none';
 
-    // Upload pro servidor
     showLoading('Enviando arquivo...');
     try {
       const formData = new FormData();
@@ -655,7 +621,7 @@ function processFile(file, type) {
         uploadedFiles[type] = { url: data.url, filename: data.filename };
         updatePrompt();
       }
-    } catch(err) { console.error(err); }
+    } catch(err) {}
     hideLoading();
   };
   reader.readAsDataURL(file);
@@ -671,17 +637,14 @@ function removeFile(type) {
   updatePrompt();
 }
 
-/* ═══════════════════════════════════
-   IA — SUGESTÕES DE TEXTO
-   ═══════════════════════════════════ */
 async function gerarSugestaoIA(campo) {
   const empresa = document.getElementById('f_empresa').value.trim() || 'a empresa';
   const titulo = document.getElementById('f_titulo').value.trim() || 'o produto';
 
   const prompts = {
-    ingredientes: `Gere 3 descrições curtas e apetitosas de ingredientes para "${titulo}" da empresa "${empresa}". Cada descrição em no máximo 2 linhas, separadas por quebra de linha dupla. Apenas as descrições, sem numeração.`,
-    resultado: `Gere 3 depoimentos curtos e entusiasmados de clientes satisfeitos com "${titulo}" da "${empresa}". Cada depoimento entre aspas com travessão e nome fictício. Separados por quebra de linha dupla.`,
-    cta: `Gere 3 CTAs curtos e atrativos (máximo 8 palavras cada) para posts de "${titulo}" da "${empresa}". Um por linha. Só os textos.`,
+    ingredientes: `Gere 3 descrições curtas e apetitosas de ingredientes para ${titulo} da empresa ${empresa}. Cada descrição em no máximo 2 linhas, separadas por quebra de linha dupla. Apenas as descrições, sem numeração.`,
+    resultado: `Gere 3 depoimentos curtos e entusiasmados de clientes satisfeitos com ${titulo} da ${empresa}. Cada depoimento entre aspas com travessão e nome fictício. Separados por quebra de linha dupla.`,
+    cta: `Gere 3 CTAs curtos e atrativos para posts de ${titulo} da ${empresa}. Um por linha. Só os textos.`,
   };
 
   const btnId = campo === 'ingredientes' ? 'aiBtnIng' : campo === 'resultado' ? 'aiBtnRes' : 'aiBtnCta';
@@ -702,8 +665,8 @@ async function gerarSugestaoIA(campo) {
       sugDiv.innerHTML = sugs.map(s => `<div class="suggestion-item" onclick="applySuggestion('${campo}',this)">${s.trim()}</div>`).join('');
       sugDiv.classList.add('visible');
     }
-  } catch(e) { console.error(e); }
-  btn.disabled = false; btn.textContent = '✦ IA';
+  } catch(e) {}
+  btn.disabled = false; btn.textContent = 'IA';
 }
 
 function applySuggestion(campo, el) {
@@ -713,9 +676,6 @@ function applySuggestion(campo, el) {
   updatePrompt();
 }
 
-/* ═══════════════════════════════════
-   PROMPT OUTPUT
-   ═══════════════════════════════════ */
 function updatePrompt() {
   const keys = {
     CHAVE_COR_FUNDO:        colors.fundo,
@@ -734,10 +694,41 @@ function updatePrompt() {
   };
 
   const lines = Object.entries(keys)
-    .map(([k,v]) => `<span class="prompt-key">${k}</span> <span class="prompt-val">${v||'—'}</span>`)
+    .map(([k,v]) => `<span class="prompt-key">${k}</span> <span class="prompt-val">${v||'---'}</span>`)
     .join('\n');
 
   document.getElementById('promptOutput').innerHTML = lines;
+
+  if (selectedTemplate) {
+    let html = selectedTemplate.html;
+    
+    const liveKeys = {
+      CHAVE_COR_FUNDO:        colors.fundo,
+      CHAVE_COR_TEXTO:        colors.texto,
+      CHAVE_COR_DESTAQUE:     colors.destaque,
+      CHAVE_COR_SECUNDARIA:   colors.secundaria,
+      CHAVE_NOME_EMPRESA:     document.getElementById('f_empresa')?.value || 'Sua Empresa',
+      CHAVE_NOME_CLIENTE:     document.getElementById('f_cliente')?.value || 'Cliente',
+      CHAVE_TITULO:           document.getElementById('f_titulo')?.value || 'Seu Título Aqui',
+      CHAVE_INGREDIENTES:     document.getElementById('f_ingredientes')?.value || 'Detalhes do produto aparecerão aqui...',
+      CHAVE_RESULTADO:        document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui...',
+      CHAVE_MACROS:           document.getElementById('f_macros')?.value || 'TAGS',
+      CHAVE_CTA:              document.getElementById('f_cta')?.value || 'Ação do Rodapé',
+      CHAVE_LOGO:             uploadedFiles.logo?.url || 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO',
+      CHAVE_IMAGEM:           uploadedFiles.img?.url || 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO'
+    };
+
+    for (const [k, v] of Object.entries(liveKeys)) {
+      html = html.split(k).join(v);
+    }
+
+    const preview = document.getElementById('sidePreview');
+    preview.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.sandbox = "allow-scripts allow-same-origin";
+    iframe.srcdoc = html;
+    preview.appendChild(iframe);
+  }
 }
 
 function getPromptText() {
@@ -761,14 +752,11 @@ function getPromptText() {
 function copyPrompt() {
   navigator.clipboard.writeText(getPromptText()).then(() => {
     const btn = document.getElementById('copyBtn');
-    btn.textContent = 'Copiado ✓'; btn.classList.add('copied');
+    btn.textContent = 'Copiado'; btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'Copiar prompt'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
-/* ═══════════════════════════════════
-   SUBMIT
-   ═══════════════════════════════════ */
 async function submitForm() {
   const payload = {
     template_id: selectedTemplate?.id || '',
@@ -805,9 +793,6 @@ async function submitForm() {
   }
 }
 
-/* ═══════════════════════════════════
-   STEPS
-   ═══════════════════════════════════ */
 function goToStep(step) {
   if (step > 0 && !selectedTemplate) { alert('Selecione um template primeiro.'); return; }
   document.querySelectorAll('.section').forEach((s,i) => {
@@ -824,18 +809,12 @@ function goToStep(step) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ═══════════════════════════════════
-   LOADING
-   ═══════════════════════════════════ */
 function showLoading(text='Carregando...') {
   document.getElementById('loadingText').textContent = text;
   document.getElementById('loadingOverlay').classList.add('visible');
 }
 function hideLoading() { document.getElementById('loadingOverlay').classList.remove('visible'); }
 
-/* ═══════════════════════════════════
-   INIT
-   ═══════════════════════════════════ */
 buildPalettes();
 loadTemplates();
 updatePrompt();
