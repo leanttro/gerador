@@ -787,6 +787,9 @@ def api_sugestao_texto():
 PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
 os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
 
+@app.route('/painel')
+def painel():
+    return render_template('painel.html')
 
 @app.route('/api/form-pedido', methods=['POST'])
 @limiter.limit("10 per minute")
