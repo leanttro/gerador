@@ -1737,6 +1737,7 @@ function goToStep(step) {
   currentStep = step;
   document.getElementById('stepLabel').textContent = `Passo ${step+1} de 4`;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  updatePrompt();
 }
 
 /* ═══════════════════════════════════
