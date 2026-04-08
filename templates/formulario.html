@@ -54,6 +54,7 @@ html, body {
   font-size: 15px;
 }
 
+/* ── HEADER ── */
 .topbar {
   position: sticky;
   top: 0;
@@ -83,6 +84,7 @@ html, body {
   font-family: 'DM Mono', monospace;
 }
 
+/* ── STEPS ── */
 .steps-bar {
   display: flex;
   align-items: center;
@@ -146,6 +148,7 @@ html, body {
   flex-shrink: 0;
 }
 
+/* ── LAYOUT ── */
 .layout {
   display: grid;
   grid-template-columns: 1fr 400px;
@@ -170,6 +173,7 @@ html, body {
   height: calc(100vh - 57px);
 }
 
+/* ── SECTION ── */
 .section {
   display: none;
 }
@@ -192,6 +196,7 @@ html, body {
   line-height: 1.6;
 }
 
+/* ── TEMPLATE GRID ── */
 .template-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -280,6 +285,7 @@ html, body {
   line-height: 1.5;
 }
 
+/* ── FORM FIELDS ── */
 .field {
   margin-bottom: 20px;
 }
@@ -325,6 +331,7 @@ html, body {
   line-height: 1.6;
 }
 
+/* ── AI HELPER ── */
 .ai-helper-wrap {
   position: relative;
 }
@@ -382,6 +389,7 @@ html, body {
   border-color: var(--accent);
 }
 
+/* ── UPLOAD ── */
 .upload-area {
   border: 1.5px dashed var(--border2);
   border-radius: var(--radius);
@@ -451,6 +459,7 @@ html, body {
   gap: 12px;
 }
 
+/* ── COLOR PICKER ── */
 .color-section {
   margin-bottom: 20px;
 }
@@ -517,6 +526,7 @@ html, body {
   gap: 16px;
 }
 
+/* ── SIDE PANEL ── */
 .side-title {
   font-size: 13px;
   font-weight: 600;
@@ -599,6 +609,7 @@ html, body {
   color: var(--green);
 }
 
+/* ── NAVIGATION ── */
 .nav-row {
   display: flex;
   gap: 12px;
@@ -664,6 +675,7 @@ html, body {
   background: #16a34a;
 }
 
+/* ── SUCCESS ── */
 .success-box {
   background: rgba(34,197,94,0.07);
   border: 1px solid rgba(34,197,94,0.25);
@@ -696,12 +708,14 @@ html, body {
   line-height: 1.6;
 }
 
+/* ── FIELD GRID ── */
 .field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 16px;
 }
 
+/* ── LOADING ── */
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -737,6 +751,7 @@ html, body {
   to { transform: rotate(360deg); }
 }
 
+/* ── HIGHLIGHT NEW FIELDS ── */
 .niche-card {
   background: rgba(124,58,237,0.05);
   border: 1px solid rgba(124,58,237,0.2);
@@ -745,6 +760,7 @@ html, body {
   margin-bottom: 24px;
 }
 
+/* ── MOBILE ── */
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
@@ -1001,6 +1017,9 @@ html, body {
 </div>
 
 <script>
+/* ═══════════════════════════════════
+   STATE
+   ═══════════════════════════════════ */
 let currentStep = 0;
 let selectedTemplate = null;
 let uploadedFiles = { logo: null, img: null };
@@ -1011,6 +1030,9 @@ let colors = {
   secundaria: '#a855f7',
 };
 
+/* ═══════════════════════════════════
+   PALETAS DE CORES
+   ═══════════════════════════════════ */
 const PALETTES = {
   fundo: ['#0a0a0a','#0d0d0d','#111827','#1e1e2e','#0f0f23','#fff','#f8f9fa','#f0f4f0','#fdf6ec','#0a1628'],
   texto: ['#ffffff','#f0f0f0','#1a1a1a','#111827','#2d2d2d','#f5f5f5','#e5e7eb','#1d2939','#374151'],
@@ -1049,6 +1071,9 @@ function setCustomColor(key, hex) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   TEMPLATES E PREVIEWS ROBUSTOS
+   ═══════════════════════════════════ */
 async function loadTemplates() {
   try {
     const res = await fetch('/api/templates');
@@ -1079,8 +1104,23 @@ function renderTemplates(templates) {
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
     iframe.scrolling = "no";
-    iframe.src = tpl.url;
-
+    
+    // Substituição rigorosa de todas as chaves possíveis para evitar erro de layout
+    let mockHtml = tpl.html
+      .replace(/CHAVE_COR_FUNDO/g, '#181818')
+      .replace(/CHAVE_COR_TEXTO/g, '#ffffff')
+      .replace(/CHAVE_COR_DESTAQUE/g, '#7C3AED')
+      .replace(/CHAVE_COR_SECUNDARIA/g, '#a855f7')
+      .replace(/CHAVE_TITULO/g, 'TITULO AQUI')
+      .replace(/CHAVE_INGREDIENTES/g, 'Beneficio Principal')
+      .replace(/CHAVE_RESULTADO/g, 'Muito bom!')
+      .replace(/CHAVE_MACROS/g, 'DESTAQUE')
+      .replace(/CHAVE_CTA/g, 'SAIBA MAIS')
+      .replace(/CHAVE_LOGO/g, 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO')
+      .replace(/CHAVE_IMAGEM/g, 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO');
+      
+    // Utilizando srcdoc para garantir carregamento perfeito (substituindo Blob URL que causava tela preta)
+    iframe.srcdoc = mockHtml;
     previewDiv.appendChild(iframe);
 
     const infoDiv = document.createElement('div');
@@ -1111,6 +1151,9 @@ function selectTemplate(tpl, cardEl) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   UPLOAD
+   ═══════════════════════════════════ */
 function handleDrag(e, areaId) { e.preventDefault(); document.getElementById(areaId).classList.add('drag'); }
 function handleDragLeave(e, areaId) { document.getElementById(areaId).classList.remove('drag'); }
 function handleDrop(e, type) {
@@ -1131,6 +1174,7 @@ function processFile(file, type) {
     previewEl.style.display = 'block';
     document.getElementById(type === 'logo' ? 'logoArea' : 'imgArea').style.display = 'none';
 
+    // Upload pro servidor
     showLoading('Enviando arquivo...');
     try {
       const formData = new FormData();
@@ -1157,6 +1201,9 @@ function removeFile(type) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   IA — SUGESTÕES DE TEXTO PERSONALIZADAS
+   ═══════════════════════════════════ */
 async function gerarSugestaoIA(campo) {
   const nicho = document.getElementById('f_nicho').value.trim() || 'Não especificado';
   const objetivo = document.getElementById('f_objetivo').value.trim() || 'Não especificado';
@@ -1208,6 +1255,9 @@ function applySuggestion(campo, el) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   PROMPT OUTPUT E LIVE PREVIEW
+   ═══════════════════════════════════ */
 function updatePrompt() {
   const keys = {
     CHAVE_COR_FUNDO:        colors.fundo,
@@ -1222,19 +1272,16 @@ function updatePrompt() {
     CHAVE_MACROS:           document.getElementById('f_macros')?.value || '',
     CHAVE_CTA:              document.getElementById('f_cta')?.value || '',
     CHAVE_LOGO:             uploadedFiles.logo?.filename || '',
-    CHAVE_IMG_LOGO:         uploadedFiles.logo?.filename || '',
     CHAVE_IMAGEM:           uploadedFiles.img?.filename || '',
-    CHAVE_FOTO:             uploadedFiles.img?.filename || '',
-    CHAVE_PRINT_MENSAGEM:   document.getElementById('f_resultado')?.value || '',
   };
 
   const lines = Object.entries(keys)
-    .filter(([k,v]) => v !== '')
-    .map(([k,v]) => `<span class="prompt-key">${k}</span> <span class="prompt-val">${v}</span>`)
+    .map(([k,v]) => `<span class="prompt-key">${k}</span> <span class="prompt-val">${v||'—'}</span>`)
     .join('\n');
 
-  document.getElementById('promptOutput').innerHTML = lines || '<span style="color:var(--muted)">Preencha os campos para<br>gerar o prompt automático...</span>';
+  document.getElementById('promptOutput').innerHTML = lines;
 
+  // Atualizar a prévia lateral dinamicamente
   if (selectedTemplate) {
     let html = selectedTemplate.html;
     
@@ -1248,13 +1295,10 @@ function updatePrompt() {
       CHAVE_TITULO:           document.getElementById('f_titulo')?.value || 'Seu Título Aqui',
       CHAVE_INGREDIENTES:     document.getElementById('f_ingredientes')?.value || 'Os benefícios ou detalhes aparecerão aqui.',
       CHAVE_RESULTADO:        document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui.',
-      CHAVE_PRINT_MENSAGEM:   document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui.',
       CHAVE_MACROS:           document.getElementById('f_macros')?.value || 'TAGS',
       CHAVE_CTA:              document.getElementById('f_cta')?.value || 'Ação do Rodapé',
-      CHAVE_LOGO:             uploadedFiles.logo?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80" viewBox="0 0 200 80"><rect fill="%23222" width="200" height="80"/><text fill="%23fff" font-family="sans-serif" font-size="20" dy="8" x="50%" y="50%" text-anchor="middle">LOGO</text></svg>',
-      CHAVE_IMG_LOGO:         uploadedFiles.logo?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80" viewBox="0 0 200 80"><rect fill="%23222" width="200" height="80"/><text fill="%23fff" font-family="sans-serif" font-size="20" dy="8" x="50%" y="50%" text-anchor="middle">LOGO</text></svg>',
-      CHAVE_IMAGEM:           uploadedFiles.img?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect fill="%23222" width="400" height="500"/><text fill="%23fff" font-family="sans-serif" font-size="30" dy="10" x="50%" y="50%" text-anchor="middle">FOTO</text></svg>',
-      CHAVE_FOTO:             uploadedFiles.img?.url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500"><rect fill="%23222" width="400" height="500"/><text fill="%23fff" font-family="sans-serif" font-size="30" dy="10" x="50%" y="50%" text-anchor="middle">FOTO</text></svg>',
+      CHAVE_LOGO:             uploadedFiles.logo?.url || 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO',
+      CHAVE_IMAGEM:           uploadedFiles.img?.url || 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO'
     };
 
     for (const [k, v] of Object.entries(liveKeys)) {
@@ -1267,6 +1311,7 @@ function updatePrompt() {
     iframe.sandbox = "allow-scripts allow-same-origin";
     iframe.scrolling = "no";
     
+    // Usando srcdoc para evitar erro de Blob URL (tela preta)
     iframe.srcdoc = html;
     preview.appendChild(iframe);
   }
@@ -1283,14 +1328,11 @@ function getPromptText() {
     CHAVE_TITULO:          document.getElementById('f_titulo').value,
     CHAVE_INGREDIENTES:    document.getElementById('f_ingredientes').value,
     CHAVE_RESULTADO:       document.getElementById('f_resultado').value,
-    CHAVE_PRINT_MENSAGEM:  document.getElementById('f_resultado').value,
     CHAVE_MACROS:          document.getElementById('f_macros').value,
     CHAVE_CTA:             document.getElementById('f_cta').value,
     CHAVE_LOGO:            uploadedFiles.logo?.filename || '',
-    CHAVE_IMG_LOGO:        uploadedFiles.logo?.filename || '',
     CHAVE_IMAGEM:          uploadedFiles.img?.filename || '',
-    CHAVE_FOTO:            uploadedFiles.img?.filename || '',
-  }).filter(([k,v]) => v !== '').map(([k,v]) => `${k} ${v}`).join('\n');
+  }).map(([k,v]) => `${k} ${v}`).join('\n');
 }
 
 function copyPrompt() {
@@ -1305,6 +1347,9 @@ function copyPrompt() {
   });
 }
 
+/* ═══════════════════════════════════
+   SUBMIT
+   ═══════════════════════════════════ */
 async function submitForm() {
   const payload = {
     template_id: selectedTemplate?.id || '',
@@ -1343,6 +1388,9 @@ async function submitForm() {
   }
 }
 
+/* ═══════════════════════════════════
+   STEPS
+   ═══════════════════════════════════ */
 function goToStep(step) {
   if (step > 0 && !selectedTemplate) { 
     alert('Selecione um template primeiro.'); 
@@ -1362,6 +1410,9 @@ function goToStep(step) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+/* ═══════════════════════════════════
+   LOADING
+   ═══════════════════════════════════ */
 function showLoading(text='Carregando...') {
   document.getElementById('loadingText').textContent = text;
   document.getElementById('loadingOverlay').classList.add('visible');
@@ -1370,6 +1421,9 @@ function hideLoading() {
   document.getElementById('loadingOverlay').classList.remove('visible'); 
 }
 
+/* ═══════════════════════════════════
+   INIT
+   ═══════════════════════════════════ */
 buildPalettes();
 loadTemplates();
 updatePrompt();
