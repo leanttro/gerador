@@ -592,6 +592,10 @@
         .preview-wrapper {
             position: relative;
             transition: transform 0.2s ease;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .preview-label {
             position: absolute;
@@ -1509,6 +1513,24 @@ function updatePreviewFormat() {
 
 function renderIframe(htmlContent) {
     const iframe = document.getElementById('previewFrame');
+    
+    if (htmlContent && htmlContent.includes('</head>')) {
+        const cssForcado = `
+        <style>
+            html, body {
+                width: 100% !important;
+                height: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+        </style>`;
+        htmlContent = htmlContent.replace('</head>', cssForcado + '</head>');
+    }
+    
     iframe.srcdoc = htmlContent;
     updatePreviewFormat();
 }
