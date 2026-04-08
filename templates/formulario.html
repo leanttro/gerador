@@ -276,13 +276,11 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
   <div class="loading-text" id="loadingText">Gerando sugestões com IA...</div>
 </div>
 
-<!-- HEADER -->
 <div class="topbar">
   <div class="topbar-logo">MOTOR DARK <span>STUDIO</span></div>
   <div class="topbar-step" id="stepLabel">Passo 1 de 4</div>
 </div>
 
-<!-- STEPS -->
 <div class="steps-bar">
   <div class="step-item active" id="step-tab-0" onclick="goToStep(0)">
     <div class="step-num">1</div> Template
@@ -302,10 +300,8 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 </div>
 
 <div class="layout">
-  <!-- MAIN COLUMN -->
   <div class="main-col">
 
-    <!-- ══════ STEP 0 — TEMPLATE ══════ -->
     <div class="section active" id="section-0">
       <div class="section-title">Escolha o template</div>
       <div class="section-sub">Selecione o modelo base da sua arte. Você pode ver uma prévia clicando no card.</div>
@@ -319,13 +315,11 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       </div>
     </div>
 
-    <!-- ══════ STEP 1 — ARQUIVOS ══════ -->
     <div class="section" id="section-1">
       <div class="section-title">Envie seus arquivos</div>
       <div class="section-sub">Logo e imagem do produto ou depoimento. JPG, PNG ou WebP até 20MB.</div>
 
       <div class="upload-grid">
-        <!-- LOGO -->
         <div class="field">
           <label>Logo da empresa</label>
           <div class="upload-area" id="logoArea" onclick="document.getElementById('logoInput').click()"
@@ -341,7 +335,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
           <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleFileSelect(this,'logo')">
         </div>
 
-        <!-- IMAGEM PRODUTO -->
         <div class="field">
           <label>Imagem principal <span>(produto, print ou foto)</span></label>
           <div class="upload-area" id="imgArea" onclick="document.getElementById('imgInput').click()"
@@ -364,7 +357,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       </div>
     </div>
 
-    <!-- ══════ STEP 2 — TEXTOS ══════ -->
     <div class="section" id="section-2">
       <div class="section-title">Textos da arte</div>
       <div class="section-sub">Preencha as informações. Use o botão <strong style="color:var(--accent2)">✦ IA</strong> para receber sugestões automáticas.</div>
@@ -423,13 +415,11 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       </div>
     </div>
 
-    <!-- ══════ STEP 3 — CORES & FINALIZAR ══════ -->
     <div class="section" id="section-3">
       <div class="section-title">Cores & finalizar</div>
       <div class="section-sub">Escolha as cores da identidade visual. Clique em um quadradinho ou use o seletor personalizado.</div>
 
       <div class="color-grid">
-        <!-- Cor de fundo -->
         <div class="color-section">
           <span class="color-label">Cor de fundo</span>
           <div class="palette-row" id="palette-fundo"></div>
@@ -439,7 +429,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
           </div>
         </div>
 
-        <!-- Cor de texto -->
         <div class="color-section">
           <span class="color-label">Cor de texto principal</span>
           <div class="palette-row" id="palette-texto"></div>
@@ -449,7 +438,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
           </div>
         </div>
 
-        <!-- Cor de destaque -->
         <div class="color-section">
           <span class="color-label">Cor de destaque <span style="font-weight:400;color:var(--muted)">(botões, bordas)</span></span>
           <div class="palette-row" id="palette-destaque"></div>
@@ -459,7 +447,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
           </div>
         </div>
 
-        <!-- Cor secundária -->
         <div class="color-section">
           <span class="color-label">Cor secundária <span style="font-weight:400;color:var(--muted)">(textos, tags)</span></span>
           <div class="palette-row" id="palette-secundaria"></div>
@@ -470,7 +457,6 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
         </div>
       </div>
 
-      <!-- SUBMIT -->
       <div style="margin-top:28px">
         <div class="success-box" id="successBox">
           <div class="success-icon">✅</div>
@@ -488,10 +474,7 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       </div>
     </div>
 
-  </div><!-- /main-col -->
-
-  <!-- SIDE COLUMN -->
-  <div class="side-col">
+  </div><div class="side-col">
     <div class="side-title">Prévia do template</div>
     <div class="preview-box" id="sidePreview">
       <div class="preview-placeholder">Selecione um template<br>para ver a prévia aqui</div>
@@ -581,19 +564,37 @@ function renderTemplates(templates) {
     return;
   }
   grid.innerHTML = '';
+  
   templates.forEach(tpl => {
     const card = document.createElement('div');
     card.className = 'tpl-card';
     card.dataset.id = tpl.id;
-    card.innerHTML = `
-      <div class="tpl-preview">
-        ${tpl.url ? `<iframe src="${tpl.url}" sandbox="allow-scripts allow-same-origin"></iframe>` : `<div class="tpl-preview-placeholder">📄<br>${tpl.name}</div>`}
-      </div>
-      <div class="tpl-info">
-        <div class="tpl-name">${tpl.name}</div>
-        <div class="tpl-keys">${extractKeys(tpl.html).slice(0,3).join(', ')}...</div>
-      </div>`;
-    card.onclick = () => selectTemplate(tpl, card);
+
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'tpl-preview';
+
+    const iframe = document.createElement('iframe');
+    iframe.sandbox = "allow-scripts allow-same-origin";
+    
+    let mockHtml = tpl.html
+      .replace(/CHAVE_COR_FUNDO/g, '#181818')
+      .replace(/CHAVE_COR_TEXTO/g, '#ffffff')
+      .replace(/CHAVE_COR_DESTAQUE/g, '#7C3AED');
+      
+    iframe.srcdoc = mockHtml;
+    previewDiv.appendChild(iframe);
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'tpl-info';
+    infoDiv.innerHTML = `
+      <div class="tpl-name">${tpl.name}</div>
+      <div class="tpl-keys">${extractKeys(tpl.html).slice(0,3).join(', ')}...</div>
+    `;
+
+    card.appendChild(previewDiv);
+    card.appendChild(infoDiv);
+
+    card.onclick = () => selectTemplate(tpl, card, mockHtml);
     grid.appendChild(card);
   });
 }
@@ -603,19 +604,20 @@ function extractKeys(html) {
   return matches ? [...new Set(matches)] : [];
 }
 
-function selectTemplate(tpl, cardEl) {
+function selectTemplate(tpl, cardEl, mockHtml) {
   document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
   cardEl.classList.add('selected');
   selectedTemplate = tpl;
   document.getElementById('btnNext0').disabled = false;
 
-  // Prévia lateral
   const preview = document.getElementById('sidePreview');
-  if (tpl.url) {
-    preview.innerHTML = `<iframe src="${tpl.url}" sandbox="allow-scripts allow-same-origin"></iframe>`;
-  } else {
-    preview.innerHTML = `<div class="preview-placeholder">${tpl.name}</div>`;
-  }
+  preview.innerHTML = '';
+  
+  const iframe = document.createElement('iframe');
+  iframe.sandbox = "allow-scripts allow-same-origin";
+  iframe.srcdoc = mockHtml;
+  preview.appendChild(iframe);
+
   updatePrompt();
 }
 
