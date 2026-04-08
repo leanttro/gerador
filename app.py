@@ -732,6 +732,116 @@ def api_status():
 # ─────────────────────────────────────────────
 # INICIALIZAÇÃO
 # ─────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# FORMULÁRIO DO CLIENTE
+# ─────────────────────────────────────────────
+@app.route('/formulario')
+def formulario():
+    return render_template('formulario.html')
+
+
+# ─────────────────────────────────────────────
+# SUGESTÃO DE TEXTO VIA IA (para o formulário)
+# ─────────────────────────────────────────────
+@app.route('/api/sugestao-texto', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_sugestao_texto():
+    data = request.json or {}
+    prompt = data.get('prompt', '').strip()
+
+    if not prompt:
+        return jsonify({"success": False, "error": "Prompt vazio"}), 400
+
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada"}), 400
+
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é um copywriter especialista em marketing digital brasileiro. "
+                        "Escreva textos curtos, diretos, persuasivos e em português do Brasil. "
+                        "Nunca use emojis em excesso. Seja natural e humano."
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ],
+            model=BEST_FREE_MODEL,
+            temperature=0.7,
+            max_tokens=600,
+        )
+        text = response.choices[0].message.content.strip()
+        return jsonify({"success": True, "text": text})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# RECEBER PEDIDO DO FORMULÁRIO
+# Salva o pedido em JSON local (sem banco de dados)
+# Opcional: integrar com Directus depois
+# ─────────────────────────────────────────────
+PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
+os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
+
+
+@app.route('/api/form-pedido', methods=['POST'])
+@limiter.limit("10 per minute")
+def api_form_pedido():
+    data = request.json or {}
+
+    pedido_id = str(uuid.uuid4())[:8].upper()
+    timestamp = int(time.time())
+
+    pedido = {
+        "id":           pedido_id,
+        "timestamp":    timestamp,
+        "template_id":  data.get("template_id", ""),
+        "prompt":       data.get("prompt", ""),
+        "assets":       data.get("assets", []),
+        "colors":       data.get("colors", {}),
+        "fields":       data.get("fields", {}),
+        "status":       "pendente",
+    }
+
+    # Salva em arquivo JSON na pasta pedidos/
+    pedido_path = os.path.join(PEDIDOS_FOLDER, f"pedido_{pedido_id}.json")
+    try:
+        with open(pedido_path, 'w', encoding='utf-8') as f:
+            json.dump(pedido, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Erro ao salvar pedido: {str(e)}"}), 500
+
+    print(f"[PEDIDO] Novo pedido recebido: {pedido_id} | Template: {pedido['template_id']} | Cliente: {pedido['fields'].get('cliente','')}")
+
+    return jsonify({
+        "success":   True,
+        "pedido_id": pedido_id,
+        "message":   "Pedido recebido com sucesso!"
+    })
+
+
+# ─────────────────────────────────────────────
+# LISTAR PEDIDOS (para você ver no painel)
+# ─────────────────────────────────────────────
+@app.route('/api/pedidos', methods=['GET'])
+def api_pedidos():
+    pedidos = []
+    try:
+        for fname in sorted(os.listdir(PEDIDOS_FOLDER), reverse=True):
+            if fname.endswith('.json'):
+                fpath = os.path.join(PEDIDOS_FOLDER, fname)
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    pedidos.append(json.load(f))
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    return jsonify({"success": True, "pedidos": pedidos, "total": len(pedidos)})
+
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
