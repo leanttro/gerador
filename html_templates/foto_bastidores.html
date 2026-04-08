@@ -52,13 +52,15 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
+            align-items: stretch;
             width: 100%;
             height: 100%;
             transform: scale(0.9);
-            transform-origin: center;
+            transform-origin: center center;
             z-index: 10;
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         /* ==============================
@@ -131,7 +133,6 @@
            ÁREA PRINCIPAL (VÍDEO/IMAGEM + ETAPAS)
            ============================== */
         .template-main {
-            width: 100%;
             flex-grow: 0;
             display: flex;
             flex-direction: column;
@@ -316,7 +317,6 @@
            FOOTER — CTA
            ============================== */
         .template-footer {
-            width: 100%;
             padding: 0 20px 16px 22px;
             display: flex;
             justify-content: space-between;
@@ -394,7 +394,7 @@
                 </div>
 
                 <div class="human-quote">
-                    “CHAVE_FRASE_HUMANA”
+                    "CHAVE_FRASE_HUMANA"
                     <span class="quote-author">— CHAVE_AUTOR_FRASE</span>
                 </div>
 
