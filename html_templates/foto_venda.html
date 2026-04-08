@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Venda Direta</title>
+    <title>Template Venda Direta - Leanttro Tecnologia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -23,10 +23,10 @@
             background-color: var(--cor-fundo);
             color: var(--cor-texto-principal);
             font-family: var(--fonte-principal);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: grid;
+            place-items: center;
             min-height: 100vh;
+            width: 100vw;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -35,9 +35,9 @@
         /* ==============================
            PROPORÇÕES — controladas por data-ratio
            ============================== */
-        .template-motion-container[data-ratio="4:5"]  { width: 400px; min-height: 500px; }
-        .template-motion-container[data-ratio="1:1"]  { width: 500px; min-height: 500px; }
-        .template-motion-container[data-ratio="9:16"] { width: 405px; min-height: 720px; }
+        .template-motion-container[data-ratio="4:5"]  { width: 400px; height: 500px; }
+        .template-motion-container[data-ratio="1:1"]  { width: 500px; height: 500px; }
+        .template-motion-container[data-ratio="9:16"] { width: 405px; height: 720px; }
 
         .template-motion-container {
             background-color: var(--cor-fundo);
@@ -46,8 +46,9 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
             margin: auto;
+            max-width: 100vw;
+            max-height: 100vh;
         }
 
         /* Linha lateral esquerda */
@@ -92,7 +93,6 @@
             justify-content: center;
             padding: 0 20px;
             position: relative;
-            width: 100%;
         }
 
         .motion-scene-container {
@@ -169,6 +169,7 @@
             z-index: 10;
             padding-left: 2px;
             margin-bottom: 10px;
+            word-wrap: break-word;
         }
 
         .product-name {
@@ -200,6 +201,7 @@
             gap: 10px;
             margin-bottom: 10px;
             opacity: 0;
+            flex-wrap: wrap;
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.25s) forwards;
         }
 
@@ -251,7 +253,6 @@
             align-items: center;
             position: relative;
             z-index: 10;
-            width: 100%;
         }
 
         .cta-text {
