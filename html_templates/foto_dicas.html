@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Dicas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+            --fonte-principal: 'Montserrat', sans-serif;
+            --velocidade-animacao-fast: 0.25s;
+            --velocidade-animacao-normal: 0.5s;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            font-family: var(--fonte-principal);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .template-motion-container[data-ratio="4:5"]  { width: 400px; height: 500px; }
+        .template-motion-container[data-ratio="1:1"]  { width: 500px; height: 500px; }
+        .template-motion-container[data-ratio="9:16"] { width: 405px; height: 720px; }
+
+        .template-motion-container {
+            background-color: var(--cor-fundo);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .side-line {
+            position: absolute;
+            left: 0; top: 0;
+            width: 3px; height: 100%;
+            background: linear-gradient(to bottom, transparent 0%, var(--cor-destaque) 30%, var(--cor-destaque) 70%, transparent 100%);
+            opacity: 0.35;
+            z-index: 1;
+            animation: fadeInTop 0.8s ease-out forwards;
+        }
+
+        .template-header {
+            width: 100%;
+            height: 75px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2px 20px 4px;
+            position: relative;
+            z-index: 10;
+            animation: fadeInTop var(--velocidade-animacao-fast) ease-out forwards;
+        }
+
+        .cliente-logo {
+            max-width: 200px;
+            max-height: 65px;
+            object-fit: contain;
+        }
+
+        .template-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px 24px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .title-block {
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
+        }
+
+        .tips-title {
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1.1;
+            color: var(--cor-texto-principal);
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+        }
+
+        .template-motion-container[data-ratio="9:16"] .tips-title { 
+            font-size: 28px; 
+            margin-bottom: 10px;
+        }
+
+        .tips-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .template-motion-container[data-ratio="9:16"] .tips-list { 
+            gap: 20px; 
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            background: rgba(0,0,0,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 14px 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--cor-destaque);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            opacity: 0;
+        }
+
+        .tip-1 { animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards; }
+        .tip-2 { animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.3s) forwards; }
+        .tip-3 { animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards; }
+
+        .template-motion-container[data-ratio="9:16"] .tip-item { 
+            padding: 20px; 
+        }
+
+        .tip-number {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--cor-destaque);
+            line-height: 1;
+            opacity: 0.9;
+        }
+
+        .template-motion-container[data-ratio="9:16"] .tip-number { 
+            font-size: 32px; 
+        }
+
+        .tip-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--cor-texto-principal);
+            line-height: 1.4;
+            padding-top: 4px;
+        }
+
+        .template-motion-container[data-ratio="9:16"] .tip-text { 
+            font-size: 16px; 
+            padding-top: 6px;
+        }
+
+        .template-footer {
+            padding: 0 20px 16px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .cta-text {
+            color: var(--cor-destaque-secundaria);
+            font-weight: 500;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            opacity: 0;
+            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.5s) forwards;
+        }
+
+        .footer-accent {
+            width: 20px;
+            height: 1px;
+            background: var(--cor-destaque);
+            opacity: 0.3;
+        }
+
+        @keyframes fadeInTop   { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInText  { from { opacity: 0; transform: translateX(8px); }  to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInRight { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInLeft  { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="template-motion-container" data-ratio="CHAVE_PROPORCAO" id="dicas-app">
+
+        <div class="side-line"></div>
+
+        <header class="template-header">
+            <img src="CHAVE_LOGO" alt="Logo" class="cliente-logo">
+        </header>
+
+        <main class="template-main">
+            
+            <div class="title-block">
+                <h1 class="tips-title">CHAVE_TITULO</h1>
+            </div>
+
+            <div class="tips-list">
+                <div class="tip-item tip-1">
+                    <span class="tip-number">1</span>
+                    <p class="tip-text">CHAVE_DICA_1</p>
+                </div>
+                
+                <div class="tip-item tip-2">
+                    <span class="tip-number">2</span>
+                    <p class="tip-text">CHAVE_DICA_2</p>
+                </div>
+                
+                <div class="tip-item tip-3">
+                    <span class="tip-number">3</span>
+                    <p class="tip-text">CHAVE_DICA_3</p>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="template-footer">
+            <span class="cta-text">CHAVE_CTA</span>
+            <div class="footer-accent"></div>
+        </footer>
+
+    </div>
+
+</body>
+</html>
