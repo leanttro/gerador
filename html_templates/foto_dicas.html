@@ -64,10 +64,10 @@
 
         .template-header {
             width: 100%;
-            height: 16%; /* Aumentado para descer o logo */
+            height: 24%; /* Aumentado para descer o logo o dobro da vez anterior */
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* Alinhado ao fundo do bloco para descer */
+            align-items: flex-end; 
             padding: 0 20px 10px;
             position: relative;
             z-index: 10;
@@ -75,8 +75,8 @@
         }
 
         .cliente-logo {
-            max-width: 162px; /* Reduzido 10% */
-            max-height: 63px; /* Reduzido 10% */
+            max-width: 162px;
+            max-height: 63px;
             object-fit: contain;
         }
 
@@ -85,20 +85,20 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 0 12%; /* Aumentado o recuo lateral para reduzir conteúdo */
+            padding: 0 12%; 
             position: relative;
             z-index: 10;
         }
 
         .title-block {
-            margin-bottom: 22px; /* Reduzido 10% */
+            margin-bottom: 22px;
             opacity: 0;
             text-align: left;
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
         }
 
         .tips-title {
-            font-size: 6.75vw; /* Reduzido 10% */
+            font-size: 6.75vw;
             font-weight: 900;
             line-height: 1.1;
             color: var(--cor-texto-principal);
@@ -109,18 +109,18 @@
         .tips-list {
             display: flex;
             flex-direction: column;
-            gap: 13.5px; /* Reduzido 10% */
+            gap: 13.5px;
         }
 
         .tip-item {
             display: flex;
             align-items: flex-start;
-            gap: 12.6px; /* Reduzido 10% */
+            gap: 12.6px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 18px; /* Reduzido 10% */
-            border-radius: 12px; /* Reduzido 10% */
-            border-left: 4.5px solid var(--cor-destaque); /* Reduzido 10% */
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 4.5px solid var(--cor-destaque);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             opacity: 0;
         }
@@ -130,14 +130,14 @@
         .tip-3 { animation: fadeInRight var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards; }
 
         .tip-number {
-            font-size: 7.2vw; /* Reduzido 10% */
+            font-size: 7.2vw;
             font-weight: 900;
             color: var(--cor-destaque);
             line-height: 1;
         }
 
         .tip-text {
-            font-size: 3.6vw; /* Reduzido 10% */
+            font-size: 3.6vw;
             font-weight: 600;
             color: var(--cor-texto-principal);
             line-height: 1.4;
@@ -145,8 +145,8 @@
         }
 
         .template-footer {
-            height: 14%; /* Ajustado para dar espaço ao subir o CTA */
-            padding: 0 10% 45px; /* Padding inferior aumentado para subir o CTA */
+            height: 14%;
+            padding: 0 10% 45px; 
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -157,7 +157,7 @@
         .cta-text {
             color: var(--cor-destaque-secundaria);
             font-weight: 700;
-            font-size: 2.9vw; /* Reduzido 10% */
+            font-size: 2.9vw;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             opacity: 0;
@@ -165,13 +165,12 @@
         }
 
         .footer-accent {
-            width: 31px; /* Reduzido 10% */
-            height: 1.8px; /* Reduzido 10% */
+            width: 31px;
+            height: 1.8px;
             background: var(--cor-destaque);
             opacity: 0.5;
         }
 
-        /* Desktop Preview Scaling */
         @media (min-width: 600px) {
             .tips-title { font-size: 32px; }
             .tip-number { font-size: 38px; }
