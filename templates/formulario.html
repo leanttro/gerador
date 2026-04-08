@@ -7,250 +7,780 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:       #0a0a0a;
-  --surface:  #111111;
+  --bg: #0a0a0a;
+  --surface: #111111;
   --surface2: #181818;
-  --border:   rgba(255,255,255,0.07);
-  --border2:  rgba(255,255,255,0.13);
-  --text:     #f0f0f0;
-  --muted:    #666;
-  --accent:   #7C3AED;
-  --accent2:  #a855f7;
-  --green:    #22c55e;
-  --red:      #ef4444;
-  --radius:   12px;
-  --radius-sm:8px;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0f0f0;
+  --muted: #666;
+  --accent: #7C3AED;
+  --accent2: #a855f7;
+  --green: #22c55e;
+  --red: #ef4444;
+  --radius: 12px;
+  --radius-sm: 8px;
 }
 
-*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; font-size: 15px; }
+::before,
+::after {
+  box-sizing: border-box;
+}
 
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 4px;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ── HEADER ── */
 .topbar {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(10,10,10,0.92); backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
   padding: 16px 40px;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.topbar-logo { font-size: 18px; font-weight: 700; letter-spacing: -.5px; }
-.topbar-logo span { color: var(--accent2); }
-.topbar-step { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
-.steps-bar {
-  display: flex; align-items: center; gap: 0;
-  padding: 20px 40px; border-bottom: 1px solid var(--border);
-  overflow-x: auto;
+.topbar-logo {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -.5px;
 }
-.step-item {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 13px; color: var(--muted); white-space: nowrap;
-  cursor: pointer; padding: 6px 0; transition: color .2s;
+
+.topbar-logo span {
+  color: var(--accent2);
 }
-.step-item.active { color: var(--text); }
-.step-item.done { color: var(--green); }
-.step-num {
-  width: 26px; height: 26px; border-radius: 50%;
-  border: 1.5px solid currentColor;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; flex-shrink: 0;
+
+.topbar-step {
+  font-size: 13px;
+  color: var(--muted);
   font-family: 'DM Mono', monospace;
 }
-.step-item.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
-.step-item.done .step-num { background: var(--green); border-color: var(--green); color: #fff; }
-.step-connector { width: 32px; height: 1px; background: var(--border2); margin: 0 6px; flex-shrink: 0; }
 
-.layout { display: grid; grid-template-columns: 1fr 400px; min-height: calc(100vh - 110px); }
-.main-col { padding: 32px 40px; border-right: 1px solid var(--border); overflow-y: auto; }
-.side-col { padding: 24px; background: var(--surface); display: flex; flex-direction: column; gap: 16px; overflow-y: auto; position: sticky; top: 57px; height: calc(100vh - 57px); }
+/* ── STEPS ── */
+.steps-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
 
-.section { display: none; }
-.section.active { display: block; }
-.section-title { font-size: 22px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 6px; }
-.section-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+  padding: 6px 0;
+  transition: color 0.2s;
+}
 
-.template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-.tpl-card {
-  border: 1.5px solid var(--border); border-radius: var(--radius);
-  overflow: hidden; cursor: pointer; transition: border-color .2s, transform .15s;
-  position: relative; background: var(--surface2);
+.step-item.active {
+  color: var(--text);
 }
-.tpl-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-.tpl-card.selected { border-color: var(--accent); }
-.tpl-card.selected::after {
-  content: '\2713'; position: absolute; top: 8px; right: 8px;
-  width: 22px; height: 22px; border-radius: 50%; background: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: #fff; font-weight: 700;
-}
-.tpl-preview {
-  width: 100%; aspect-ratio: 4/5; background: #111;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden; position: relative;
-}
-.tpl-preview iframe { width: 300%; height: 300%; transform: scale(.333); transform-origin: top left; pointer-events: none; border: none; }
-.tpl-preview-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
-.tpl-info { padding: 12px; }
-.tpl-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
-.tpl-keys { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; line-height: 1.5; }
 
-.field { margin-bottom: 20px; }
-.field label { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,.7); margin-bottom: 8px; letter-spacing: .01em; }
-.field label span { color: var(--muted); font-weight: 400; }
-.field input, .field textarea, .field select {
-  width: 100%; background: var(--surface2); border: 1px solid var(--border2);
-  border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif;
-  font-size: 14px; padding: 11px 14px; outline: none; transition: border-color .2s;
+.step-item.done {
+  color: var(--green);
 }
-.field input:focus, .field textarea:focus { border-color: var(--accent); }
-.field textarea { min-height: 90px; resize: vertical; line-height: 1.6; }
 
-.ai-helper-wrap { position: relative; }
-.ai-btn {
-  position: absolute; right: 8px; top: 8px;
-  background: var(--accent); color: #fff; border: none;
-  padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-  cursor: pointer; display: flex; align-items: center; gap: 5px;
-  transition: background .2s;
+.step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
 }
-.ai-btn:hover { background: var(--accent2); }
-.ai-btn:disabled { opacity: .5; cursor: wait; }
-.ai-suggestions { margin-top: 8px; display: none; }
-.ai-suggestions.visible { display: block; }
-.suggestion-item {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 6px;
-  font-size: 13px; color: rgba(255,255,255,.8); line-height: 1.6;
-  cursor: pointer; transition: border-color .15s;
-}
-.suggestion-item:hover { border-color: var(--accent); }
 
-.upload-area {
-  border: 1.5px dashed var(--border2); border-radius: var(--radius);
-  padding: 28px; text-align: center; cursor: pointer;
-  transition: border-color .2s, background .2s;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
+.step-item.active .step-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
-.upload-area:hover, .upload-area.drag { border-color: var(--accent); background: rgba(124,58,237,0.04); }
-.upload-icon { font-size: 28px; opacity: .5; }
-.upload-label { font-size: 14px; color: var(--muted); }
-.upload-label strong { color: var(--text); }
-.upload-preview {
-  width: 100%; border-radius: var(--radius-sm); overflow: hidden;
-  border: 1px solid var(--border); display: none; position: relative;
-}
-.upload-preview img { width: 100%; max-height: 200px; object-fit: contain; background: #111; display: block; }
-.upload-preview .remove-btn {
-  position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7);
-  border: 1px solid var(--border2); color: var(--text); border-radius: 6px;
-  padding: 4px 10px; font-size: 12px; cursor: pointer;
-}
-.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.color-section { margin-bottom: 20px; }
-.color-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.7); margin-bottom: 10px; display: block; }
+.step-item.done .step-num {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
 
-.palette-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-.color-swatch {
-  width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
-  border: 2px solid transparent; transition: transform .15s, border-color .15s;
+.step-connector {
+  width: 32px;
+  height: 1px;
+  background: var(--border2);
+  margin: 0 6px;
   flex-shrink: 0;
 }
-.color-swatch:hover { transform: scale(1.15); }
-.color-swatch.selected { border-color: #fff; transform: scale(1.1); }
 
-.custom-color-row { display: flex; align-items: center; gap: 8px; }
-.custom-color-row input[type=color] { width: 36px; height: 36px; border: none; background: none; cursor: pointer; border-radius: 8px; padding: 0; }
-.custom-color-row span { font-size: 13px; font-family: 'DM Mono', monospace; color: var(--muted); }
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  min-height: calc(100vh - 110px);
+}
 
-.color-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.main-col {
+  padding: 32px 40px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
 
-.side-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-.preview-box {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius); overflow: hidden; aspect-ratio: 4/5;
-  display: flex; align-items: center; justify-content: center;
+.side-col {
+  padding: 24px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+}
+
+/* ── SECTION ── */
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  margin-bottom: 6px;
+}
+
+.section-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* ── TEMPLATE GRID ── */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.tpl-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  position: relative;
+  background: var(--surface2);
+}
+
+.tpl-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+}
+
+.tpl-card.selected {
+  border-color: var(--accent);
+}
+
+.tpl-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.tpl-preview {
+  width: 100%;
+  aspect-ratio: 4/5;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   position: relative;
 }
-.preview-box iframe { width: 300%; height: 300%; transform: scale(.333); transform-origin: top left; border: none; }
-.preview-placeholder { text-align: center; color: var(--muted); font-size: 13px; line-height: 1.7; padding: 20px; }
+
+.tpl-preview iframe {
+  width: 300%;
+  height: 300%;
+  transform: scale(0.333);
+  transform-origin: top left;
+  pointer-events: none;
+  border: none;
+}
+
+.tpl-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tpl-info {
+  padding: 12px;
+}
+
+.tpl-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.tpl-keys {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  line-height: 1.5;
+}
+
+/* ── FORM FIELDS ── */
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+
+.field label span {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.field input, 
+.field textarea, 
+.field select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field input:focus, 
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--accent);
+}
+
+.field textarea {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* ── AI HELPER ── */
+.ai-helper-wrap {
+  position: relative;
+}
+
+.ai-btn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.2s;
+}
+
+.ai-btn:hover {
+  background: var(--accent2);
+}
+
+.ai-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.ai-suggestions {
+  margin-top: 8px;
+  display: none;
+}
+
+.ai-suggestions.visible {
+  display: block;
+}
+
+.suggestion-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.6;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.suggestion-item:hover {
+  border-color: var(--accent);
+}
+
+/* ── UPLOAD ── */
+.upload-area {
+  border: 1.5px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-area:hover, 
+.upload-area.drag {
+  border-color: var(--accent);
+  background: rgba(124,58,237,0.04);
+}
+
+.upload-icon {
+  font-size: 28px;
+  opacity: 0.5;
+}
+
+.upload-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.upload-label strong {
+  color: var(--text);
+}
+
+.upload-preview {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  display: none;
+  position: relative;
+}
+
+.upload-preview img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  background: #111;
+  display: block;
+}
+
+.upload-preview .remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── COLOR PICKER ── */
+.color-section {
+  margin-bottom: 20px;
+}
+
+.color-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.palette-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch.selected {
+  border-color: #fff;
+  transform: scale(1.1);
+}
+
+.custom-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-color-row input[type=color] {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0;
+}
+
+.custom-color-row span {
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── SIDE PANEL ── */
+.side-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.preview-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  aspect-ratio: 4/5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.preview-box iframe {
+  width: 300%;
+  height: 300%;
+  transform: scale(0.333);
+  transform-origin: top left;
+  border: none;
+}
+
+.preview-placeholder {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 20px;
+}
 
 .prompt-output {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px;
-  font-family: 'DM Mono', monospace; font-size: 11.5px;
-  color: rgba(255,255,255,.6); line-height: 1.9;
-  min-height: 120px; white-space: pre-wrap; word-break: break-all;
-  flex: 1; overflow-y: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.9;
+  min-height: 120px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  flex: 1;
+  overflow-y: auto;
 }
-.prompt-key { color: var(--accent2); }
-.prompt-val { color: #7ec88a; }
+
+.prompt-key {
+  color: var(--accent2);
+}
+
+.prompt-val {
+  color: #7ec88a;
+}
 
 .copy-btn {
-  background: transparent; border: 1px solid var(--border2);
-  color: var(--muted); border-radius: var(--radius-sm);
-  padding: 8px 14px; font-size: 13px; cursor: pointer;
-  width: 100%; transition: border-color .2s, color .2s;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color 0.2s, color 0.2s;
 }
-.copy-btn:hover { border-color: var(--accent); color: var(--text); }
-.copy-btn.copied { border-color: var(--green); color: var(--green); }
 
-.nav-row { display: flex; gap: 12px; margin-top: 32px; justify-content: flex-end; }
+.copy-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.copy-btn.copied {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ── NAVIGATION ── */
+.nav-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  justify-content: flex-end;
+}
+
 .btn-back {
-  background: transparent; border: 1px solid var(--border2);
-  color: var(--muted); padding: 11px 24px; border-radius: var(--radius-sm);
-  font-size: 14px; font-weight: 500; cursor: pointer; transition: color .2s, border-color .2s;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  padding: 11px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
 }
-.btn-back:hover { color: var(--text); border-color: var(--border); }
+
+.btn-back:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+
 .btn-next {
-  background: var(--accent); color: #fff; border: none;
-  padding: 11px 28px; border-radius: var(--radius-sm);
-  font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: background .2s; display: flex; align-items: center; gap: 8px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 11px 28px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.btn-next:hover { background: var(--accent2); }
-.btn-next:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn-next:hover {
+  background: var(--accent2);
+}
+
+.btn-next:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .btn-submit {
-  background: var(--green); color: #fff; border: none;
-  padding: 14px 32px; border-radius: var(--radius-sm);
-  font-size: 15px; font-weight: 700; cursor: pointer;
-  transition: background .2s; width: 100%;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  padding: 14px 32px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
 }
-.btn-submit:hover { background: #16a34a; }
 
+.btn-submit:hover {
+  background: #16a34a;
+}
+
+/* ── SUCCESS ── */
 .success-box {
-  background: rgba(34,197,94,.07); border: 1px solid rgba(34,197,94,.25);
-  border-radius: var(--radius); padding: 20px; text-align: center;
-  display: none; flex-direction: column; align-items: center; gap: 12px;
+  background: rgba(34,197,94,0.07);
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
-.success-box.visible { display: flex; }
-.success-icon { font-size: 36px; }
-.success-title { font-size: 18px; font-weight: 700; color: var(--green); }
-.success-sub { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.success-box.visible {
+  display: flex;
+}
 
+.success-icon {
+  font-size: 36px;
+}
+
+.success-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.success-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── FIELD GRID ── */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+
+/* ── LOADING ── */
 .loading-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
-  display: none; align-items: center; justify-content: center; z-index: 999; flex-direction: column; gap: 16px;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  flex-direction: column;
+  gap: 16px;
 }
-.loading-overlay.visible { display: flex; }
-.loading-spinner {
-  width: 40px; height: 40px; border-radius: 50%;
-  border: 3px solid var(--border2); border-top-color: var(--accent);
-  animation: spin .8s linear infinite;
-}
-.loading-text { font-size: 14px; color: var(--muted); }
-@keyframes spin { to { transform: rotate(360deg); } }
 
+.loading-overlay.visible {
+  display: flex;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── HIGHLIGHT NEW FIELDS ── */
+.niche-card {
+  background: rgba(124,58,237,0.05);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+/* ── MOBILE ── */
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
-  .side-col { position: static; height: auto; border-top: 1px solid var(--border); }
-  .topbar, .steps-bar, .main-col { padding-left: 20px; padding-right: 20px; }
-  .field-grid, .color-grid, .upload-grid { grid-template-columns: 1fr; }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .side-col {
+    position: static;
+    height: auto;
+    border-top: 1px solid var(--border);
+  }
+  .topbar, 
+  .steps-bar, 
+  .main-col {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .field-grid, 
+  .color-grid, 
+  .upload-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -295,108 +825,121 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
       </div>
       <div class="nav-row">
         <button class="btn-next" id="btnNext0" onclick="goToStep(1)" disabled>
-          Próximo
+          Próximo <span>→</span>
         </button>
       </div>
     </div>
 
     <div class="section" id="section-1">
       <div class="section-title">Envie seus arquivos</div>
-      <div class="section-sub">Logo e imagem do produto ou depoimento. JPG, PNG ou WebP até 20MB.</div>
+      <div class="section-sub">Logo e imagem principal. JPG, PNG ou WebP até 20MB.</div>
 
       <div class="upload-grid">
         <div class="field">
           <label>Logo da empresa</label>
           <div class="upload-area" id="logoArea" onclick="document.getElementById('logoInput').click()"
             ondragover="handleDrag(event,'logoArea')" ondragleave="handleDragLeave(event,'logoArea')" ondrop="handleDrop(event,'logo')">
-            <div class="upload-icon">&#127991;&#65039;</div>
+            <div class="upload-icon">🏷️</div>
             <div class="upload-label"><strong>Clique</strong> ou arraste aqui</div>
             <div style="font-size:12px;color:var(--muted)">PNG transparente ideal</div>
           </div>
           <div class="upload-preview" id="logoPreview">
             <img id="logoPreviewImg" src="" alt="Logo">
-            <button class="remove-btn" onclick="removeFile('logo')">&#10005; Remover</button>
+            <button class="remove-btn" onclick="removeFile('logo')">✕ Remover</button>
           </div>
           <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="handleFileSelect(this,'logo')">
         </div>
 
         <div class="field">
-          <label>Imagem principal <span>(produto, print ou foto)</span></label>
+          <label>Imagem principal <span>(produto, serviço, pessoa)</span></label>
           <div class="upload-area" id="imgArea" onclick="document.getElementById('imgInput').click()"
             ondragover="handleDrag(event,'imgArea')" ondragleave="handleDragLeave(event,'imgArea')" ondrop="handleDrop(event,'img')">
-            <div class="upload-icon">&#128444;&#65039;</div>
+            <div class="upload-icon">🖼️</div>
             <div class="upload-label"><strong>Clique</strong> ou arraste aqui</div>
-            <div style="font-size:12px;color:var(--muted)">Foto do produto ou print</div>
+            <div style="font-size:12px;color:var(--muted)">Foto principal da arte</div>
           </div>
           <div class="upload-preview" id="imgPreview">
-            <img id="imgPreviewImg" src="" alt="Produto">
-            <button class="remove-btn" onclick="removeFile('img')">&#10005; Remover</button>
+            <img id="imgPreviewImg" src="" alt="Principal">
+            <button class="remove-btn" onclick="removeFile('img')">✕ Remover</button>
           </div>
           <input type="file" id="imgInput" accept="image/*,video/*" style="display:none" onchange="handleFileSelect(this,'img')">
         </div>
       </div>
 
       <div class="nav-row">
-        <button class="btn-back" onclick="goToStep(0)">Voltar</button>
-        <button class="btn-next" id="btnNext1" onclick="goToStep(2)">Próximo</button>
+        <button class="btn-back" onclick="goToStep(0)">← Voltar</button>
+        <button class="btn-next" id="btnNext1" onclick="goToStep(2)">Próximo →</button>
       </div>
     </div>
 
     <div class="section" id="section-2">
       <div class="section-title">Textos da arte</div>
-      <div class="section-sub">Preencha as informações. Use o botão <strong style="color:var(--accent2)">IA</strong> para receber sugestões automáticas.</div>
+      <div class="section-sub">Preencha as informações do seu negócio. A <strong style="color:var(--accent2)">✦ IA</strong> usará o seu nicho para sugerir os melhores textos de venda.</div>
+
+      <div class="niche-card">
+        <div class="field-grid">
+          <div class="field" style="margin-bottom:0">
+            <label>Nicho de mercado <span>(Para a IA entender)</span></label>
+            <input type="text" id="f_nicho" placeholder="Ex: Tecnologia, Moda, Imobiliária, Estética..." oninput="updatePrompt()">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>O que você quer anunciar?</label>
+            <input type="text" id="f_objetivo" placeholder="Ex: Venda de celular, Lançamento de curso..." oninput="updatePrompt()">
+          </div>
+        </div>
+      </div>
 
       <div class="field-grid">
         <div class="field">
-          <label>Nome da empresa</label>
-          <input type="text" id="f_empresa" placeholder="Ex: Fit4Life" oninput="updatePrompt()">
+          <label>Nome da empresa / marca</label>
+          <input type="text" id="f_empresa" placeholder="Ex: Tech Store" oninput="updatePrompt()">
         </div>
         <div class="field">
           <label>Nome do cliente / responsável</label>
-          <input type="text" id="f_cliente" placeholder="Ex: Ana Silva" oninput="updatePrompt()">
+          <input type="text" id="f_cliente" placeholder="Ex: João Silva" oninput="updatePrompt()">
         </div>
       </div>
 
       <div class="field">
-        <label>Título principal <span>(nome do produto, prato, serviço...)</span></label>
-        <input type="text" id="f_titulo" placeholder="Ex: Frango ao Curry com Quinoa" oninput="updatePrompt()">
+        <label>Título principal <span>(nome do produto ou serviço)</span></label>
+        <input type="text" id="f_titulo" placeholder="Ex: Smartphone Pro Max 512GB" oninput="updatePrompt()">
       </div>
 
       <div class="field">
-        <label>Ingredientes / descrição do produto</label>
+        <label>Principais Benefícios / Características do produto</label>
         <div class="ai-helper-wrap">
-          <textarea id="f_ingredientes" placeholder="Ex: Frango grelhado, quinoa vermelha, cenoura ralada..." oninput="updatePrompt()" style="padding-right:90px"></textarea>
-          <button class="ai-btn" onclick="gerarSugestaoIA('ingredientes')" id="aiBtnIng">IA</button>
+          <textarea id="f_ingredientes" placeholder="Ex: Bateria dura 2 dias, Câmera 4K..." oninput="updatePrompt()" style="padding-right:90px"></textarea>
+          <button class="ai-btn" onclick="gerarSugestaoIA('caracteristicas')" id="aiBtnIng">✦ IA</button>
         </div>
         <div class="ai-suggestions" id="suggestionsIng"></div>
       </div>
 
       <div class="field">
-        <label>Texto de destaque / depoimento <span>(aparece em cima da foto)</span></label>
+        <label>Texto de destaque / depoimento de cliente</label>
         <div class="ai-helper-wrap">
-          <textarea id="f_resultado" placeholder="Ex: Achei lindo Já abri o site umas 500 vezes Luana" oninput="updatePrompt()" style="padding-right:90px"></textarea>
-          <button class="ai-btn" onclick="gerarSugestaoIA('resultado')" id="aiBtnRes">IA</button>
+          <textarea id="f_resultado" placeholder='Ex: "Melhor compra que já fiz!" — Carlos' oninput="updatePrompt()" style="padding-right:90px"></textarea>
+          <button class="ai-btn" onclick="gerarSugestaoIA('resultado')" id="aiBtnRes">✦ IA</button>
         </div>
         <div class="ai-suggestions" id="suggestionsRes"></div>
       </div>
 
       <div class="field">
-        <label>Macros / informações extras <span>(aparece como tags)</span></label>
-        <input type="text" id="f_macros" placeholder="Ex: 380kcal | 42g proteína | Low Carb" oninput="updatePrompt()">
+        <label>Tags Extras / Informações Rápidas</label>
+        <input type="text" id="f_macros" placeholder="Ex: Frete Grátis | 12x Sem Juros | Garantia 1 Ano" oninput="updatePrompt()">
       </div>
 
       <div class="field">
-        <label>Texto do rodapé / CTA</label>
+        <label>Texto do rodapé / Chamada para Ação (CTA)</label>
         <div class="ai-helper-wrap">
-          <input type="text" id="f_cta" placeholder="Ex: Peça já no link da bio" oninput="updatePrompt()" style="padding-right:90px">
-          <button class="ai-btn" style="top:50%;transform:translateY(-50%)" onclick="gerarSugestaoIA('cta')" id="aiBtnCta">IA</button>
+          <input type="text" id="f_cta" placeholder="Ex: Clique no link da bio e garanta o seu" oninput="updatePrompt()" style="padding-right:90px">
+          <button class="ai-btn" style="top:50%;transform:translateY(-50%)" onclick="gerarSugestaoIA('cta')" id="aiBtnCta">✦ IA</button>
         </div>
         <div class="ai-suggestions" id="suggestionsCta"></div>
       </div>
 
       <div class="nav-row">
-        <button class="btn-back" onclick="goToStep(1)">Voltar</button>
-        <button class="btn-next" onclick="goToStep(3)">Próximo</button>
+        <button class="btn-back" onclick="goToStep(1)">← Voltar</button>
+        <button class="btn-next" onclick="goToStep(3)">Próximo →</button>
       </div>
     </div>
 
@@ -444,24 +987,22 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 
       <div style="margin-top:28px">
         <div class="success-box" id="successBox">
-          <div class="success-icon">&#9989;</div>
+          <div class="success-icon">✅</div>
           <div class="success-title">Arte enviada!</div>
-          <div class="success-sub">Seu pedido foi recebido. Em breve você receberá a arte pronta no WhatsApp ou e-mail.</div>
+          <div class="success-sub">Seu pedido foi recebido. Em breve você receberá a arte pronta.</div>
         </div>
 
         <button class="btn-submit" id="btnSubmit" onclick="submitForm()">
-          Gerar minha arte agora
+          🎨 Gerar minha arte agora
         </button>
       </div>
 
       <div class="nav-row" style="justify-content:flex-start;margin-top:0">
-        <button class="btn-back" onclick="goToStep(2)">Voltar</button>
+        <button class="btn-back" onclick="goToStep(2)">← Voltar</button>
       </div>
     </div>
 
-  </div>
-
-  <div class="side-col">
+  </div><div class="side-col">
     <div class="side-title">Prévia do template</div>
     <div class="preview-box" id="sidePreview">
       <div class="preview-placeholder">Selecione um template<br>para ver a prévia aqui</div>
@@ -476,6 +1017,9 @@ html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 
 </div>
 
 <script>
+/* ═══════════════════════════════════
+   STATE
+   ═══════════════════════════════════ */
 let currentStep = 0;
 let selectedTemplate = null;
 let uploadedFiles = { logo: null, img: null };
@@ -486,6 +1030,9 @@ let colors = {
   secundaria: '#a855f7',
 };
 
+/* ═══════════════════════════════════
+   PALETAS DE CORES
+   ═══════════════════════════════════ */
 const PALETTES = {
   fundo: ['#0a0a0a','#0d0d0d','#111827','#1e1e2e','#0f0f23','#fff','#f8f9fa','#f0f4f0','#fdf6ec','#0a1628'],
   texto: ['#ffffff','#f0f0f0','#1a1a1a','#111827','#2d2d2d','#f5f5f5','#e5e7eb','#1d2939','#374151'],
@@ -524,6 +1071,9 @@ function setCustomColor(key, hex) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   TEMPLATES E PREVIEWS ROBUSTOS
+   ═══════════════════════════════════ */
 async function loadTemplates() {
   try {
     const res = await fetch('/api/templates');
@@ -554,13 +1104,23 @@ function renderTemplates(templates) {
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
     
+    // Substituição rigorosa de todas as chaves possíveis para evitar erro de layout
     let mockHtml = tpl.html
       .replace(/CHAVE_COR_FUNDO/g, '#181818')
       .replace(/CHAVE_COR_TEXTO/g, '#ffffff')
       .replace(/CHAVE_COR_DESTAQUE/g, '#7C3AED')
-      .replace(/CHAVE_COR_SECUNDARIA/g, '#a855f7');
+      .replace(/CHAVE_COR_SECUNDARIA/g, '#a855f7')
+      .replace(/CHAVE_TITULO/g, 'TITULO AQUI')
+      .replace(/CHAVE_INGREDIENTES/g, 'Beneficio Principal')
+      .replace(/CHAVE_RESULTADO/g, 'Muito bom!')
+      .replace(/CHAVE_MACROS/g, 'DESTAQUE')
+      .replace(/CHAVE_CTA/g, 'SAIBA MAIS')
+      .replace(/CHAVE_LOGO/g, 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO')
+      .replace(/CHAVE_IMAGEM/g, 'https://via.placeholder.com/400x500/222/fff.png?text=FOTO');
       
-    iframe.srcdoc = mockHtml;
+    // Utilizando Blob URL para garantir carregamento perfeito como no index.html
+    const blob = new Blob([mockHtml], { type: 'text/html' });
+    iframe.src = URL.createObjectURL(blob);
     previewDiv.appendChild(iframe);
 
     const infoDiv = document.createElement('div');
@@ -591,6 +1151,9 @@ function selectTemplate(tpl, cardEl) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   UPLOAD
+   ═══════════════════════════════════ */
 function handleDrag(e, areaId) { e.preventDefault(); document.getElementById(areaId).classList.add('drag'); }
 function handleDragLeave(e, areaId) { document.getElementById(areaId).classList.remove('drag'); }
 function handleDrop(e, type) {
@@ -611,6 +1174,7 @@ function processFile(file, type) {
     previewEl.style.display = 'block';
     document.getElementById(type === 'logo' ? 'logoArea' : 'imgArea').style.display = 'none';
 
+    // Upload pro servidor
     showLoading('Enviando arquivo...');
     try {
       const formData = new FormData();
@@ -621,7 +1185,7 @@ function processFile(file, type) {
         uploadedFiles[type] = { url: data.url, filename: data.filename };
         updatePrompt();
       }
-    } catch(err) {}
+    } catch(err) { console.error(err); }
     hideLoading();
   };
   reader.readAsDataURL(file);
@@ -637,26 +1201,39 @@ function removeFile(type) {
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   IA — SUGESTÕES DE TEXTO PERSONALIZADAS
+   ═══════════════════════════════════ */
 async function gerarSugestaoIA(campo) {
+  const nicho = document.getElementById('f_nicho').value.trim() || 'Não especificado';
+  const objetivo = document.getElementById('f_objetivo').value.trim() || 'Não especificado';
   const empresa = document.getElementById('f_empresa').value.trim() || 'a empresa';
-  const titulo = document.getElementById('f_titulo').value.trim() || 'o produto';
+  const titulo = document.getElementById('f_titulo').value.trim() || 'o produto/serviço';
 
-  const prompts = {
-    ingredientes: `Gere 3 descrições curtas e apetitosas de ingredientes para ${titulo} da empresa ${empresa}. Cada descrição em no máximo 2 linhas, separadas por quebra de linha dupla. Apenas as descrições, sem numeração.`,
-    resultado: `Gere 3 depoimentos curtos e entusiasmados de clientes satisfeitos com ${titulo} da ${empresa}. Cada depoimento entre aspas com travessão e nome fictício. Separados por quebra de linha dupla.`,
-    cta: `Gere 3 CTAs curtos e atrativos para posts de ${titulo} da ${empresa}. Um por linha. Só os textos.`,
-  };
+  const baseContext = `Você é um copywriter de marketing especialista. O nicho do cliente é "${nicho}" e o objetivo do anúncio é "${objetivo}". A empresa se chama "${empresa}" e o título do anúncio é "${titulo}".`;
 
-  const btnId = campo === 'ingredientes' ? 'aiBtnIng' : campo === 'resultado' ? 'aiBtnRes' : 'aiBtnCta';
-  const sugId = campo === 'ingredientes' ? 'suggestionsIng' : campo === 'resultado' ? 'suggestionsRes' : 'suggestionsCta';
+  let promptIA = '';
+  
+  if (campo === 'caracteristicas') {
+    promptIA = `${baseContext} Crie 3 opções de textos curtos e persuasivos destacando os melhores benefícios ou características. Máximo de 2 linhas por opção. Separe as opções APENAS com duas quebras de linha (Enter). Não use numeração ou marcadores.`;
+  } else if (campo === 'resultado') {
+    promptIA = `${baseContext} Crie 3 opções de depoimentos curtos e muito entusiasmados de clientes satisfeitos com isso. Coloque o depoimento entre aspas, seguido de um travessão e um primeiro nome fictício. Separe as opções APENAS com duas quebras de linha.`;
+  } else if (campo === 'cta') {
+    promptIA = `${baseContext} Crie 3 opções de Call to Action (CTA - Chamada para Ação) urgentes e focados em conversão, com no máximo 8 palavras cada. Um por linha. Separe as opções APENAS com duas quebras de linha.`;
+  }
+
+  const btnId = campo === 'caracteristicas' ? 'aiBtnIng' : campo === 'resultado' ? 'aiBtnRes' : 'aiBtnCta';
+  const sugId = campo === 'caracteristicas' ? 'suggestionsIng' : campo === 'resultado' ? 'suggestionsRes' : 'suggestionsCta';
   const btn = document.getElementById(btnId);
-  btn.disabled = true; btn.textContent = '...';
+  
+  btn.disabled = true; 
+  btn.textContent = '...';
 
   try {
     const res = await fetch('/api/sugestao-texto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompts[campo] })
+      body: JSON.stringify({ prompt: promptIA })
     });
     const data = await res.json();
     if (data.success) {
@@ -665,17 +1242,22 @@ async function gerarSugestaoIA(campo) {
       sugDiv.innerHTML = sugs.map(s => `<div class="suggestion-item" onclick="applySuggestion('${campo}',this)">${s.trim()}</div>`).join('');
       sugDiv.classList.add('visible');
     }
-  } catch(e) {}
-  btn.disabled = false; btn.textContent = 'IA';
+  } catch(e) { console.error(e); }
+  
+  btn.disabled = false; 
+  btn.textContent = '✦ IA';
 }
 
 function applySuggestion(campo, el) {
   const text = el.textContent;
-  const fieldMap = { ingredientes: 'f_ingredientes', resultado: 'f_resultado', cta: 'f_cta' };
+  const fieldMap = { caracteristicas: 'f_ingredientes', resultado: 'f_resultado', cta: 'f_cta' };
   document.getElementById(fieldMap[campo]).value = text;
   updatePrompt();
 }
 
+/* ═══════════════════════════════════
+   PROMPT OUTPUT E LIVE PREVIEW
+   ═══════════════════════════════════ */
 function updatePrompt() {
   const keys = {
     CHAVE_COR_FUNDO:        colors.fundo,
@@ -694,11 +1276,12 @@ function updatePrompt() {
   };
 
   const lines = Object.entries(keys)
-    .map(([k,v]) => `<span class="prompt-key">${k}</span> <span class="prompt-val">${v||'---'}</span>`)
+    .map(([k,v]) => `<span class="prompt-key">${k}</span> <span class="prompt-val">${v||'—'}</span>`)
     .join('\n');
 
   document.getElementById('promptOutput').innerHTML = lines;
 
+  // Atualizar a prévia lateral dinamicamente
   if (selectedTemplate) {
     let html = selectedTemplate.html;
     
@@ -708,10 +1291,10 @@ function updatePrompt() {
       CHAVE_COR_DESTAQUE:     colors.destaque,
       CHAVE_COR_SECUNDARIA:   colors.secundaria,
       CHAVE_NOME_EMPRESA:     document.getElementById('f_empresa')?.value || 'Sua Empresa',
-      CHAVE_NOME_CLIENTE:     document.getElementById('f_cliente')?.value || 'Cliente',
+      CHAVE_NOME_CLIENTE:     document.getElementById('f_cliente')?.value || 'Nome Cliente',
       CHAVE_TITULO:           document.getElementById('f_titulo')?.value || 'Seu Título Aqui',
-      CHAVE_INGREDIENTES:     document.getElementById('f_ingredientes')?.value || 'Detalhes do produto aparecerão aqui...',
-      CHAVE_RESULTADO:        document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui...',
+      CHAVE_INGREDIENTES:     document.getElementById('f_ingredientes')?.value || 'Os benefícios ou detalhes aparecerão aqui.',
+      CHAVE_RESULTADO:        document.getElementById('f_resultado')?.value || 'Depoimento aparecerá aqui.',
       CHAVE_MACROS:           document.getElementById('f_macros')?.value || 'TAGS',
       CHAVE_CTA:              document.getElementById('f_cta')?.value || 'Ação do Rodapé',
       CHAVE_LOGO:             uploadedFiles.logo?.url || 'https://via.placeholder.com/200x80/222/fff.png?text=LOGO',
@@ -726,7 +1309,9 @@ function updatePrompt() {
     preview.innerHTML = '';
     const iframe = document.createElement('iframe');
     iframe.sandbox = "allow-scripts allow-same-origin";
-    iframe.srcdoc = html;
+    
+    const blob = new Blob([html], { type: 'text/html' });
+    iframe.src = URL.createObjectURL(blob);
     preview.appendChild(iframe);
   }
 }
@@ -752,11 +1337,18 @@ function getPromptText() {
 function copyPrompt() {
   navigator.clipboard.writeText(getPromptText()).then(() => {
     const btn = document.getElementById('copyBtn');
-    btn.textContent = 'Copiado'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copiar prompt'; btn.classList.remove('copied'); }, 2000);
+    btn.textContent = 'Copiado ✓'; 
+    btn.classList.add('copied');
+    setTimeout(() => { 
+      btn.textContent = 'Copiar prompt'; 
+      btn.classList.remove('copied'); 
+    }, 2000);
   });
 }
 
+/* ═══════════════════════════════════
+   SUBMIT
+   ═══════════════════════════════════ */
 async function submitForm() {
   const payload = {
     template_id: selectedTemplate?.id || '',
@@ -764,6 +1356,8 @@ async function submitForm() {
     assets: [uploadedFiles.logo?.url, uploadedFiles.img?.url].filter(Boolean),
     colors,
     fields: {
+      nicho:        document.getElementById('f_nicho').value,
+      objetivo:     document.getElementById('f_objetivo').value,
       empresa:      document.getElementById('f_empresa').value,
       cliente:      document.getElementById('f_cliente').value,
       titulo:       document.getElementById('f_titulo').value,
@@ -793,8 +1387,14 @@ async function submitForm() {
   }
 }
 
+/* ═══════════════════════════════════
+   STEPS
+   ═══════════════════════════════════ */
 function goToStep(step) {
-  if (step > 0 && !selectedTemplate) { alert('Selecione um template primeiro.'); return; }
+  if (step > 0 && !selectedTemplate) { 
+    alert('Selecione um template primeiro.'); 
+    return; 
+  }
   document.querySelectorAll('.section').forEach((s,i) => {
     s.classList.toggle('active', i === step);
   });
@@ -809,12 +1409,20 @@ function goToStep(step) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+/* ═══════════════════════════════════
+   LOADING
+   ═══════════════════════════════════ */
 function showLoading(text='Carregando...') {
   document.getElementById('loadingText').textContent = text;
   document.getElementById('loadingOverlay').classList.add('visible');
 }
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('visible'); }
+function hideLoading() { 
+  document.getElementById('loadingOverlay').classList.remove('visible'); 
+}
 
+/* ═══════════════════════════════════
+   INIT
+   ═══════════════════════════════════ */
 buildPalettes();
 loadTemplates();
 updatePrompt();
