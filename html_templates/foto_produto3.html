@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Estático Leanttro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+            --fonte-principal: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: var(--fonte-principal);
+        }
+
+        /* Container principal ajustado para proporção.
+           Para usar 4:5, basta alterar o aspect-ratio abaixo para 4 / 5
+        */
+        .template-container {
+            width: 400px;
+            aspect-ratio: 9 / 16;
+            position: relative;
+            background-image: url('CHAVE_IMAGEM');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 100%);
+            z-index: 1;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            padding: 40px 30px;
+        }
+
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .logo {
+            max-width: 140px;
+            max-height: 70px;
+            object-fit: contain;
+        }
+
+        /* Centralização forçada no meio */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-grow: 1;
+            margin: 20px 0;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--cor-destaque);
+            line-height: 1.15;
+            margin-bottom: 24px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            font-weight: 300;
+            color: var(--cor-texto-principal);
+            line-height: 1.4;
+        }
+
+        footer {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .cta-box {
+            background-color: var(--cor-destaque);
+            color: var(--cor-fundo);
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 4px;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="template-container">
+        <div class="overlay"></div>
+        <div class="content-wrapper">
+            
+            <header>
+                <img src="CHAVE_LOGO" alt="Logo Cliente" class="logo">
+            </header>
+
+            <main class="main-content">
+                <h1 class="title">CHAVE_TITULO</h1>
+                <p class="subtitle">CHAVE_FRASE</p>
+            </main>
+
+            <footer>
+                <div class="cta-box">CHAVE_CTA</div>
+            </footer>
+
+        </div>
+    </div>
+
+</body>
+</html>
