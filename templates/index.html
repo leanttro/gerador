@@ -1790,6 +1790,11 @@ async function captureImage() {
             windowWidth: iframe.clientWidth,
             windowHeight: iframe.clientHeight,
             onclone: (clonedDoc) => {
+                // Corrige canvas 0x0 que causam crash no html2canvas
+                clonedDoc.querySelectorAll('canvas').forEach(c => {
+                    if (!c.width || c.width === 0) c.width = 1;
+                    if (!c.height || c.height === 0) c.height = 1;
+                });
                 const allElements = clonedDoc.querySelectorAll('*');
                 allElements.forEach(el => {
                     const style = clonedDoc.defaultView.getComputedStyle(el);
