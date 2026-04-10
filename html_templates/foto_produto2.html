@@ -34,29 +34,37 @@
         }
 
         /* ==============================
-           CONTAINER — 9:16 PADRÃO (oficial)
-           Para 4:5, adicione a classe "proporcao-4-5" no div.card
+           WRAPPER — borda preta externa
            ============================== */
-        .card {
+        .card-wrapper {
             position: relative;
             width: 100vw;
             height: 100vh;
-            overflow: hidden;
             border-radius: 18px;
+            background-color: #000;
+            padding: 8px;
+            flex-shrink: 0;
+            display: flex;
+        }
+
+        /* ==============================
+           CONTAINER — 9:16 PADRÃO (oficial)
+           Para 4:5, adicione a classe "proporcao-4-5" no div.card-wrapper
+           ============================== */
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
             flex-shrink: 0;
         }
 
-        /* PROPORÇÃO 4:5 — enquadramento alternativo */
-        .card.proporcao-4-5 {
-            width: 100vw;
-            height: 100vh;
-        }
-
-        /* FOTO DE FUNDO */
-        .card-bg {
+        /* FOTO BORRADA DE FUNDO — preenche sem distorcer no 9:16 */
+        .card-bg-blur {
             position: absolute;
             inset: 0;
             width: 100%;
@@ -64,13 +72,31 @@
             object-fit: cover;
             object-position: center;
             z-index: 0;
+            filter: blur(18px) brightness(0.55) saturate(0.8);
+            transform: scale(1.08);
+        }
+
+        /* FOTO PRINCIPAL — cover normal */
+        .card-bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            z-index: 1;
+        }
+
+        /* No 4:5 a imagem já cabe bem — desativa o blur */
+        .card-wrapper.proporcao-4-5 .card-bg-blur {
+            display: none;
         }
 
         /* OVERLAY gradiente para legibilidade do texto */
         .card-overlay {
             position: absolute;
             inset: 0;
-            z-index: 1;
+            z-index: 2;
             background: linear-gradient(
                 to bottom,
                 rgba(0,0,0,0.18) 0%,
@@ -137,7 +163,7 @@
         }
 
         /* Título menor no 4:5 */
-        .card.proporcao-4-5 .card-titulo {
+        .card-wrapper.proporcao-4-5 .card-titulo {
             font-size: 44px;
         }
 
@@ -157,28 +183,33 @@
 <body>
 
     <!--
-        PROPORÇÃO PADRÃO:      9:16  →  <div class="card">
-        PROPORÇÃO ALTERNATIVA: 4:5   →  <div class="card proporcao-4-5">
+        PROPORÇÃO PADRÃO:      9:16  →  <div class="card-wrapper">
+        PROPORÇÃO ALTERNATIVA: 4:5   →  <div class="card-wrapper proporcao-4-5">
     -->
-    <div class="card">
+    <div class="card-wrapper">
+        <div class="card">
 
-        <!-- FOTO DE FUNDO -->
-        <img class="card-bg" src="CHAVE_IMAGEM" alt="Foto do produto">
+            <!-- FOTO BORRADA DE FUNDO (preenchimento no 9:16) -->
+            <img class="card-bg-blur" src="CHAVE_IMAGEM" alt="">
 
-        <!-- OVERLAY -->
-        <div class="card-overlay"></div>
+            <!-- FOTO PRINCIPAL -->
+            <img class="card-bg" src="CHAVE_IMAGEM" alt="Foto do produto">
 
-        <!-- LOGO NO TOPO -->
-        <div class="card-logo-wrap">
-            <img class="card-logo" src="CHAVE_LOGO" alt="Logo">
+            <!-- OVERLAY -->
+            <div class="card-overlay"></div>
+
+            <!-- LOGO NO TOPO -->
+            <div class="card-logo-wrap">
+                <img class="card-logo" src="CHAVE_LOGO" alt="Logo">
+            </div>
+
+            <!-- TÍTULO + FRASE NO RODAPÉ -->
+            <div class="card-body">
+                <h1 class="card-titulo">CHAVE_TITULO</h1>
+                <p class="card-frase">CHAVE_FRASE</p>
+            </div>
+
         </div>
-
-        <!-- TÍTULO + FRASE NO RODAPÉ -->
-        <div class="card-body">
-            <h1 class="card-titulo">CHAVE_TITULO</h1>
-            <p class="card-frase">CHAVE_FRASE</p>
-        </div>
-
     </div>
 
 </body>
