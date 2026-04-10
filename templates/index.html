@@ -1763,7 +1763,6 @@ async function captureImage() {
         await iframeDoc.fonts.ready;
         const images = iframeDoc.querySelectorAll('img');
         await Promise.all(Array.from(images).map(img => {
-            img.setAttribute('crossorigin', 'anonymous');
             if (img.complete) return Promise.resolve();
             return new Promise(resolve => { img.onload = img.onerror = resolve; });
         }));
@@ -1800,13 +1799,8 @@ async function captureImage() {
                     if (style.visibility === 'hidden') {
                         el.style.visibility = 'visible';
                     }
-                    if (el.classList && el.classList.contains('bg-marquee-row')) {
-                        el.style.width = '2000px';
-                    }
                     el.style.animation = 'none';
                     el.style.transition = 'none';
-                    el.style.backdropFilter = 'none';
-                    el.style.webkitBackdropFilter = 'none';
                 });
             }
         });
@@ -1821,6 +1815,7 @@ async function captureImage() {
         showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
+
 let mediaRecorder = null;
 let recordedChunks = [];
 let isRecording   = false;
