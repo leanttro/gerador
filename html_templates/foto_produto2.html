@@ -39,11 +39,10 @@
            ============================== */
         .card {
             position: relative;
-            width: 450px;
-            height: 800px;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
-            border-radius: 36px;
-            border: 7px solid #000;
+            border-radius: 18px;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -52,8 +51,8 @@
 
         /* PROPORÇÃO 4:5 — enquadramento alternativo */
         .card.proporcao-4-5 {
-            width: 450px;
-            height: 562px;
+            width: 100vw;
+            height: 100vh;
         }
 
         /* FOTO DE FUNDO */
@@ -70,18 +69,14 @@
         /* OVERLAY gradiente para legibilidade do texto */
         .card-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: -6px;
+            inset: 0;
             z-index: 1;
             background: linear-gradient(
                 to bottom,
                 rgba(0,0,0,0.18) 0%,
-                rgba(0,0,0,0.08) 28%,
-                rgba(0,0,0,0.62) 55%,
-                rgba(0,0,0,0.94) 75%,
-                rgba(0,0,0,1.00) 100%
+                rgba(0,0,0,0.08) 35%,
+                rgba(0,0,0,0.55) 65%,
+                rgba(0,0,0,0.82) 100%
             );
         }
 
