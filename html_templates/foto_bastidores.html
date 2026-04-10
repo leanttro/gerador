@@ -8,10 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cor-fundo: #FFFFFF;
-            --cor-texto-principal: #1A1A1A;
-            --cor-destaque: #C5A059;
-            --cor-destaque-secundaria: #7A7A7A;
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
             --fonte-principal: 'Montserrat', sans-serif;
         }
 
@@ -28,16 +28,21 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
         }
 
         /* ==============================
-           CONTAINER PRINCIPAL — 4:5
+           CONTAINER — RESPONSIVO 4:5 E 9:16
+           Ocupa 100% do viewport sem distorcer.
+           O backend renderiza na resolução certa
+           (ex: 1080x1350 para 4:5 ou 1080x1920 para 9:16)
+           e o layout escala fluido via vw/vh/clamp.
            ============================== */
         .container {
-            width: 400px;
-            height: 500px;
+            width: 100vw;
+            height: 100vh;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -74,16 +79,16 @@
         }
 
         /* ==============================
-           FAIXA LATERAL ESQUERDA — BASTIDORES
+           FAIXA LATERAL ESQUERDA
            ============================== */
         .side-label {
             position: absolute;
-            left: 20px;
+            left: 2.5vw;
             top: 50%;
             transform: translateY(-50%) rotate(-90deg);
             transform-origin: center center;
             z-index: 5;
-            font-size: 8px;
+            font-size: clamp(7px, 1.1vw, 10px);
             font-weight: 700;
             letter-spacing: 4px;
             text-transform: uppercase;
@@ -100,7 +105,7 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 3px;
+            height: clamp(2px, 0.4vh, 4px);
             background: var(--cor-destaque);
             z-index: 5;
         }
@@ -113,17 +118,17 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 80px;
+            height: clamp(60px, 14vh, 110px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 10;
-            padding: 0 24px;
+            padding: 0 clamp(16px, 5vw, 40px);
         }
 
         .logo {
-            max-width: 180px;
-            max-height: 60px;
+            max-width: clamp(110px, 38vw, 220px);
+            max-height: clamp(38px, 9vh, 72px);
             object-fit: contain;
             filter: brightness(0) invert(1);
             opacity: 0.92;
@@ -134,12 +139,12 @@
            ============================== */
         .badge {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: clamp(14px, 3.5vh, 30px);
+            right: clamp(14px, 3.5vw, 30px);
             z-index: 10;
             border: 1.5px solid var(--cor-destaque);
-            padding: 4px 12px;
-            font-size: 9px;
+            padding: clamp(3px, 0.7vh, 6px) clamp(8px, 2.5vw, 16px);
+            font-size: clamp(7px, 1.2vw, 10px);
             font-weight: 700;
             letter-spacing: 2.5px;
             text-transform: uppercase;
@@ -156,81 +161,87 @@
             left: 0;
             right: 0;
             z-index: 10;
-            padding: 0 24px 28px 24px;
+            padding: 0 clamp(18px, 6vw, 40px) clamp(20px, 5.5vh, 48px) clamp(18px, 6vw, 40px);
         }
 
-        /* Linha decorativa antes do título */
         .bottom-block::before {
             content: '';
             display: block;
-            width: 36px;
+            width: clamp(28px, 8vw, 44px);
             height: 2px;
             background: var(--cor-destaque);
-            margin-bottom: 14px;
+            margin-bottom: clamp(10px, 2.8vh, 20px);
         }
 
         .titulo {
-            font-size: 22px;
+            font-size: clamp(15px, 5vw, 28px);
             font-weight: 900;
             line-height: 1.15;
             letter-spacing: -0.5px;
             color: #ffffff;
-            margin-bottom: 10px;
+            margin-bottom: clamp(6px, 1.8vh, 14px);
             text-transform: uppercase;
         }
 
         .subtexto {
-            font-size: 11px;
+            font-size: clamp(9px, 2.2vw, 13px);
             font-weight: 400;
             color: rgba(255,255,255,0.65);
             letter-spacing: 0.3px;
             line-height: 1.5;
+            margin-bottom: clamp(10px, 2.8vh, 20px);
+        }
+
+        .cta {
+            font-size: clamp(7px, 1.8vw, 10px);
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: var(--cor-destaque);
         }
 
         /* ==============================
-           GRID DECORATIVO — CANTO INFERIOR DIREITO
+           GRID DECORATIVO
            ============================== */
         .grid-deco {
             position: absolute;
-            bottom: 24px;
-            right: 22px;
+            bottom: clamp(20px, 5.5vh, 48px);
+            right: clamp(16px, 4.5vw, 36px);
             z-index: 10;
             display: grid;
-            grid-template-columns: repeat(3, 5px);
-            grid-template-rows: repeat(3, 5px);
-            gap: 4px;
+            grid-template-columns: repeat(3, clamp(4px, 1.1vw, 7px));
+            grid-template-rows: repeat(3, clamp(4px, 1.1vw, 7px));
+            gap: clamp(3px, 0.8vw, 5px);
             opacity: 0.35;
         }
 
         .grid-deco span {
-            width: 5px;
-            height: 5px;
             background: var(--cor-destaque);
             display: block;
         }
 
         /* ==============================
-           FRAME CANTO — EFEITO FOTOGRÁFICO
+           FRAME CANTO
            ============================== */
         .corner-tl,
         .corner-br {
             position: absolute;
-            width: 22px;
-            height: 22px;
+            width: clamp(14px, 4vw, 26px);
+            height: clamp(14px, 4vw, 26px);
             z-index: 5;
         }
 
         .corner-tl {
-            top: 14px;
-            left: 14px;
+            top: clamp(10px, 2.5vh, 20px);
+            left: clamp(10px, 2.5vw, 20px);
             border-top: 1.5px solid var(--cor-destaque);
             border-left: 1.5px solid var(--cor-destaque);
             opacity: 0.45;
         }
 
         .corner-br {
-            bottom: 14px;
-            right: 14px;
+            bottom: clamp(10px, 2.5vh, 20px);
+            right: clamp(10px, 2.5vw, 20px);
             border-bottom: 1.5px solid var(--cor-destaque);
             border-right: 1.5px solid var(--cor-destaque);
             opacity: 0.45;
@@ -241,37 +252,26 @@
 
     <div class="container">
 
-        <!-- Linha topo -->
         <div class="top-line"></div>
-
-        <!-- Faixa lateral -->
         <span class="side-label">bastidores</span>
-
-        <!-- Cantos decorativos -->
         <div class="corner-tl"></div>
         <div class="corner-br"></div>
 
-        <!-- Imagem de fundo -->
         <img src="CHAVE_IMAGEM" alt="Bastidores" class="bg-image">
-
-        <!-- Overlay -->
         <div class="overlay"></div>
 
-        <!-- Header com logo -->
         <header class="header">
             <img src="CHAVE_LOGO" alt="Logo" class="logo">
         </header>
 
-        <!-- Badge -->
         <div class="badge">Bastidores</div>
 
-        <!-- Texto inferior -->
         <div class="bottom-block">
             <h1 class="titulo">CHAVE_TITULO</h1>
             <p class="subtexto">CHAVE_SUBTEXTO</p>
+            <p class="cta">CHAVE_CTA</p>
         </div>
 
-        <!-- Grid decorativo -->
         <div class="grid-deco">
             <span></span><span></span><span></span>
             <span></span><span></span><span></span>
