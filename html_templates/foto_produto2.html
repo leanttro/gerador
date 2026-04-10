@@ -20,7 +20,6 @@
             box-sizing: border-box;
         }
 
-        /* CENTRALIZAÇÃO FORÇADA */
         html, body {
             width: 100%;
             height: 100%;
@@ -48,8 +47,7 @@
         }
 
         /* ==============================
-           CONTAINER — 9:16 PADRÃO (oficial)
-           Para 4:5, adicione a classe "proporcao-4-5" no div.card-wrapper
+           CONTAINER INTERNO
            ============================== */
         .card {
             position: relative;
@@ -61,22 +59,25 @@
             flex-direction: column;
             justify-content: flex-end;
             flex-shrink: 0;
+            background-color: #000;
         }
 
-        /* FOTO BORRADA DE FUNDO — preenche sem distorcer no 9:16 */
+        /* ==============================
+           FOTO BORRADA — sangra -40px em todos os lados
+           para cobrir completamente, sem borda branca
+           ============================== */
         .card-bg-blur {
             position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
+            inset: -40px;
+            width: calc(100% + 80px);
+            height: calc(100% + 80px);
             object-fit: cover;
             object-position: center;
             z-index: 0;
-            filter: blur(18px) brightness(0.55) saturate(0.8);
-            transform: scale(1.08);
+            filter: blur(22px) brightness(0.45) saturate(0.7);
         }
 
-        /* FOTO PRINCIPAL — cover normal */
+        /* FOTO PRINCIPAL — cobre o card inteiro */
         .card-bg {
             position: absolute;
             inset: 0;
@@ -87,7 +88,7 @@
             z-index: 1;
         }
 
-        /* No 4:5 a imagem já cabe bem — desativa o blur */
+        /* No 4:5 desativa o blur (imagem já cobre tudo) */
         .card-wrapper.proporcao-4-5 .card-bg-blur {
             display: none;
         }
@@ -189,7 +190,7 @@
     <div class="card-wrapper">
         <div class="card">
 
-            <!-- FOTO BORRADA DE FUNDO (preenchimento no 9:16) -->
+            <!-- FOTO BORRADA DE FUNDO (preenche laterais no 9:16) -->
             <img class="card-bg-blur" src="CHAVE_IMAGEM" alt="">
 
             <!-- FOTO PRINCIPAL -->
