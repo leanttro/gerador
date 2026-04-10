@@ -382,6 +382,10 @@ Regras de processamento
             for chave, valor in substituicoes.items():
                 html_final = html_final.replace(str(chave), str(valor))
 
+            # Garante substituição de CHAVE_PROPORCAO com o formato selecionado
+            if 'CHAVE_PROPORCAO' in html_final:
+                html_final = html_final.replace('CHAVE_PROPORCAO', format_ratio)
+
             # Salvar no histórico
             session_id = get_session_id(request)
             if session_id not in version_history:
