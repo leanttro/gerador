@@ -592,6 +592,10 @@
         .preview-wrapper {
             position: relative;
             transition: transform 0.2s ease;
+            margin: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .preview-label {
             position: absolute;
@@ -1509,6 +1513,24 @@ function updatePreviewFormat() {
 
 function renderIframe(htmlContent) {
     const iframe = document.getElementById('previewFrame');
+    
+    if (htmlContent && htmlContent.includes('</head>')) {
+        const cssForcado = `
+        <style>
+            html, body {
+                width: 100% !important;
+                height: 100% !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+        </style>`;
+        htmlContent = htmlContent.replace('</head>', cssForcado + '</head>');
+    }
+    
     iframe.srcdoc = htmlContent;
     updatePreviewFormat();
 }
@@ -1757,23 +1779,17 @@ async function captureImage() {
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
 
     try {
-        const canvas = await iframe.contentWindow.html2canvas(iframeDoc.documentElement, {
-            scale: 2,
+        const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
+            scale: 3,
             backgroundColor: null,
             useCORS: true,
-            allowTaint: true,
+            allowTaint: false,
             logging: false,
             width: iframe.clientWidth,
             height: iframe.clientHeight,
             windowWidth: iframe.clientWidth,
             windowHeight: iframe.clientHeight,
             onclone: (clonedDoc) => {
-                const imgs = clonedDoc.querySelectorAll('img');
-                imgs.forEach(img => {
-                    if (!img.naturalWidth || !img.complete) {
-                        img.style.display = 'none';
-                    }
-                });
                 const allElements = clonedDoc.querySelectorAll('*');
                 allElements.forEach(el => {
                     const style = clonedDoc.defaultView.getComputedStyle(el);
@@ -1831,23 +1847,21 @@ async function recordScreen() {
         } catch (cropErr) { console.warn(cropErr); }
 
         recordedChunks = [];
-        const mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : (MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm');
-        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
         mediaRecorder = new MediaRecorder(stream, { mimeType });
         mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: mimeType });
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
             const url  = URL.createObjectURL(blob);
             const a    = document.createElement('a');
             a.href = url;
-            a.download = `motordark_video_${Date.now()}.${ext}`;
+            a.download = `motordark_video_${Date.now()}.webm`;
             a.click();
             URL.revokeObjectURL(url);
             stream.getTracks().forEach(t => t.stop());
             isRecording = false;
             document.querySelector('.btn-green').textContent = '⏺ Gravar Vídeo';
-            showToast('success', 'Vídeo salvo!', `Arquivo .${ext} baixado com sucesso.`);
+            showToast('success', 'Vídeo salvo!', 'Arquivo .webm baixado com sucesso.');
         };
         mediaRecorder.start(100);
         isRecording = true;
