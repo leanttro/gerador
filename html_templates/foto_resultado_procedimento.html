@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Resultado Procedimento</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* FOTO FULLSCREEN */
+        .bg-image {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; z-index: 0;
+        }
+
+        /* OVERLAY SOFISTICADO */
+        .overlay {
+            position: absolute; inset: 0; z-index: 1;
+            background: linear-gradient(
+                to bottom,
+                rgba(0,0,0,0.10) 0%,
+                rgba(0,0,0,0.04) 35%,
+                rgba(0,0,0,0.55) 65%,
+                rgba(0,0,0,0.88) 100%
+            );
+        }
+
+        /* FAIXA SUPERIOR SUTIL */
+        .top-fade {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(2px, 0.4vh, 4px);
+            background-color: var(--cor-destaque);
+            z-index: 5;
+        }
+
+        /* HEADER */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(65px, 13.5vh, 105px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 clamp(18px, 4.5vw, 36px);
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(90px, 28vw, 180px); max-height: clamp(32px, 7vh, 54px);
+            object-fit: contain;
+            filter: brightness(0) invert(1); opacity: 0.9;
+        }
+
+        /* BADGE PROCEDIMENTO */
+        .badge {
+            font-size: clamp(7px, 1.6vw, 10px); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            border: 1.5px solid var(--cor-destaque);
+            padding: clamp(4px, 1vh, 7px) clamp(10px, 2.5vw, 18px);
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* BLOCO DECORATIVO LATERAL */
+        .side-label {
+            position: absolute;
+            right: clamp(14px, 3.5vw, 24px);
+            top: 50%; transform: translateY(-50%) rotate(90deg);
+            font-size: clamp(7px, 1.4vw, 10px); font-weight: 700;
+            letter-spacing: 4px; text-transform: uppercase;
+            color: var(--cor-destaque); opacity: 0.5;
+            white-space: nowrap; z-index: 5;
+        }
+
+        /* BLOCO INFERIOR */
+        .bottom-block {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            z-index: 10;
+            padding: 0 clamp(20px, 5.5vw, 44px) clamp(20px, 5vh, 44px);
+        }
+
+        /* ESTATÍSTICAS DO PROCEDIMENTO */
+        .stats-row {
+            display: flex; gap: clamp(12px, 3vw, 24px);
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+        .stat-item {
+            display: flex; flex-direction: column;
+        }
+        .stat-valor {
+            font-size: clamp(16px, 5vw, 32px); font-weight: 900;
+            color: var(--cor-destaque); line-height: 1;
+            margin-bottom: clamp(2px, 0.5vh, 4px);
+        }
+        .stat-label {
+            font-size: clamp(7px, 1.6vw, 10px); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.55);
+        }
+        .stat-divider {
+            width: 1px; background-color: rgba(255,255,255,0.15);
+            align-self: stretch;
+        }
+
+        .divisor-linha {
+            width: clamp(32px, 8vw, 52px); height: 2px;
+            background-color: var(--cor-destaque);
+            margin-bottom: clamp(12px, 3vh, 22px);
+        }
+
+        .procedimento-nome {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: clamp(11px, 3vw, 18px);
+            color: var(--cor-destaque); opacity: 0.85;
+            margin-bottom: clamp(5px, 1.2vh, 10px);
+        }
+
+        .titulo {
+            font-size: clamp(18px, 6.5vw, 42px); font-weight: 900;
+            line-height: 1.1; color: #ffffff;
+            text-transform: uppercase; letter-spacing: -0.5px;
+            margin-bottom: clamp(10px, 2.5vh, 18px);
+        }
+
+        .descricao {
+            font-size: clamp(10px, 2.5vw, 14px); font-weight: 400;
+            line-height: 1.6; color: rgba(255,255,255,0.65);
+            margin-bottom: clamp(14px, 3.5vh, 26px);
+        }
+
+        .cta {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--cor-destaque);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="top-fade"></div>
+    <img src="CHAVE_IMAGEM" alt="Resultado" class="bg-image">
+    <div class="overlay"></div>
+    <span class="side-label">resultado</span>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+        <div class="badge">CHAVE_PROCEDIMENTO</div>
+    </header>
+
+    <div class="bottom-block">
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="stat-valor">CHAVE_STAT_1_VALOR</span>
+                <span class="stat-label">CHAVE_STAT_1_LABEL</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-valor">CHAVE_STAT_2_VALOR</span>
+                <span class="stat-label">CHAVE_STAT_2_LABEL</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-valor">CHAVE_STAT_3_VALOR</span>
+                <span class="stat-label">CHAVE_STAT_3_LABEL</span>
+            </div>
+        </div>
+
+        <div class="divisor-linha"></div>
+        <p class="procedimento-nome">CHAVE_PROCEDIMENTO</p>
+        <h1 class="titulo">CHAVE_TITULO</h1>
+        <p class="descricao">CHAVE_DESCRICAO</p>
+        <p class="cta">CHAVE_CTA</p>
+    </div>
+
+</div>
+</body>
+</html>
