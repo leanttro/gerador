@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Capa Carrossel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* IMAGEM DE FUNDO */
+        .bg-image {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; z-index: 0;
+        }
+
+        /* OVERLAY GRADIENTE PESADO */
+        .overlay {
+            position: absolute; inset: 0; z-index: 1;
+            background: linear-gradient(
+                160deg,
+                rgba(0,0,0,0.72) 0%,
+                rgba(0,0,0,0.42) 45%,
+                rgba(0,0,0,0.65) 100%
+            );
+        }
+
+        /* FAIXA LATERAL */
+        .side-bar {
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: clamp(4px, 1vw, 7px);
+            background-color: var(--cor-destaque);
+            z-index: 5;
+        }
+
+        /* NÚMERO DO EPISÓDIO / SÉRIE */
+        .serie-badge {
+            position: absolute;
+            top: clamp(14px, 3.5vh, 28px);
+            right: clamp(14px, 3.5vw, 28px);
+            z-index: 10;
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            border: 1.5px solid var(--cor-destaque);
+            padding: clamp(4px, 1vh, 8px) clamp(10px, 2.5vw, 18px);
+            background: rgba(0,0,0,0.25);
+        }
+
+        /* HEADER LOGO */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(65px, 14vh, 105px);
+            display: flex; align-items: center;
+            padding: 0 clamp(20px, 5.5vw, 44px);
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(100px, 30vw, 200px); max-height: clamp(36px, 8vh, 62px);
+            object-fit: contain;
+            filter: brightness(0) invert(1); opacity: 0.92;
+        }
+
+        /* BLOCO CENTRAL */
+        .main {
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            transform: translateY(-50%);
+            padding: 0 clamp(22px, 6vw, 48px);
+            z-index: 10;
+        }
+
+        .label-serie {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            margin-bottom: clamp(10px, 2.5vh, 20px);
+        }
+
+        .titulo {
+            font-size: clamp(24px, 8.5vw, 56px); font-weight: 900;
+            line-height: 1.05; color: #ffffff;
+            text-transform: uppercase; letter-spacing: -0.5px;
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+
+        .divisor {
+            width: clamp(36px, 9vw, 60px); height: 3px;
+            background-color: var(--cor-destaque);
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+
+        .subtitulo {
+            font-size: clamp(11px, 2.8vw, 16px); font-weight: 400;
+            line-height: 1.55; color: rgba(255,255,255,0.7);
+            max-width: 82%;
+        }
+
+        /* ÍNDICE — lista de tópicos */
+        .topicos {
+            margin-top: clamp(16px, 4vh, 32px);
+            display: flex; flex-direction: column;
+            gap: clamp(6px, 1.5vh, 12px);
+        }
+        .topico-item {
+            display: flex; align-items: center;
+            gap: clamp(8px, 2vw, 14px);
+        }
+        .topico-num {
+            font-size: clamp(9px, 2vw, 12px); font-weight: 900;
+            color: var(--cor-destaque); min-width: clamp(16px, 4vw, 24px);
+        }
+        .topico-texto {
+            font-size: clamp(10px, 2.5vw, 14px); font-weight: 500;
+            color: rgba(255,255,255,0.75);
+        }
+
+        /* FOOTER */
+        .footer {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 0 clamp(22px, 6vw, 48px) clamp(18px, 4.5vh, 36px);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+        }
+        .cta {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            display: flex; align-items: center; gap: clamp(6px, 1.5vw, 12px);
+        }
+        .cta-seta {
+            font-size: clamp(14px, 3.5vw, 22px);
+        }
+        .paginas {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 600;
+            color: rgba(255,255,255,0.4); letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <img src="CHAVE_IMAGEM" alt="Capa" class="bg-image">
+    <div class="overlay"></div>
+    <div class="side-bar"></div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+    </header>
+
+    <div class="serie-badge">CHAVE_SERIE</div>
+
+    <div class="main">
+        <p class="label-serie">CHAVE_CATEGORIA</p>
+        <h1 class="titulo">CHAVE_TITULO</h1>
+        <div class="divisor"></div>
+        <p class="subtitulo">CHAVE_SUBTITULO</p>
+
+        <div class="topicos">
+            <div class="topico-item">
+                <span class="topico-num">01</span>
+                <span class="topico-texto">CHAVE_TOPICO_1</span>
+            </div>
+            <div class="topico-item">
+                <span class="topico-num">02</span>
+                <span class="topico-texto">CHAVE_TOPICO_2</span>
+            </div>
+            <div class="topico-item">
+                <span class="topico-num">03</span>
+                <span class="topico-texto">CHAVE_TOPICO_3</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <span class="cta">Arraste para ver <span class="cta-seta">→</span></span>
+        <span class="paginas">CHAVE_NUM_PAGINAS slides</span>
+    </footer>
+
+</div>
+</body>
+</html>
