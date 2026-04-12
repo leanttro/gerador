@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Antes e Depois</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            background-color: var(--cor-fundo);
+        }
+
+        /* LINHA TOPO */
+        .top-line {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(3px, 0.5vh, 5px);
+            background-color: var(--cor-destaque);
+            z-index: 10;
+        }
+
+        /* HEADER */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(60px, 13vh, 100px);
+            display: flex; justify-content: center; align-items: center;
+            padding: clamp(3px, 0.5vh, 6px) clamp(20px, 5vw, 40px) 0;
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(100px, 30vw, 200px); max-height: clamp(36px, 8vh, 60px);
+            object-fit: contain;
+        }
+
+        /* ÁREA DAS FOTOS */
+        .fotos-wrap {
+            position: absolute;
+            top: clamp(60px, 13vh, 100px);
+            bottom: clamp(90px, 18vh, 140px);
+            left: 0; right: 0;
+            display: flex;
+            gap: clamp(3px, 0.8vw, 6px);
+            padding: 0 clamp(14px, 3.5vw, 28px);
+        }
+
+        .foto-col {
+            flex: 1; position: relative; overflow: hidden;
+            border-radius: clamp(8px, 2vw, 14px);
+        }
+
+        .foto-col img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+
+        /* OVERLAY POR FOTO */
+        .foto-col .overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 45%);
+        }
+
+        /* LABELS ANTES / DEPOIS */
+        .label-foto {
+            position: absolute;
+            bottom: clamp(10px, 2.5vh, 20px);
+            left: 50%; transform: translateX(-50%);
+            font-size: clamp(10px, 2.5vw, 15px);
+            font-weight: 900; letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #ffffff;
+            white-space: nowrap;
+        }
+
+        .label-foto.depois { color: var(--cor-destaque); }
+
+        /* DIVISOR CENTRAL COM ÍCONE */
+        .divider-center {
+            position: absolute;
+            top: clamp(60px, 13vh, 100px);
+            bottom: clamp(90px, 18vh, 140px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(28px, 7vw, 46px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+        .divider-center .circulo {
+            width: clamp(28px, 7vw, 46px); height: clamp(28px, 7vw, 46px);
+            border-radius: 50%;
+            background-color: var(--cor-destaque);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        }
+        .divider-center .circulo svg {
+            width: clamp(14px, 3.5vw, 22px); height: clamp(14px, 3.5vw, 22px);
+        }
+
+        /* BLOCO INFERIOR */
+        .bottom-block {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: clamp(90px, 18vh, 140px);
+            display: flex; flex-direction: column;
+            justify-content: center;
+            padding: 0 clamp(20px, 5vw, 40px) clamp(14px, 3.5vh, 28px);
+            z-index: 10;
+        }
+
+        .procedimento {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            margin-bottom: clamp(4px, 1vh, 8px);
+        }
+
+        .titulo {
+            font-size: clamp(15px, 5vw, 32px); font-weight: 900;
+            line-height: 1.1; color: var(--cor-texto-principal);
+            text-transform: uppercase; margin-bottom: clamp(6px, 1.5vh, 12px);
+        }
+
+        .cta {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque-secundaria); opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="top-line"></div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+    </header>
+
+    <div class="fotos-wrap">
+        <!-- FOTO ANTES -->
+        <div class="foto-col">
+            <img src="CHAVE_FOTO_ANTES" alt="Antes">
+            <div class="overlay"></div>
+            <span class="label-foto antes">Antes</span>
+        </div>
+
+        <!-- FOTO DEPOIS -->
+        <div class="foto-col">
+            <img src="CHAVE_FOTO_DEPOIS" alt="Depois">
+            <div class="overlay"></div>
+            <span class="label-foto depois">Depois</span>
+        </div>
+    </div>
+
+    <!-- DIVISOR CENTRAL -->
+    <div class="divider-center">
+        <div class="circulo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- TEXTO INFERIOR -->
+    <div class="bottom-block">
+        <p class="procedimento">CHAVE_PROCEDIMENTO</p>
+        <h1 class="titulo">CHAVE_TITULO</h1>
+        <p class="cta">CHAVE_CTA</p>
+    </div>
+
+</div>
+</body>
+</html>
