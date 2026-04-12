@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Cupom / Frete Grátis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between;
+            background-color: var(--cor-fundo);
+        }
+
+        /* METADE INFERIOR COLORIDA */
+        .bg-bottom {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 38%;
+            background-color: var(--cor-destaque);
+            z-index: 0;
+        }
+        /* PADRÃO NA METADE COLORIDA */
+        .bg-bottom-pattern {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 38%;
+            opacity: 0.07;
+            background-image: repeating-linear-gradient(
+                0deg, #ffffff 0, #ffffff 1px, transparent 0, transparent 50%
+            );
+            background-size: clamp(14px, 3.5vw, 22px) clamp(14px, 3.5vw, 22px);
+            z-index: 1;
+        }
+
+        /* ONDINHA DIVISÓRIA */
+        .ondinha {
+            position: absolute;
+            bottom: 36%;
+            left: 0; right: 0;
+            height: clamp(24px, 6vw, 48px);
+            z-index: 2;
+        }
+        .ondinha svg { width: 100%; height: 100%; display: block; }
+
+        /* RECORTES LATERAIS DO CUPOM */
+        .recorte-esq {
+            position: absolute;
+            bottom: calc(38% - clamp(14px, 3.5vw, 24px));
+            left: clamp(-14px, -3.5vw, -24px);
+            width: clamp(28px, 7vw, 48px); height: clamp(28px, 7vw, 48px);
+            border-radius: 50%;
+            background-color: var(--cor-fundo);
+            z-index: 5;
+        }
+        .recorte-dir {
+            position: absolute;
+            bottom: calc(38% - clamp(14px, 3.5vw, 24px));
+            right: clamp(-14px, -3.5vw, -24px);
+            width: clamp(28px, 7vw, 48px); height: clamp(28px, 7vw, 48px);
+            border-radius: 50%;
+            background-color: var(--cor-fundo);
+            z-index: 5;
+        }
+
+        /* LINHA PONTILHADA */
+        .linha-pontilhada {
+            position: absolute;
+            bottom: 38%;
+            left: clamp(20px, 5vw, 36px); right: clamp(20px, 5vw, 36px);
+            height: 0;
+            border-top: 2px dashed rgba(0,0,0,0.12);
+            z-index: 6;
+        }
+
+        /* HEADER */
+        .header {
+            position: relative; z-index: 10;
+            padding: clamp(18px, 4.5vh, 38px) clamp(20px, 5.5vw, 44px) 0;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .logo {
+            max-width: clamp(90px, 28vw, 180px); max-height: clamp(32px, 7vh, 54px);
+            object-fit: contain;
+        }
+
+        /* BLOCO SUPERIOR */
+        .bloco-superior {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative; z-index: 10;
+            padding: 0 clamp(20px, 5.5vw, 44px) clamp(22px, 5.5vh, 44px);
+            text-align: center;
+        }
+
+        .icone-wrap {
+            width: clamp(52px, 13vw, 90px); height: clamp(52px, 13vw, 90px);
+            border-radius: 50%; background-color: var(--cor-destaque);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+        .icone-wrap svg { width: clamp(26px, 6.5vw, 45px); height: clamp(26px, 6.5vw, 45px); }
+
+        .oferta-label {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            margin-bottom: clamp(8px, 2vh, 16px);
+        }
+
+        .titulo-oferta {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(42px, 15vw, 98px);
+            color: var(--cor-texto-principal);
+            line-height: 0.95; letter-spacing: 1px;
+            margin-bottom: clamp(8px, 2vh, 14px);
+        }
+
+        .subtitulo-oferta {
+            font-size: clamp(11px, 2.8vw, 16px); font-weight: 400;
+            color: var(--cor-destaque-secundaria); opacity: 0.75;
+            line-height: 1.5;
+        }
+
+        /* BLOCO INFERIOR — CUPOM */
+        .bloco-cupom {
+            position: relative; z-index: 10;
+            height: 38%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: clamp(10px, 2.5vh, 20px) clamp(20px, 5.5vw, 44px) clamp(18px, 4.5vh, 36px);
+            text-align: center;
+            gap: clamp(8px, 2vh, 16px);
+        }
+
+        .cupom-label {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .cupom-codigo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(28px, 9vw, 60px);
+            color: #ffffff; letter-spacing: 6px;
+            background: rgba(255,255,255,0.12);
+            padding: clamp(8px, 2vh, 16px) clamp(18px, 4.5vw, 36px);
+            border-radius: clamp(6px, 1.5vw, 10px);
+            border: 2px dashed rgba(255,255,255,0.4);
+        }
+
+        .cupom-validade {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase; letter-spacing: 1.5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="bg-bottom"></div>
+    <div class="bg-bottom-pattern"></div>
+
+    <!-- ONDINHA SVG -->
+    <div class="ondinha">
+        <svg viewBox="0 0 400 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 48 Q100 0 200 24 Q300 48 400 0 L400 48 Z" fill="var(--cor-fundo)"/>
+        </svg>
+    </div>
+
+    <div class="recorte-esq"></div>
+    <div class="recorte-dir"></div>
+    <div class="linha-pontilhada"></div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+    </header>
+
+    <div class="bloco-superior">
+        <div class="icone-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+                <circle cx="12" cy="12" r="10"/>
+            </svg>
+        </div>
+        <p class="oferta-label">CHAVE_LABEL_OFERTA</p>
+        <h1 class="titulo-oferta">CHAVE_TITULO_OFERTA</h1>
+        <p class="subtitulo-oferta">CHAVE_SUBTITULO</p>
+    </div>
+
+    <div class="bloco-cupom">
+        <p class="cupom-label">Use o cupom</p>
+        <div class="cupom-codigo">CHAVE_CUPOM</div>
+        <p class="cupom-validade">CHAVE_VALIDADE</p>
+    </div>
+
+</div>
+</body>
+</html>
