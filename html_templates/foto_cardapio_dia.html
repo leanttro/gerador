@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Cardápio do Dia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            background-color: var(--cor-fundo);
+        }
+
+        /* FOTO TOPO */
+        .foto-topo {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 40%;
+            overflow: hidden; z-index: 0;
+        }
+        .foto-topo img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .foto-topo-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--cor-fundo) 100%);
+        }
+
+        /* LINHA DESTAQUE TOPO */
+        .top-line {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(3px, 0.5vh, 5px);
+            background-color: var(--cor-destaque); z-index: 5;
+        }
+
+        /* HEADER */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(60px, 13vh, 100px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 clamp(18px, 4.5vw, 36px);
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(90px, 28vw, 180px); max-height: clamp(32px, 7vh, 54px);
+            object-fit: contain;
+            filter: brightness(0) invert(1); opacity: 0.9;
+        }
+        .badge-dia {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid var(--cor-destaque);
+            padding: clamp(4px, 1vh, 7px) clamp(10px, 2.5vw, 18px);
+        }
+
+        /* BLOCO PRINCIPAL */
+        .main {
+            position: absolute;
+            top: 36%; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 0 clamp(20px, 5.5vw, 44px) clamp(14px, 3.5vh, 28px);
+            z-index: 10;
+        }
+
+        .data-label {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            margin-bottom: clamp(4px, 1vh, 8px);
+        }
+
+        .titulo-dia {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(32px, 11vw, 72px);
+            color: var(--cor-texto-principal);
+            line-height: 0.95; letter-spacing: 1px;
+            margin-bottom: clamp(14px, 3.5vh, 26px);
+        }
+
+        /* ITENS DO CARDÁPIO */
+        .itens-lista {
+            display: flex; flex-direction: column;
+            gap: clamp(5px, 1.3vh, 10px);
+            margin-bottom: clamp(12px, 3vh, 22px);
+        }
+
+        .item-row {
+            display: flex; align-items: center;
+            gap: clamp(8px, 2vw, 16px);
+            padding: clamp(8px, 2vh, 16px) clamp(10px, 2.5vw, 18px);
+            border-radius: clamp(6px, 1.5vw, 10px);
+            background-color: rgba(0,0,0,0.04);
+        }
+        .item-row.especial {
+            background-color: var(--cor-destaque);
+        }
+        .item-row.especial .item-nome { color: #ffffff; }
+        .item-row.especial .item-desc { color: rgba(255,255,255,0.7); }
+        .item-row.especial .item-preco { color: #ffffff; }
+        .item-row.especial .especial-tag { display: inline-block; }
+
+        .item-numero {
+            font-size: clamp(14px, 4vw, 24px); font-weight: 900;
+            color: var(--cor-destaque); min-width: clamp(22px, 5.5vw, 34px);
+            line-height: 1;
+        }
+        .item-row.especial .item-numero { color: rgba(255,255,255,0.5); }
+
+        .item-info { flex: 1; }
+        .item-nome {
+            font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
+            color: var(--cor-texto-principal);
+            margin-bottom: clamp(1px, 0.3vh, 3px);
+        }
+        .item-desc {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 400;
+            color: var(--cor-destaque-secundaria); opacity: 0.7;
+        }
+        .especial-tag {
+            display: none;
+            font-size: clamp(7px, 1.5vw, 9px); font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            background: rgba(255,255,255,0.25);
+            padding: clamp(2px, 0.4vh, 3px) clamp(6px, 1.5vw, 10px);
+            border-radius: 50px; margin-left: clamp(4px, 1vw, 8px);
+        }
+
+        .item-preco {
+            font-size: clamp(13px, 3.5vw, 20px); font-weight: 900;
+            color: var(--cor-destaque); text-align: right;
+        }
+
+        /* FOOTER */
+        .footer {
+            position: relative; z-index: 10;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .cta {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase; color: var(--cor-destaque);
+        }
+        .entrega-info {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 600;
+            color: var(--cor-destaque-secundaria); opacity: 0.6;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="top-line"></div>
+
+    <div class="foto-topo">
+        <img src="CHAVE_IMAGEM" alt="Prato destaque">
+        <div class="foto-topo-overlay"></div>
+    </div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+        <div class="badge-dia">CHAVE_DIA_SEMANA</div>
+    </header>
+
+    <div class="main">
+        <p class="data-label">CHAVE_DATA</p>
+        <h1 class="titulo-dia">CHAVE_TITULO</h1>
+
+        <div class="itens-lista">
+
+            <div class="item-row especial">
+                <span class="item-numero">01</span>
+                <div class="item-info">
+                    <p class="item-nome">CHAVE_ITEM_1 <span class="especial-tag">Destaque</span></p>
+                    <p class="item-desc">CHAVE_DESC_1</p>
+                </div>
+                <span class="item-preco">CHAVE_PRECO_1</span>
+            </div>
+
+            <div class="item-row">
+                <span class="item-numero">02</span>
+                <div class="item-info">
+                    <p class="item-nome">CHAVE_ITEM_2</p>
+                    <p class="item-desc">CHAVE_DESC_2</p>
+                </div>
+                <span class="item-preco">CHAVE_PRECO_2</span>
+            </div>
+
+            <div class="item-row">
+                <span class="item-numero">03</span>
+                <div class="item-info">
+                    <p class="item-nome">CHAVE_ITEM_3</p>
+                    <p class="item-desc">CHAVE_DESC_3</p>
+                </div>
+                <span class="item-preco">CHAVE_PRECO_3</span>
+            </div>
+
+            <div class="item-row">
+                <span class="item-numero">04</span>
+                <div class="item-info">
+                    <p class="item-nome">CHAVE_ITEM_4</p>
+                    <p class="item-desc">CHAVE_DESC_4</p>
+                </div>
+                <span class="item-preco">CHAVE_PRECO_4</span>
+            </div>
+
+        </div>
+
+        <div class="footer">
+            <span class="cta">CHAVE_CTA</span>
+            <span class="entrega-info">CHAVE_ENTREGA</span>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
