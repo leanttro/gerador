@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Promoção Relâmpago</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            background-color: var(--cor-fundo);
+        }
+
+        /* FUNDO DIAGONAL DESTAQUE */
+        .bg-diagonal {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 52%;
+            background-color: var(--cor-destaque);
+            clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+            z-index: 0;
+        }
+
+        /* PADRÃO XADREZ SUTIL NO TOPO */
+        .bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 52%;
+            clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+            opacity: 0.08;
+            background-image:
+                repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 0, transparent 50%);
+            background-size: clamp(12px, 3vw, 20px) clamp(12px, 3vw, 20px);
+            z-index: 1;
+        }
+
+        /* CANTOS DECORATIVOS */
+        .corner-tl {
+            position: absolute; top: clamp(10px, 2.5vw, 20px); left: clamp(10px, 2.5vw, 20px);
+            width: clamp(16px, 4vw, 28px); height: clamp(16px, 4vw, 28px);
+            border-top: 2px solid rgba(255,255,255,0.5);
+            border-left: 2px solid rgba(255,255,255,0.5);
+            z-index: 5;
+        }
+        .corner-tr {
+            position: absolute; top: clamp(10px, 2.5vw, 20px); right: clamp(10px, 2.5vw, 20px);
+            width: clamp(16px, 4vw, 28px); height: clamp(16px, 4vw, 28px);
+            border-top: 2px solid rgba(255,255,255,0.5);
+            border-right: 2px solid rgba(255,255,255,0.5);
+            z-index: 5;
+        }
+
+        /* HEADER */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(70px, 15vh, 110px);
+            display: flex; justify-content: center; align-items: center;
+            padding: clamp(6px, 1.5vh, 12px) clamp(20px, 5vw, 40px) 0;
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(100px, 30vw, 200px); max-height: clamp(36px, 8vh, 62px);
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        /* BADGE RELÂMPAGO */
+        .badge-promo {
+            position: absolute;
+            top: clamp(70px, 15vh, 110px);
+            left: 50%; transform: translateX(-50%);
+            z-index: 10;
+            display: flex; align-items: center; gap: clamp(4px, 1vw, 8px);
+            background: #ffffff;
+            padding: clamp(4px, 1vh, 8px) clamp(12px, 3vw, 22px);
+            border-radius: 50px;
+        }
+        .badge-promo svg { width: clamp(12px, 3vw, 18px); height: clamp(12px, 3vw, 18px); }
+        .badge-promo span {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 800;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque);
+        }
+
+        /* BLOCO CENTRAL DE PREÇO */
+        .preco-block {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            width: 90%;
+        }
+
+        .nome-produto {
+            font-size: clamp(11px, 3vw, 18px); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-texto-principal);
+            margin-bottom: clamp(8px, 2vh, 16px);
+            opacity: 0.75;
+        }
+
+        .preco-de {
+            font-size: clamp(14px, 4vw, 24px); font-weight: 400;
+            color: var(--cor-destaque-secundaria);
+            text-decoration: line-through; opacity: 0.6;
+            margin-bottom: clamp(4px, 1vh, 8px);
+        }
+
+        .preco-por {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(56px, 20vw, 130px);
+            color: var(--cor-destaque);
+            line-height: 0.9;
+            letter-spacing: 2px;
+            margin-bottom: clamp(8px, 2vh, 16px);
+        }
+
+        .preco-condicao {
+            font-size: clamp(10px, 2.5vw, 14px); font-weight: 600;
+            color: var(--cor-destaque-secundaria); opacity: 0.7;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+
+        /* LINHA DIVISÓRIA */
+        .linha-central {
+            width: clamp(50px, 14vw, 100px); height: 2px;
+            background-color: var(--cor-destaque); opacity: 0.2;
+            margin: 0 auto clamp(14px, 3.5vh, 28px);
+        }
+
+        /* DESCRIÇÃO */
+        .descricao {
+            font-size: clamp(10px, 2.5vw, 14px); font-weight: 400;
+            line-height: 1.55; color: var(--cor-destaque-secundaria);
+            max-width: 80%; margin: 0 auto;
+            opacity: 0.75;
+        }
+
+        /* FOOTER */
+        .footer {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 0 clamp(20px, 5vw, 40px) clamp(18px, 4.5vh, 36px);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+        }
+        .cta-footer {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase;
+            color: var(--cor-destaque);
+        }
+        .validade {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 600;
+            color: var(--cor-destaque-secundaria); opacity: 0.55;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="bg-diagonal"></div>
+    <div class="bg-pattern"></div>
+    <div class="corner-tl"></div>
+    <div class="corner-tr"></div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+    </header>
+
+    <div class="badge-promo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--cor-destaque)">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>CHAVE_BADGE</span>
+    </div>
+
+    <div class="preco-block">
+        <p class="nome-produto">CHAVE_NOME_PRODUTO</p>
+        <p class="preco-de">CHAVE_PRECO_DE</p>
+        <p class="preco-por">CHAVE_PRECO_POR</p>
+        <p class="preco-condicao">CHAVE_CONDICAO</p>
+        <div class="linha-central"></div>
+        <p class="descricao">CHAVE_DESCRICAO</p>
+    </div>
+
+    <footer class="footer">
+        <span class="cta-footer">CHAVE_CTA</span>
+        <span class="validade">CHAVE_VALIDADE</span>
+    </footer>
+
+</div>
+</body>
+</html>
