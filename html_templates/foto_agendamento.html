@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Agendamento</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between;
+            background-color: var(--cor-fundo);
+        }
+
+        /* IMAGEM TOPO */
+        .img-topo {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 42%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .img-topo img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+        .img-topo-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, var(--cor-fundo) 100%);
+        }
+
+        /* HEADER */
+        .header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(60px, 13vh, 100px);
+            display: flex; justify-content: center; align-items: center;
+            padding: clamp(4px, 1vh, 8px) clamp(20px, 5vw, 40px) 0;
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(90px, 28vw, 180px); max-height: clamp(32px, 7vh, 54px);
+            object-fit: contain;
+            filter: brightness(0) invert(1); opacity: 0.9;
+        }
+
+        /* BLOCO PRINCIPAL */
+        .main {
+            position: absolute;
+            top: 38%; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: clamp(14px, 3.5vh, 30px) clamp(22px, 6vw, 46px) clamp(18px, 4.5vh, 38px);
+            z-index: 10;
+        }
+
+        .label {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            margin-bottom: clamp(8px, 2vh, 16px);
+        }
+
+        .titulo {
+            font-size: clamp(22px, 7.5vw, 50px); font-weight: 900;
+            line-height: 1.1; color: var(--cor-texto-principal);
+            text-transform: uppercase; letter-spacing: -0.5px;
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+
+        /* SLOTS DE HORÁRIO */
+        .horarios-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(6px, 1.5vw, 12px);
+            margin-bottom: clamp(14px, 3.5vh, 26px);
+        }
+        .horario-slot {
+            border: 1.5px solid var(--cor-destaque);
+            border-radius: clamp(6px, 1.5vw, 10px);
+            padding: clamp(8px, 2vh, 16px) clamp(6px, 1.5vw, 12px);
+            text-align: center;
+        }
+        .horario-slot.disponivel {
+            background-color: var(--cor-destaque);
+        }
+        .horario-slot.disponivel .hora-texto { color: #ffffff; }
+        .horario-slot.disponivel .dia-texto { color: rgba(255,255,255,0.75); }
+
+        .hora-texto {
+            font-size: clamp(12px, 3vw, 18px); font-weight: 800;
+            color: var(--cor-destaque);
+            display: block; margin-bottom: clamp(2px, 0.5vh, 4px);
+        }
+        .dia-texto {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 500;
+            color: var(--cor-destaque-secundaria);
+            text-transform: uppercase; letter-spacing: 1px; display: block;
+        }
+
+        /* DIVISOR */
+        .divisor {
+            width: 100%; height: 1px;
+            background: linear-gradient(to right, var(--cor-destaque), transparent);
+            opacity: 0.15; margin-bottom: clamp(12px, 3vh, 22px);
+        }
+
+        /* CONTATO */
+        .contato-wrap {
+            display: flex; align-items: center;
+            gap: clamp(8px, 2vw, 16px);
+        }
+        .contato-icone {
+            width: clamp(32px, 8vw, 50px); height: clamp(32px, 8vw, 50px);
+            border-radius: 50%; background-color: var(--cor-destaque);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .contato-icone svg { width: clamp(16px, 4vw, 24px); height: clamp(16px, 4vw, 24px); }
+        .contato-texto-wrap {}
+        .contato-label {
+            font-size: clamp(7px, 1.6vw, 10px); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
+            color: var(--cor-destaque-secundaria); opacity: 0.6; display: block;
+            margin-bottom: clamp(2px, 0.5vh, 4px);
+        }
+        .contato-valor {
+            font-size: clamp(11px, 2.8vw, 16px); font-weight: 700;
+            color: var(--cor-texto-principal);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="img-topo">
+        <img src="CHAVE_IMAGEM" alt="Clínica">
+        <div class="img-topo-overlay"></div>
+    </div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+    </header>
+
+    <div class="main">
+        <p class="label">CHAVE_LABEL</p>
+        <h1 class="titulo">CHAVE_TITULO</h1>
+
+        <div class="horarios-grid">
+            <div class="horario-slot disponivel">
+                <span class="hora-texto">CHAVE_HORA_1</span>
+                <span class="dia-texto">CHAVE_DIA_1</span>
+            </div>
+            <div class="horario-slot disponivel">
+                <span class="hora-texto">CHAVE_HORA_2</span>
+                <span class="dia-texto">CHAVE_DIA_2</span>
+            </div>
+            <div class="horario-slot">
+                <span class="hora-texto">CHAVE_HORA_3</span>
+                <span class="dia-texto">CHAVE_DIA_3</span>
+            </div>
+            <div class="horario-slot">
+                <span class="hora-texto">CHAVE_HORA_4</span>
+                <span class="dia-texto">CHAVE_DIA_4</span>
+            </div>
+            <div class="horario-slot disponivel">
+                <span class="hora-texto">CHAVE_HORA_5</span>
+                <span class="dia-texto">CHAVE_DIA_5</span>
+            </div>
+            <div class="horario-slot">
+                <span class="hora-texto">CHAVE_HORA_6</span>
+                <span class="dia-texto">CHAVE_DIA_6</span>
+            </div>
+        </div>
+
+        <div class="divisor"></div>
+
+        <div class="contato-wrap">
+            <div class="contato-icone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.7 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1.1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.73a16 16 0 0 0 6.36 6.36l1.8-1.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+            </div>
+            <div class="contato-texto-wrap">
+                <span class="contato-label">Agende agora</span>
+                <span class="contato-valor">CHAVE_CONTATO</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
