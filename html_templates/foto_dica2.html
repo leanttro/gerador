@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Dica</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative;
+            display: flex; flex-direction: column; justify-content: space-between;
+            background-color: var(--cor-fundo);
+            overflow: hidden;
+        }
+        .side-accent {
+            position: absolute; left: 0; top: 0; bottom: 0;
+            width: clamp(4px, 1vw, 8px);
+            background-color: var(--cor-destaque);
+        }
+        .dots-bg {
+            position: absolute; top: 0; right: 0;
+            width: clamp(100px, 28vw, 200px); height: clamp(100px, 28vw, 200px);
+            opacity: 0.07;
+            background-image: radial-gradient(circle, var(--cor-destaque) 1.5px, transparent 1.5px);
+            background-size: clamp(12px, 3vw, 20px) clamp(12px, 3vw, 20px);
+        }
+        .dots-bg-bottom {
+            position: absolute; bottom: 0; left: clamp(20px, 5vw, 50px);
+            width: clamp(70px, 18vw, 130px); height: clamp(70px, 18vw, 130px);
+            opacity: 0.05;
+            background-image: radial-gradient(circle, var(--cor-destaque) 1.5px, transparent 1.5px);
+            background-size: clamp(12px, 3vw, 20px) clamp(12px, 3vw, 20px);
+        }
+        .numero-deco {
+            position: absolute; right: clamp(12px, 3vw, 28px); top: 50%;
+            transform: translateY(-55%);
+            font-size: clamp(100px, 35vw, 260px);
+            font-weight: 900; color: var(--cor-destaque);
+            opacity: 0.05; line-height: 1;
+            pointer-events: none; z-index: 1;
+        }
+        .header {
+            padding: clamp(18px, 4.5vh, 40px) clamp(22px, 6vw, 48px) 0 clamp(26px, 7vw, 54px);
+            display: flex; justify-content: space-between; align-items: center;
+            position: relative; z-index: 10;
+        }
+        .logo {
+            max-width: clamp(90px, 28vw, 190px); max-height: clamp(32px, 7.5vh, 60px);
+            object-fit: contain;
+        }
+        .badge-numero {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            border: 1.5px solid var(--cor-destaque);
+            padding: clamp(4px, 1vh, 8px) clamp(10px, 2.5vw, 18px);
+        }
+        .main {
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            padding: clamp(14px, 3.5vh, 32px) clamp(22px, 6vw, 48px) clamp(14px, 3.5vh, 32px) clamp(26px, 7vw, 54px);
+            position: relative; z-index: 10;
+        }
+        .label-categoria {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 3px; text-transform: uppercase;
+            color: var(--cor-destaque); margin-bottom: clamp(10px, 2.5vh, 22px);
+        }
+        .icone-wrap {
+            display: flex; align-items: center;
+            gap: clamp(8px, 2vw, 16px);
+            margin-bottom: clamp(12px, 3vh, 24px);
+        }
+        .icone-circulo {
+            width: clamp(36px, 9vw, 64px); height: clamp(36px, 9vw, 64px);
+            border-radius: 50%; background-color: var(--cor-destaque);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .icone-circulo svg { width: clamp(18px, 4.5vw, 32px); height: clamp(18px, 4.5vw, 32px); }
+        .icone-label {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 2px;
+            color: var(--cor-destaque-secundaria); opacity: 0.7;
+        }
+        .titulo-dica {
+            font-size: clamp(20px, 7vw, 48px); font-weight: 900;
+            line-height: 1.1; color: var(--cor-texto-principal);
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+            text-transform: uppercase; letter-spacing: -0.5px;
+        }
+        .divisor {
+            width: clamp(32px, 8vw, 56px); height: 3px;
+            background-color: var(--cor-destaque);
+            margin-bottom: clamp(14px, 3.5vh, 28px);
+        }
+        .texto-corpo {
+            font-size: clamp(11px, 2.8vw, 16px); font-weight: 400;
+            line-height: 1.65; color: var(--cor-destaque-secundaria); max-width: 86%;
+        }
+        .footer {
+            padding: 0 clamp(22px, 6vw, 48px) clamp(18px, 4.5vh, 38px) clamp(26px, 7vw, 54px);
+            display: flex; justify-content: space-between; align-items: center;
+            position: relative; z-index: 10;
+        }
+        .cta {
+            font-size: clamp(8px, 1.8vw, 11px); font-weight: 700;
+            letter-spacing: 2.5px; text-transform: uppercase; color: var(--cor-destaque);
+        }
+        .linha-footer { height: 1px; width: clamp(30px, 8vw, 60px); background-color: var(--cor-destaque); opacity: 0.3; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="side-accent"></div>
+    <div class="dots-bg"></div>
+    <div class="dots-bg-bottom"></div>
+    <div class="numero-deco">CHAVE_NUMERO</div>
+
+    <header class="header">
+        <img src="CHAVE_LOGO" alt="Logo" class="logo">
+        <div class="badge-numero">Dica CHAVE_NUMERO</div>
+    </header>
+
+    <main class="main">
+        <p class="label-categoria">CHAVE_CATEGORIA</p>
+        <div class="icone-wrap">
+            <div class="icone-circulo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.906V17H8v-2.094A7 7 0 0 1 12 2z"/>
+                </svg>
+            </div>
+            <span class="icone-label">CHAVE_ICONE_LABEL</span>
+        </div>
+        <h1 class="titulo-dica">CHAVE_TITULO</h1>
+        <div class="divisor"></div>
+        <p class="texto-corpo">CHAVE_TEXTO</p>
+    </main>
+
+    <footer class="footer">
+        <span class="cta">CHAVE_CTA</span>
+        <div class="linha-footer"></div>
+    </footer>
+</div>
+</body>
+</html>
