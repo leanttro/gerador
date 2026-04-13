@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Como Chegar - Claro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--cor-fundo); }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--cor-texto);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            padding: 6% 8%;
+            position: relative; overflow: hidden;
+        }
+        /* Detalhes decorativos */
+        .deco-corner {
+            position: absolute;
+            top: 5%; right: 6%;
+            width: clamp(30px, 8vw, 50px);
+            height: clamp(30px, 8vw, 50px);
+            border-top: 2px solid var(--cor-destaque);
+            border-right: 2px solid var(--cor-destaque);
+            opacity: 0.5;
+        }
+        .deco-corner-bl {
+            position: absolute;
+            bottom: 10%; left: 6%;
+            width: clamp(20px, 5vw, 35px);
+            height: clamp(20px, 5vw, 35px);
+            border-bottom: 2px solid var(--cor-destaque);
+            border-left: 2px solid var(--cor-destaque);
+            opacity: 0.3;
+        }
+        header {
+            z-index: 10; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .logo { max-width: 120px; max-height: 45px; object-fit: contain; }
+        .titulo-header {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: clamp(13px, 3.5vw, 20px);
+            color: var(--cor-destaque);
+            font-weight: 600;
+        }
+        main {
+            z-index: 10; flex: 1;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 3% 0; gap: 4%;
+        }
+        /* Título grande */
+        .titulo-grande {
+            width: 100%; text-align: left;
+        }
+        .titulo-linha1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(26px, 8vw, 52px);
+            font-weight: 700; font-style: italic;
+            color: var(--cor-texto); line-height: 1;
+        }
+        .titulo-linha2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(28px, 9vw, 58px);
+            font-weight: 700;
+            color: var(--cor-destaque); line-height: 1;
+            text-transform: uppercase; letter-spacing: -1px;
+        }
+        /* Foto estilo polaroid */
+        .polaroid {
+            background: #fff;
+            padding: clamp(8px, 2vw, 14px) clamp(8px, 2vw, 14px) clamp(30px, 8vw, 50px);
+            box-shadow: 0 6px 30px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.07);
+            transform: rotate(1.5deg);
+            width: 75%; max-width: 300px;
+        }
+        .polaroid-img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover; display: block;
+        }
+        /* Endereço */
+        .address-card {
+            width: 100%;
+            border-left: 3px solid var(--cor-destaque);
+            padding-left: 5%;
+        }
+        .address-label {
+            font-size: clamp(8px, 2vw, 11px);
+            font-weight: 700; color: var(--cor-destaque);
+            letter-spacing: 2px; text-transform: uppercase;
+            margin-bottom: 3%;
+        }
+        .address-nome {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(15px, 4vw, 24px);
+            font-weight: 700; color: var(--cor-texto);
+            margin-bottom: 2%;
+        }
+        .address-info {
+            font-size: clamp(10px, 2.6vw, 15px);
+            font-weight: 400; color: var(--cor-secundaria);
+            line-height: 1.5;
+        }
+        footer {
+            z-index: 10; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .cta {
+            font-size: clamp(9px, 2.3vw, 12px); font-weight: 700;
+            color: var(--cor-texto); opacity: 0.5;
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+        .footer-line {
+            width: 40px; height: 2px;
+            background: var(--cor-destaque);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="deco-corner"></div>
+        <div class="deco-corner-bl"></div>
+
+        <header>
+            <img src="CHAVE_LOGO" alt="Logo" class="logo">
+            <span class="titulo-header">CHAVE_TITULO</span>
+        </header>
+
+        <main>
+            <div class="titulo-grande">
+                <div class="titulo-linha1">CHAVE_SUBTITULO</div>
+                <div class="titulo-linha2">Chegar</div>
+            </div>
+
+            <div class="polaroid">
+                <img src="CHAVE_IMAGEM" alt="Local" class="polaroid-img">
+            </div>
+
+            <div class="address-card">
+                <div class="address-label">Endereço</div>
+                <div class="address-nome">CHAVE_ENDERECO</div>
+                <div class="address-info">CHAVE_CIDADE</div>
+            </div>
+        </main>
+
+        <footer>
+            <span class="cta">CHAVE_CTA</span>
+            <div class="footer-line"></div>
+        </footer>
+    </div>
+</body>
+</html>

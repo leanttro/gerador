@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Como Chegar - Pin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--cor-fundo); }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--cor-texto);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            padding: 7% 8%;
+            position: relative; overflow: hidden;
+        }
+        /* Padrão decorativo de fundo (hexagonos/dots) */
+        .bg-pattern {
+            position: absolute; inset: 0;
+            background-image:
+                radial-gradient(circle, var(--cor-destaque) 1px, transparent 1px);
+            background-size: 28px 28px;
+            opacity: 0.05;
+            z-index: 0;
+        }
+        header {
+            z-index: 10; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .logo { max-width: 110px; max-height: 42px; object-fit: contain; }
+        .header-tag {
+            font-size: clamp(9px, 2.2vw, 12px);
+            font-weight: 700; color: var(--cor-destaque);
+            letter-spacing: 2px; text-transform: uppercase;
+            border: 1px solid var(--cor-destaque);
+            padding: 4px 10px; border-radius: 4px;
+        }
+        main {
+            z-index: 10; flex: 1;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 2% 0;
+            gap: 0;
+        }
+        /* Título acima do pin */
+        .titulo-wrap {
+            width: 100%; margin-bottom: 4%;
+        }
+        .titulo-saiba {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: clamp(32px, 10vw, 64px);
+            font-weight: 900;
+            line-height: 0.9;
+            color: var(--cor-texto);
+            text-transform: uppercase;
+        }
+        .titulo-como {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: clamp(32px, 10vw, 64px);
+            font-weight: 900;
+            line-height: 0.9;
+            color: var(--cor-destaque);
+            text-transform: uppercase;
+        }
+        /* PIN - círculo + triângulo */
+        .pin-wrap {
+            display: flex; flex-direction: column; align-items: center;
+            margin: 2% 0;
+        }
+        .pin-circle {
+            width: clamp(110px, 28vw, 170px);
+            height: clamp(110px, 28vw, 170px);
+            border-radius: 50%;
+            background-image: url(CHAVE_IMAGEM);
+            background-size: cover; background-position: center;
+            border: 4px solid var(--cor-destaque);
+            box-shadow: 0 0 0 8px rgba(255,255,255,0.06), 0 8px 40px rgba(0,0,0,0.5);
+            position: relative; z-index: 1;
+        }
+        .pin-triangle {
+            width: 0; height: 0;
+            border-left: clamp(18px, 4.5vw, 28px) solid transparent;
+            border-right: clamp(18px, 4.5vw, 28px) solid transparent;
+            border-top: clamp(25px, 6vw, 38px) solid var(--cor-destaque);
+            margin-top: -2px;
+        }
+        .pin-sombra {
+            width: clamp(40px, 10vw, 60px);
+            height: 8px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            filter: blur(4px);
+            margin-top: 4px;
+        }
+        /* Endereço */
+        .address-block {
+            width: 100%; text-align: center;
+            margin-top: 4%;
+        }
+        .address-nome {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: clamp(16px, 4.5vw, 28px);
+            font-weight: 900; color: var(--cor-texto);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 2%;
+        }
+        .address-info {
+            font-size: clamp(11px, 2.8vw, 16px);
+            font-weight: 500; color: var(--cor-secundaria);
+            line-height: 1.6;
+        }
+        footer {
+            z-index: 10; display: flex;
+            justify-content: center; align-items: center;
+        }
+        .cta {
+            font-size: clamp(9px, 2.3vw, 12px); font-weight: 700;
+            color: var(--cor-destaque); letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bg-pattern"></div>
+
+        <header>
+            <img src="CHAVE_LOGO" alt="Logo" class="logo">
+            <div class="header-tag">Localização</div>
+        </header>
+
+        <main>
+            <div class="titulo-wrap">
+                <div class="titulo-saiba">CHAVE_TITULO</div>
+                <div class="titulo-como">CHAVE_SUBTITULO</div>
+            </div>
+
+            <div class="pin-wrap">
+                <div class="pin-circle"></div>
+                <div class="pin-triangle"></div>
+                <div class="pin-sombra"></div>
+            </div>
+
+            <div class="address-block">
+                <p class="address-nome">CHAVE_ENDERECO</p>
+                <p class="address-info">CHAVE_CIDADE</p>
+            </div>
+        </main>
+
+        <footer>
+            <span class="cta">CHAVE_CTA</span>
+        </footer>
+    </div>
+</body>
+</html>

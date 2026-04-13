@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Moldura Celular - Branca</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+        /* Background com a foto desfocada atrás */
+        .bg {
+            position: absolute; inset: 0;
+            background-image: url(CHAVE_IMAGEM_FUNDO);
+            background-size: cover; background-position: center;
+            filter: blur(12px) brightness(0.6);
+            transform: scale(1.05);
+            z-index: 0;
+        }
+        .bg-color {
+            position: absolute; inset: 0;
+            background: var(--cor-fundo);
+            opacity: 0.55; z-index: 1;
+        }
+        /* Estrelas/partículas decorativas */
+        .stars {
+            position: absolute; inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px),
+                radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px);
+            background-size: 60px 60px, 90px 90px, 45px 45px;
+            background-position: 10px 15px, 30px 50px, 50px 20px;
+            opacity: 0.35; z-index: 2;
+        }
+        /* Card - moldura branca */
+        .card {
+            position: relative; z-index: 10;
+            background: #ffffff;
+            border-radius: 16px;
+            width: clamp(200px, 70%, 340px);
+            max-height: 88%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        /* Header do card (perfil) */
+        .card-header {
+            display: flex; align-items: center;
+            padding: clamp(8px, 2vh, 12px) clamp(10px, 2.5vw, 14px);
+            gap: clamp(8px, 2vw, 10px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+        }
+        .avatar-wrap {
+            width: clamp(28px, 7vw, 36px);
+            height: clamp(28px, 7vw, 36px);
+            border-radius: 50%;
+            border: 2px solid var(--cor-destaque);
+            padding: 1.5px; flex-shrink: 0;
+        }
+        .avatar {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background-image: url(CHAVE_IMAGEM_PERFIL);
+            background-size: cover; background-position: center;
+        }
+        .username-wrap { flex: 1; }
+        .username {
+            font-size: clamp(10px, 2.5vw, 13px);
+            font-weight: 700; color: #111;
+        }
+        .verified {
+            font-size: clamp(7px, 1.8vw, 10px);
+            color: var(--cor-destaque); font-weight: 600;
+        }
+        .three-dots {
+            font-size: clamp(12px, 3vw, 18px); color: #555;
+            letter-spacing: 1px; font-weight: 700;
+        }
+        /* Imagem principal */
+        .card-photo {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover; display: block;
+            flex-shrink: 0;
+        }
+        /* Ações */
+        .card-actions {
+            padding: clamp(6px, 1.5vh, 10px) clamp(10px, 2.5vw, 14px);
+            display: flex; align-items: center; gap: clamp(10px, 2.5vw, 14px);
+        }
+        .action-icon {
+            font-size: clamp(14px, 3.5vw, 20px);
+        }
+        .save-icon { margin-left: auto; }
+        /* Legenda */
+        .card-caption {
+            padding: 0 clamp(10px, 2.5vw, 14px) clamp(10px, 2.5vh, 14px);
+        }
+        .caption-user {
+            font-size: clamp(9px, 2.3vw, 12px);
+            font-weight: 700; color: #111;
+            display: inline;
+        }
+        .caption-text {
+            font-size: clamp(9px, 2.3vw, 12px);
+            font-weight: 400; color: #333;
+            display: inline;
+            line-height: 1.4;
+        }
+        /* Elementos flutuantes externos ao card */
+        .floating-logo {
+            position: absolute; z-index: 15;
+            bottom: 5%; right: 5%;
+        }
+        .floating-logo img {
+            max-width: 80px; max-height: 30px;
+            object-fit: contain; opacity: 0.7;
+            filter: brightness(0) invert(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    <div class="bg-color"></div>
+    <div class="stars"></div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="avatar-wrap">
+                <div class="avatar"></div>
+            </div>
+            <div class="username-wrap">
+                <div class="username">CHAVE_USUARIO</div>
+                <div class="verified">CHAVE_CTA</div>
+            </div>
+            <div class="three-dots">···</div>
+        </div>
+
+        <img src="CHAVE_IMAGEM" alt="Post" class="card-photo">
+
+        <div class="card-actions">
+            <span class="action-icon">♡</span>
+            <span class="action-icon">💬</span>
+            <span class="action-icon">➤</span>
+            <span class="action-icon save-icon">🔖</span>
+        </div>
+
+        <div class="card-caption">
+            <span class="caption-user">CHAVE_USUARIO </span>
+            <span class="caption-text">CHAVE_LEGENDA</span>
+        </div>
+    </div>
+
+    <div class="floating-logo">
+        <img src="CHAVE_LOGO" alt="Logo">
+    </div>
+</body>
+</html>

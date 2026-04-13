@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Dia da Semana - Foto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+            --cor-overlay: CHAVE_COR_TRANSPARENTE;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--cor-texto);
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+        .bg {
+            position: absolute; inset: 0;
+            background-image: url(CHAVE_IMAGEM);
+            background-size: cover; background-position: center;
+            z-index: 0;
+        }
+        /* Gradiente forte de cima e de baixo */
+        .overlay {
+            position: absolute; inset: 0;
+            background: var(--cor-overlay);
+            z-index: 1;
+        }
+        .gradient {
+            position: absolute; inset: 0;
+            background:
+                linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 40%, transparent 55%, rgba(0,0,0,0.75) 100%);
+            z-index: 2;
+        }
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            padding: 7% 8%;
+            position: relative; z-index: 10;
+        }
+        header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .logo { max-width: 120px; max-height: 45px; object-fit: contain; }
+        /* Pílula de data */
+        .date-pill {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            border-radius: 50px;
+            padding: clamp(5px, 1.2vh, 9px) clamp(12px, 3vw, 20px);
+            font-size: clamp(10px, 2.5vw, 13px);
+            font-weight: 600; color: var(--cor-texto);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        main {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: flex-start;
+            padding: 3% 0;
+        }
+        .saudacao {
+            font-size: clamp(13px, 3.5vw, 20px);
+            font-weight: 600; color: rgba(255,255,255,0.75);
+            letter-spacing: 1px; margin-bottom: 1%;
+        }
+        .dia-semana {
+            font-family: 'Bebas Neue', cursive;
+            font-size: clamp(70px, 20vw, 130px);
+            line-height: 0.9;
+            color: var(--cor-texto);
+            letter-spacing: -1px;
+        }
+        /* Underline decorativo no nome do dia */
+        .dia-underline {
+            width: 55%; height: 4px;
+            background: var(--cor-destaque);
+            margin-top: 2%; margin-bottom: 5%;
+        }
+        .subtitulo {
+            font-size: clamp(13px, 3.5vw, 20px);
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.5;
+            max-width: 80%;
+        }
+        /* Palavra sublinhada no subtítulo */
+        .subtitulo strong {
+            font-weight: 800;
+            color: var(--cor-destaque);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        footer {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .cta {
+            font-size: clamp(9px, 2.3vw, 13px); font-weight: 700;
+            color: var(--cor-secundaria); letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .footer-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--cor-destaque);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    <div class="overlay"></div>
+    <div class="gradient"></div>
+
+    <div class="container">
+        <header>
+            <img src="CHAVE_LOGO" alt="Logo" class="logo">
+            <div class="date-pill">CHAVE_DIA_MES</div>
+        </header>
+        <main>
+            <p class="saudacao">CHAVE_SAUDACAO</p>
+            <h1 class="dia-semana">CHAVE_DIA_SEMANA</h1>
+            <div class="dia-underline"></div>
+            <p class="subtitulo">CHAVE_SUBTITULO</p>
+        </main>
+        <footer>
+            <span class="cta">CHAVE_CTA</span>
+            <div class="footer-dot"></div>
+        </footer>
+    </div>
+</body>
+</html>

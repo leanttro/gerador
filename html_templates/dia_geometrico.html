@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Dia da Semana - Geométrico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800;900&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--cor-fundo); }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--cor-texto);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            padding: 7% 8%;
+            position: relative; overflow: hidden;
+        }
+        /* Elementos geométricos decorativos */
+        .geo-circle-1 {
+            position: absolute;
+            width: 55vw; height: 55vw;
+            max-width: 320px; max-height: 320px;
+            border: 2px solid var(--cor-destaque);
+            border-radius: 50%;
+            opacity: 0.08;
+            right: -20%; top: -15%;
+        }
+        .geo-circle-2 {
+            position: absolute;
+            width: 35vw; height: 35vw;
+            max-width: 200px; max-height: 200px;
+            border: 1px solid var(--cor-destaque);
+            border-radius: 50%;
+            opacity: 0.12;
+            right: -5%; top: -2%;
+        }
+        .geo-circle-3 {
+            position: absolute;
+            width: 25vw; height: 25vw;
+            max-width: 150px; max-height: 150px;
+            background: var(--cor-destaque);
+            border-radius: 50%;
+            opacity: 0.07;
+            left: -8%; bottom: 20%;
+        }
+        .geo-line {
+            position: absolute;
+            width: 1px; height: 40%;
+            background: var(--cor-destaque);
+            opacity: 0.2;
+            right: 12%; bottom: 10%;
+        }
+        header {
+            z-index: 10; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .logo { max-width: 120px; max-height: 45px; object-fit: contain; }
+        .date-badge {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(11px, 2.8vw, 16px);
+            font-weight: 600; color: var(--cor-destaque);
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+        main {
+            z-index: 10; flex: 1;
+            display: flex; flex-direction: column;
+            justify-content: center; padding: 3% 0;
+        }
+        .saudacao {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(16px, 4vw, 24px);
+            font-weight: 300; color: var(--cor-secundaria);
+            letter-spacing: 4px; text-transform: uppercase;
+            margin-bottom: 1%;
+        }
+        .dia-semana {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(80px, 22vw, 140px);
+            font-weight: 900;
+            line-height: 0.85;
+            color: var(--cor-texto);
+            letter-spacing: -2px;
+            text-transform: uppercase;
+        }
+        /* Faixa colorida atrás do dia */
+        .dia-wrap { position: relative; display: inline-block; }
+        .dia-accent {
+            position: absolute;
+            left: 0; bottom: 10%;
+            width: 100%; height: 30%;
+            background: var(--cor-destaque);
+            opacity: 0.18;
+            z-index: -1;
+        }
+        .divider {
+            width: 60px; height: 3px;
+            background: var(--cor-destaque);
+            margin: 5% 0 4%;
+        }
+        .subtitulo {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(16px, 4.2vw, 26px);
+            font-weight: 400; color: var(--cor-texto);
+            opacity: 0.75;
+            line-height: 1.4; letter-spacing: 0.5px;
+            max-width: 85%;
+        }
+        footer {
+            z-index: 10; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .cta {
+            font-size: clamp(9px, 2.3vw, 12px); font-weight: 700;
+            color: var(--cor-destaque); letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .footer-dots {
+            display: flex; gap: 5px;
+        }
+        .dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--cor-destaque); opacity: 0.4;
+        }
+        .dot:last-child { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="geo-circle-1"></div>
+        <div class="geo-circle-2"></div>
+        <div class="geo-circle-3"></div>
+        <div class="geo-line"></div>
+
+        <header>
+            <img src="CHAVE_LOGO" alt="Logo" class="logo">
+            <span class="date-badge">CHAVE_DIA_MES</span>
+        </header>
+
+        <main>
+            <p class="saudacao">CHAVE_SAUDACAO</p>
+            <div class="dia-wrap">
+                <h1 class="dia-semana">CHAVE_DIA_SEMANA</h1>
+                <div class="dia-accent"></div>
+            </div>
+            <div class="divider"></div>
+            <p class="subtitulo">CHAVE_SUBTITULO</p>
+        </main>
+
+        <footer>
+            <span class="cta">CHAVE_CTA</span>
+            <div class="footer-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

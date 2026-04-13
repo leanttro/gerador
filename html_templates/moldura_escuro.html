@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Moldura Celular - Escura</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+            background: var(--cor-fundo);
+        }
+        /* Gradiente de fundo escuro */
+        .bg-gradient {
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, color-mix(in srgb, var(--cor-destaque) 15%, transparent) 0%, transparent 50%);
+            z-index: 1;
+        }
+        /* Grade sutil */
+        .bg-grid {
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: 2;
+        }
+        /* Moldura de celular */
+        .phone-frame {
+            position: relative; z-index: 10;
+            width: clamp(170px, 55%, 300px);
+            max-height: 92%;
+            background: #111;
+            border-radius: clamp(20px, 5vw, 32px);
+            border: clamp(6px, 1.5vw, 10px) solid #222;
+            box-shadow:
+                0 0 0 1px #333,
+                0 30px 80px rgba(0,0,0,0.7),
+                0 8px 20px rgba(0,0,0,0.4),
+                inset 0 0 0 1px rgba(255,255,255,0.05);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        /* Notch do celular */
+        .notch {
+            width: 35%; height: clamp(16px, 4vw, 22px);
+            background: #111;
+            border-radius: 0 0 12px 12px;
+            margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            gap: 5px; flex-shrink: 0;
+        }
+        .notch-cam {
+            width: 6px; height: 6px;
+            border-radius: 50%; background: #1a1a1a;
+            border: 1px solid #333;
+        }
+        .notch-speaker {
+            width: 30px; height: 3px;
+            border-radius: 2px; background: #1a1a1a;
+        }
+        /* Conteúdo da tela */
+        .screen {
+            flex: 1; background: #000;
+            overflow: hidden; display: flex; flex-direction: column;
+            min-height: 0;
+        }
+        /* Status bar */
+        .status-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: clamp(4px, 1vh, 6px) clamp(10px, 3vw, 16px);
+            background: #000;
+        }
+        .status-time {
+            font-size: clamp(8px, 2vw, 11px);
+            font-weight: 700; color: #fff;
+        }
+        .status-icons {
+            font-size: clamp(8px, 2vw, 10px); color: #fff;
+            display: flex; gap: 3px;
+        }
+        /* Header do app */
+        .app-header {
+            display: flex; align-items: center;
+            padding: clamp(6px, 1.5vh, 9px) clamp(10px, 3vw, 14px);
+            gap: clamp(6px, 1.5vw, 9px);
+            background: #0a0a0a;
+            border-bottom: 0.5px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+        .app-avatar {
+            width: clamp(22px, 6vw, 32px);
+            height: clamp(22px, 6vw, 32px);
+            border-radius: 50%;
+            background-image: url(CHAVE_IMAGEM_PERFIL);
+            background-size: cover; background-position: center;
+            border: 1.5px solid var(--cor-destaque);
+            flex-shrink: 0;
+        }
+        .app-username {
+            flex: 1;
+            font-size: clamp(8px, 2.2vw, 12px);
+            font-weight: 700; color: #fff;
+        }
+        .app-follow {
+            font-size: clamp(7px, 1.8vw, 10px);
+            font-weight: 700; color: var(--cor-destaque);
+            border: 1px solid var(--cor-destaque);
+            padding: 2px 7px; border-radius: 4px;
+        }
+        /* Foto principal */
+        .app-photo {
+            width: 100%;
+            flex: 1;
+            object-fit: cover; display: block;
+            min-height: 0;
+        }
+        /* Ações */
+        .app-actions {
+            padding: clamp(5px, 1.2vh, 8px) clamp(10px, 3vw, 14px);
+            display: flex; align-items: center; gap: clamp(8px, 2vw, 12px);
+            background: #0a0a0a; flex-shrink: 0;
+        }
+        .act-icon { font-size: clamp(12px, 3vw, 17px); }
+        .act-save { margin-left: auto; }
+        /* Legenda */
+        .app-caption {
+            padding: 0 clamp(10px, 3vw, 14px) clamp(8px, 2vh, 10px);
+            background: #0a0a0a; flex-shrink: 0;
+        }
+        .cap-user {
+            font-size: clamp(7px, 1.8vw, 10px);
+            font-weight: 700; color: #fff; display: inline;
+        }
+        .cap-text {
+            font-size: clamp(7px, 1.8vw, 10px);
+            font-weight: 400; color: rgba(255,255,255,0.6);
+            display: inline; line-height: 1.4;
+        }
+        /* Logo flutuante */
+        .logo-float {
+            position: absolute; z-index: 15;
+            bottom: 4%; right: 4%;
+        }
+        .logo-float img {
+            max-width: 80px; max-height: 28px;
+            object-fit: contain; opacity: 0.5;
+            filter: brightness(0) invert(1);
+        }
+        /* Botão lateral do celular */
+        .side-btn {
+            position: absolute;
+            right: -1px; top: 25%;
+            width: 3px; height: 8%;
+            background: #333; border-radius: 0 2px 2px 0;
+        }
+        .side-btn-2 {
+            position: absolute;
+            right: -1px; top: 38%;
+            width: 3px; height: 6%;
+            background: #333; border-radius: 0 2px 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <div class="phone-frame">
+        <div class="side-btn"></div>
+        <div class="side-btn-2"></div>
+
+        <div class="notch">
+            <div class="notch-cam"></div>
+            <div class="notch-speaker"></div>
+            <div class="notch-cam"></div>
+        </div>
+
+        <div class="screen">
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-icons">
+                    <span>▲</span><span>WiFi</span><span>⬛</span>
+                </div>
+            </div>
+
+            <div class="app-header">
+                <div class="app-avatar"></div>
+                <div class="app-username">CHAVE_USUARIO</div>
+                <div class="app-follow">Seguir</div>
+            </div>
+
+            <img src="CHAVE_IMAGEM" alt="Post" class="app-photo">
+
+            <div class="app-actions">
+                <span class="act-icon">♡</span>
+                <span class="act-icon">💬</span>
+                <span class="act-icon">↗</span>
+                <span class="act-icon act-save">🔖</span>
+            </div>
+
+            <div class="app-caption">
+                <span class="cap-user">CHAVE_USUARIO </span>
+                <span class="cap-text">CHAVE_LEGENDA</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="logo-float">
+        <img src="CHAVE_LOGO" alt="Logo">
+    </div>
+</body>
+</html>

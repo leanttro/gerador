@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Template Frase Pincelada</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700;1,900&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+            --cor-pincelada: CHAVE_COR_TRANSPARENTE;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--cor-fundo); }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--cor-texto);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: space-between; align-items: center;
+            padding: 7% 8%;
+            position: relative;
+        }
+        /* Pincelada decorativa */
+        .blob {
+            position: absolute;
+            width: 88%; height: 36%;
+            background: var(--cor-pincelada);
+            border-radius: 63% 37% 54% 46% / 55% 48% 52% 45%;
+            transform: rotate(-4deg);
+            left: 6%; top: 33%;
+            z-index: 0;
+        }
+        .blob-2 {
+            position: absolute;
+            width: 55%; height: 20%;
+            background: var(--cor-pincelada);
+            border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+            transform: rotate(2deg);
+            left: 22%; top: 49%;
+            z-index: 0;
+            opacity: 0.5;
+        }
+        header { z-index: 10; width: 100%; display: flex; justify-content: center; }
+        .logo { max-width: 140px; max-height: 52px; object-fit: contain; }
+        main {
+            z-index: 10; flex: 1;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center; padding: 5% 2%;
+        }
+        .quote {
+            font-family: 'Playfair Display', serif;
+            font-style: italic; font-weight: 700;
+            font-size: clamp(20px, 6.8vw, 46px);
+            line-height: 1.35; color: var(--cor-texto);
+            margin-bottom: 6%;
+        }
+        .autor {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(10px, 2.8vw, 16px);
+            font-weight: 600; color: var(--cor-destaque);
+            letter-spacing: 2.5px; text-transform: uppercase;
+        }
+        footer { z-index: 10; width: 100%; display: flex; justify-content: center; }
+        .cta {
+            font-size: clamp(9px, 2.4vw, 13px); font-weight: 700;
+            color: var(--cor-secundaria); letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="blob"></div>
+        <div class="blob-2"></div>
+        <header>
+            <img src="CHAVE_LOGO" alt="Logo" class="logo">
+        </header>
+        <main>
+            <p class="quote">CHAVE_FRASE</p>
+            <span class="autor">— CHAVE_AUTOR</span>
+        </main>
+        <footer>
+            <span class="cta">CHAVE_CTA</span>
+        </footer>
+    </div>
+</body>
+</html>
