@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Demo Story 9:16</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--cor-fundo);
+            font-family: 'Montserrat', sans-serif;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .container {
+            width: 100vw; height: 100vh;
+            position: relative; overflow: hidden;
+            background-color: var(--cor-fundo);
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* FUNDO DESFOCADO ATRÁS DA MOLDURA */
+        .bg-blur {
+            position: absolute; inset: 0;
+            background-image: url(CHAVE_IMAGEM);
+            background-size: cover; background-position: center;
+            filter: blur(20px) brightness(0.3);
+            transform: scale(1.08);
+            z-index: 0;
+        }
+        .bg-color {
+            position: absolute; inset: 0;
+            background-color: var(--cor-fundo);
+            opacity: 0.65; z-index: 1;
+        }
+
+        /* CÍRCULO DECORATIVO */
+        .circle-deco {
+            position: absolute;
+            top: clamp(-35px,-5vw,-20px); right: clamp(-35px,-5vw,-20px);
+            width: clamp(100px,20vw,150px); height: clamp(100px,20vw,150px);
+            border-radius: 50%; border: 1.5px solid var(--cor-destaque);
+            opacity: 0.18; z-index: 2;
+        }
+
+        /* MOLDURA CELULAR */
+        .phone-wrap {
+            position: relative; z-index: 10;
+            width: clamp(190px,45vw,290px);
+            height: clamp(370px,83vh,560px);
+        }
+        /* Frame externo */
+        .phone-frame {
+            width: 100%; height: 100%;
+            border-radius: clamp(30px,7vw,46px);
+            background: #111111;
+            padding: clamp(7px,1.4vw,11px);
+            box-shadow:
+                0 0 0 1.5px #2d2d2d,
+                0 0 0 3px #0a0a0a,
+                0 20px 60px rgba(0,0,0,0.7);
+            position: relative;
+        }
+        /* Botão power direita */
+        .btn-power {
+            position: absolute;
+            right: -3.5px; top: 22%;
+            width: 3.5px; height: 10%;
+            background: #222; border-radius: 0 2px 2px 0;
+        }
+        /* Botões volume esquerda */
+        .btn-vol-up {
+            position: absolute;
+            left: -3.5px; top: 18%;
+            width: 3.5px; height: 7%;
+            background: #222; border-radius: 2px 0 0 2px;
+        }
+        .btn-vol-down {
+            position: absolute;
+            left: -3.5px; top: 28%;
+            width: 3.5px; height: 7%;
+            background: #222; border-radius: 2px 0 0 2px;
+        }
+
+        /* TELA */
+        .phone-screen {
+            width: 100%; height: 100%;
+            border-radius: clamp(24px,5.5vw,38px);
+            overflow: hidden;
+            position: relative;
+            background-color: var(--cor-fundo);
+        }
+
+        /* ILHA DINÂMICA */
+        .dynamic-island {
+            position: absolute;
+            top: clamp(8px,1.5vw,12px);
+            left: 50%; transform: translateX(-50%);
+            width: clamp(56px,14vw,80px);
+            height: clamp(18px,3.5vw,24px);
+            background: #000;
+            border-radius: 50px;
+            z-index: 20;
+        }
+
+        /* FOTO FULLSCREEN DENTRO DA TELA */
+        .foto {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: cover; z-index: 0;
+        }
+        .overlay {
+            position: absolute; inset: 0; z-index: 1;
+            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.62) 70%, rgba(0,0,0,0.94) 100%);
+        }
+
+        /* LINHA TOPO */
+        .top-line {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(2px,0.4vh,4px);
+            background-color: var(--cor-destaque); z-index: 5;
+        }
+
+        /* CÍRCULO TOPO DIREITO NA TELA */
+        .circle-screen {
+            position: absolute;
+            top: clamp(-20px,-4vw,-12px); right: clamp(-20px,-4vw,-12px);
+            width: clamp(70px,14vw,100px); height: clamp(70px,14vw,100px);
+            border-radius: 50%; border: 1.5px solid var(--cor-destaque);
+            opacity: 0.2; z-index: 2;
+        }
+
+        /* HEADER DA TELA */
+        .screen-header {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: clamp(44px,10vw,64px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 clamp(10px,2.5vw,16px);
+            z-index: 10;
+        }
+        .logo {
+            max-width: clamp(50px,14vw,80px);
+            max-height: clamp(18px,4.5vw,28px);
+            object-fit: contain;
+        }
+        .badge-formato {
+            font-size: clamp(5px,1.1vw,7px); font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--cor-fundo); background-color: var(--cor-destaque);
+            padding: clamp(3px,0.7vw,5px) clamp(6px,1.5vw,10px);
+        }
+
+        /* LINHA VERTICAL */
+        .linha-v {
+            position: absolute;
+            right: clamp(10px,2.5vw,16px);
+            top: 30%; bottom: clamp(30px,8vw,48px);
+            width: 0.5px; background-color: var(--cor-destaque);
+            opacity: 0.25; z-index: 3;
+        }
+
+        /* BLOCO INFERIOR */
+        .bottom-block {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            z-index: 10;
+            padding: 0 clamp(10px,2.5vw,16px) clamp(12px,3vw,20px);
+        }
+        .divisor {
+            width: clamp(16px,4vw,26px); height: 2px;
+            background-color: var(--cor-destaque);
+            margin-bottom: clamp(6px,1.5vw,10px);
+        }
+        .titulo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(20px,7.5vw,46px);
+            color: var(--cor-texto); line-height: 0.92;
+            letter-spacing: 1px; margin-bottom: clamp(5px,1.2vw,8px);
+        }
+        .cta {
+            font-size: clamp(5px,1.1vw,7px); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque);
+        }
+
+        /* RODAPÉ DA TELA */
+        .screen-footer {
+            position: absolute; bottom: clamp(5px,1.2vw,8px);
+            left: clamp(10px,2.5vw,16px); right: clamp(10px,2.5vw,16px);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+        }
+        .usuario {
+            font-size: clamp(5px,1.1vw,7px); font-weight: 600;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--cor-destaque); opacity: 0.6;
+        }
+        .dots { display: flex; gap: clamp(2px,0.6vw,4px); }
+        .dot {
+            width: clamp(3px,0.8vw,5px); height: clamp(3px,0.8vw,5px);
+            border-radius: 50%; background-color: var(--cor-destaque);
+        }
+        .dot:nth-child(1) { opacity: 1; }
+        .dot:nth-child(2) { opacity: 0.4; }
+        .dot:nth-child(3) { opacity: 0.7; }
+
+        /* BARRA HOME (iOS) */
+        .home-bar {
+            position: absolute; bottom: clamp(3px,0.7vw,5px);
+            left: 50%; transform: translateX(-50%);
+            width: 30%; height: clamp(2px,0.5vw,3px);
+            background: var(--cor-texto); opacity: 0.25;
+            border-radius: 50px; z-index: 20;
+        }
+
+        /* BADGE FIXO FORA DA MOLDURA */
+        .label-externo {
+            position: absolute;
+            bottom: clamp(16px,3.5vh,28px);
+            left: 50%; transform: translateX(-50%);
+            z-index: 15;
+            font-size: clamp(9px,1.8vw,12px); font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cor-destaque);
+            opacity: 0.5;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="bg-blur"></div>
+    <div class="bg-color"></div>
+    <div class="circle-deco"></div>
+
+    <div class="phone-wrap">
+        <div class="phone-frame">
+            <div class="btn-power"></div>
+            <div class="btn-vol-up"></div>
+            <div class="btn-vol-down"></div>
+
+            <div class="phone-screen">
+                <div class="dynamic-island"></div>
+                <div class="top-line"></div>
+                <div class="circle-screen"></div>
+                <div class="linha-v"></div>
+
+                <img src="CHAVE_IMAGEM" alt="Foto" class="foto">
+                <div class="overlay"></div>
+
+                <header class="screen-header">
+                    <img src="CHAVE_LOGO" alt="Logo" class="logo">
+                    <div class="badge-formato">9:16 &nbsp;·&nbsp; Story</div>
+                </header>
+
+                <div class="bottom-block">
+                    <div class="divisor"></div>
+                    <h1 class="titulo">CHAVE_TITULO</h1>
+                    <p class="cta">CHAVE_CTA</p>
+                </div>
+
+                <div class="screen-footer">
+                    <span class="usuario">CHAVE_USUARIO</span>
+                    <div class="dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="home-bar"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
