@@ -76,11 +76,6 @@
             z-index: 10;
             padding: 0 clamp(20px,5.5vw,44px) clamp(22px,5.5vh,42px);
         }
-        .divisor {
-            width: clamp(28px,7vw,44px); height: 2.5px;
-            background-color: var(--cor-destaque);
-            margin-bottom: clamp(10px,2.5vh,18px);
-        }
         .titulo {
             font-family: 'Bebas Neue', sans-serif;
             font-size: clamp(38px,14vw,86px);
@@ -106,14 +101,6 @@
             color: var(--cor-destaque); opacity: 0.9;
             text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
         }
-        .dots { display: flex; gap: clamp(4px,1vw,7px); }
-        .dot {
-            width: clamp(6px,1.4vw,9px); height: clamp(6px,1.4vw,9px);
-            border-radius: 50%; background-color: var(--cor-destaque);
-        }
-        .dot:nth-child(1) { opacity: 1; }
-        .dot:nth-child(2) { opacity: 0.4; }
-        .dot:nth-child(3) { opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -128,17 +115,11 @@
         <div class="badge-formato">4:5 &nbsp;·&nbsp; Feed</div>
     </header>
     <div class="bottom-block">
-        <div class="divisor"></div>
         <h1 class="titulo">CHAVE_TITULO</h1>
         <p class="cta">CHAVE_CTA</p>
     </div>
     <div class="footer">
         <span class="usuario">CHAVE_USUARIO</span>
-        <div class="dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
     </div>
 </div>
 </body>
