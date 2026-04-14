@@ -28,21 +28,6 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        /* FUNDO DESFOCADO ATRÁS DA MOLDURA */
-        .bg-blur {
-            position: absolute; inset: 0;
-            background-image: url(CHAVE_IMAGEM);
-            background-size: cover; background-position: center;
-            filter: blur(20px) brightness(0.3);
-            transform: scale(1.08);
-            z-index: 0;
-        }
-        .bg-color {
-            position: absolute; inset: 0;
-            background-color: var(--cor-fundo);
-            opacity: 0.65; z-index: 1;
-        }
-
         /* CÍRCULO DECORATIVO */
         .circle-deco {
             position: absolute;
@@ -227,13 +212,10 @@
 <body>
 <div class="container">
 
-    <div class="bg-blur"></div>
-    <div class="bg-color"></div>
     <div class="circle-deco"></div>
 
     <div class="phone-wrap">
 
-        <!-- MOLDURA DO CELULAR -->
         <div class="phone-size">
             <div class="phone-frame">
                 <div class="btn-power"></div>
@@ -258,7 +240,6 @@
             </div>
         </div>
 
-        <!-- TEXTOS FORA DA MOLDURA -->
         <div class="bottom-block">
             <div class="divisor"></div>
             <h1 class="titulo">CHAVE_TITULO</h1>
