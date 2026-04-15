@@ -32,15 +32,17 @@
         .foto-topo {
             position: absolute; top: 0; left: 0; right: 0;
             height: 40%;
-            overflow: hidden; z-index: 0;
+            overflow: visible; z-index: 0;
         }
         .foto-topo img {
             width: 100%; height: 100%;
             object-fit: cover; display: block;
         }
         .foto-topo-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--cor-fundo) 95%, var(--cor-fundo) 100%);
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            bottom: -30px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, var(--cor-fundo) 85%);
         }
 
         /* LINHA DESTAQUE TOPO */
