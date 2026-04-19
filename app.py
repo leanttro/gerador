@@ -101,6 +101,10 @@ def home():
 def conteudo():
     return render_template('conteudo.html')
 
+@app.route('/criacao')
+def criacao():
+    return render_template('criacao.html')
+
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
