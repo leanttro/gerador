@@ -412,16 +412,34 @@
     let currentChaves = {};
 
     document.addEventListener('DOMContentLoaded', async () => {
+        const cardDoneRaw = localStorage.getItem('wl_card_done');
+        if (cardDoneRaw) {
+            try {
+                const { cardId, status } = JSON.parse(cardDoneRaw);
+                const card = document.getElementById(cardId);
+                if (card && status === 'pronto') {
+                    const colPronto = document.getElementById('col-pronto');
+                    if (colPronto) colPronto.appendChild(card);
+                    const existing = card.querySelector('.badge-pronto');
+                    if (!existing) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge-pronto';
+                        badge.style.cssText = 'font-size:9px;font-weight:700;color:#10b981;margin-top:4px;display:block;';
+                        badge.textContent = '✓ Arte criada';
+                        card.appendChild(badge);
+                    }
+                    atualizarContadores();
+                }
+            } catch(e) {}
+            localStorage.removeItem('wl_card_done');
+        }
+
         const body = document.body;
         if (localStorage.getItem('wl_theme')) body.setAttribute('data-theme', localStorage.getItem('wl_theme'));
 
-        // Load Brand Colors
         loadBrandColors();
-
-        // Load Board Titles
         loadBoardTitles();
 
-        // Recupera o Logo do LocalStorage
         const savedLogo = localStorage.getItem('wl_logo_url');
         if (savedLogo) {
             document.getElementById('logoUrl').value = savedLogo;
@@ -448,7 +466,6 @@
                     sel.appendChild(opt);
                 });
                 
-                // Initialize default UI state
                 toggleFormatUI();
             }
         } catch(e) { console.error(e); }
@@ -792,7 +809,7 @@
                 btn.innerText = 'Logo Salva ✓';
                 
                 localStorage.setItem('wl_logo_url', data.url);
-                onTemplateChange(); // refresh logo url in keys
+                onTemplateChange();
             } else {
                 alert(data.error);
                 btn.innerText = 'Fazer Upload';
@@ -963,6 +980,11 @@
 
         card.innerHTML = `
             <div class="card-actions">
+                <div class="action-icon" onclick="enviarParaCriacao('${cardId}')" title="Criar Arte">
+                    <svg viewBox="0 0 24 24">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                </div>
                 <div class="action-icon" onclick="abrirEdicao('${cardId}')" title="Editar Variáveis"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
                 <div class="action-icon danger" onclick="excluirCard('${cardId}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
             </div>
@@ -980,7 +1002,6 @@
         document.getElementById('aiSuggestionBox').classList.remove('active');
         document.getElementById('currentTemplateId').value = '';
         
-        // Reset selections
         const typeSelect = document.getElementById('draftType').value;
         if(typeSelect === 'Carrossel') {
             document.getElementById('carouselPagesContainer').innerHTML = '';
@@ -991,6 +1012,30 @@
         }
         
         currentChaves = {};
+    }
+
+    function enviarParaCriacao(cardId) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        
+        const chaves      = JSON.parse(card.getAttribute('data-chaves') || '{}');
+        const copy        = card.getAttribute('data-copy') || '';
+        const templateId  = card.getAttribute('data-template') || '';
+        const templateName = card.getAttribute('data-template-name') || '';
+        const titulo      = card.querySelector('.k-card-title')?.innerText || '';
+        const tipo        = card.querySelector('.k-card-type')?.innerText || '';
+
+        localStorage.setItem('wl_pending_creation', JSON.stringify({
+            cardId,
+            titulo,
+            tipo,
+            copy,
+            templateId,
+            templateName,
+            chaves,
+        }));
+
+        window.location.href = '/criacao';
     }
 
     function excluirCard(id) {
