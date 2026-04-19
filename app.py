@@ -107,7 +107,12 @@ def criacao():
 
 @app.route('/prospeccao')
 def prospeccao():
-    return render_template('prospeccao.html')
+    return render_template('prospeccao.html', 
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", ""),
+        serper_api_key=os.environ.get("SERPER_API_KEY", "")
+    )
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
