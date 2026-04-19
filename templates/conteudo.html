@@ -462,7 +462,7 @@
         }
 
         const promptCompleto = `Atue como Diretor de Arte e Copywriter da Leanttro Tecnologia.
-        Formato: ${tipo}. Título base: "${titulo}". Contexto de copy: "${copyPre}". Tema Visual: ${tema}. Logo: ${logo || 'Sem logo'}.
+        Formato: ${tipo}. Título base: "${titulo}". Contexto de copy: "${copyPre}". Tema Visual: ${tema}. Logo URL: ${logo || 'Sem logo'}.
         
         REGRAS:
         1. Escolha o template com base nesta lista e suas variáveis:
@@ -473,7 +473,7 @@
         
         3. Preencha TODAS as variáveis necessárias do template selecionado com textos persuasivos curtos.
         
-        4. CORES: As cores (CHAVE_COR_...) DEVEM harmonizar com o Tema Visual (${tema}). SE houver um Logo fornecido na URL acima, EXTRAIA as cores predominantes dele mentalmente (ex: se for dourado, use dourado; se for azul, use azul) para compor a paleta HEX, ignorando o tema genérico. Retorne cores HEX reais, ex: #0D0D0D. Mapeie a URL do Logo para CHAVE_LOGO.
+        4. CORES: Gere uma paleta de cores HEX real (CHAVE_COR_...) focada 100% no Tema Visual (${tema}). Crie cores premium, de alto contraste e profissionais. NÃO tente adivinhar cores lendo o link do logo (isso causa erros graves e alucinações de cores feias). Apenas insira a exata URL fornecida na variável CHAVE_LOGO.
 
         Retorne APENAS um JSON estrito sem formatação markdown, exatamente assim:
         {
