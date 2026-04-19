@@ -884,8 +884,8 @@ function updateCharCounter() {
 ════════════════════════════════════════════ */
 async function generateCode() {
     const prompt = document.getElementById('promptInput').value.trim();
-    if (!prompt) { showToast('warning', 'Atenção', 'Escreva uma instrução antes de gerar.'); return; }
-    if (state.isGenerating) return;
+    if (!prompt) { showToast('warning', 'Atenção', 'Escreva uma instrução antes de gerar.'); return false; }
+    if (state.isGenerating) return false;
 
     state.isGenerating = true;
     setLoading(true, 'Gerando animação', 'A IA está processando o HTML...');
@@ -927,18 +927,27 @@ async function generateCode() {
 
             showToast('success', 'Animação gerada!', data.tokens_used ? `${data.tokens_used.toLocaleString()} tokens usados` : 'Sucesso');
             setStatus('Pronto', true);
+            
+            setLoading(false);
+            document.getElementById('generateBtn').disabled = false;
+            state.isGenerating = false;
+            return true;
         } else {
             showToast('error', 'Erro na geração', data.error || 'Erro desconhecido.');
             setStatus('Erro', false);
+            setLoading(false);
+            document.getElementById('generateBtn').disabled = false;
+            state.isGenerating = false;
+            return false;
         }
     } catch(e) {
         showToast('error', 'Erro de conexão', 'Não foi possível conectar ao servidor.');
         setStatus('Erro de conexão', false);
+        setLoading(false);
+        document.getElementById('generateBtn').disabled = false;
+        state.isGenerating = false;
+        return false;
     }
-
-    setLoading(false);
-    document.getElementById('generateBtn').disabled = false;
-    state.isGenerating = false;
 }
 
 /* ════════════════════════════════════════════
@@ -1391,11 +1400,17 @@ async function autoProcessPendingTask(data) {
                 }
                 document.getElementById('promptInput').value = prompt;
                 updateCharCounter();
-                await generateCode();
+                
+                const gerouComSucesso = await generateCode();
+                if (!gerouComSucesso) {
+                    showToast('error', 'Processo Interrompido', `O laço parou pois houve falha na página ${p}.`);
+                    return;
+                }
+
                 await new Promise(r => setTimeout(r, 2000));
                 showToast('info', `Baixando Página ${p}...`, 'Capturando frame.');
                 await captureImage();
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 1500));
             }
             showToast('success', 'Carrossel Concluído', 'Todas as páginas foram geradas e baixadas.');
             return;
