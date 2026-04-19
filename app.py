@@ -105,6 +105,10 @@ def conteudo():
 def criacao():
     return render_template('criacao.html')
 
+@app.route('/prospeccao')
+def prospeccao():
+    return render_template('prospeccao.html')
+
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
@@ -896,6 +900,253 @@ def api_pedidos():
         return jsonify({"success": False, "error": str(e)}), 500
 
     return jsonify({"success": True, "pedidos": pedidos, "total": len(pedidos)})
+
+
+# ─────────────────────────────────────────────
+# CRM — ARMAZENAMENTO LOCAL (JSON)
+# ─────────────────────────────────────────────
+CONTACTS_FILE = os.path.join(BASE_DIR, 'contacts.json')
+
+def load_contacts():
+    try:
+        if os.path.exists(CONTACTS_FILE):
+            with open(CONTACTS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[CRM] Erro ao carregar contacts.json: {e}")
+    return []
+
+def save_contacts(contacts):
+    try:
+        with open(CONTACTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(contacts, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"[CRM] Erro ao salvar contacts.json: {e}")
+        return False
+
+@app.route('/api/crm/contacts', methods=['GET'])
+def crm_list():
+    contacts = load_contacts()
+    return jsonify({"success": True, "contacts": contacts, "total": len(contacts)})
+
+@app.route('/api/crm/contacts', methods=['POST'])
+@limiter.limit("120 per minute")
+def crm_create():
+    data = request.json or {}
+    contacts = load_contacts()
+    contact = {
+        "id":         str(uuid.uuid4()),
+        "created_at": int(time.time()),
+        "nome":       data.get("nome", "").strip(),
+        "empresa":    data.get("empresa", "").strip(),
+        "whatsapp":   data.get("whatsapp", "").strip(),
+        "email":      data.get("email", "").strip(),
+        "origem":     data.get("origem", "manual"),
+        "status":     data.get("status", "novo"),
+        "tags":       data.get("tags", []),
+        "obs":        data.get("obs", "").strip(),
+    }
+    if not contact["nome"] and not contact["empresa"] and not contact["whatsapp"]:
+        return jsonify({"success": False, "error": "Preencha nome, empresa ou WhatsApp."}), 400
+    contacts.append(contact)
+    save_contacts(contacts)
+    return jsonify({"success": True, "contact": contact})
+
+@app.route('/api/crm/contacts/<contact_id>', methods=['GET'])
+def crm_get(contact_id):
+    contacts = load_contacts()
+    contact  = next((c for c in contacts if c["id"] == contact_id), None)
+    if not contact:
+        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
+    return jsonify({"success": True, "contact": contact})
+
+@app.route('/api/crm/contacts/<contact_id>', methods=['PATCH'])
+@limiter.limit("120 per minute")
+def crm_update(contact_id):
+    data     = request.json or {}
+    contacts = load_contacts()
+    idx      = next((i for i, c in enumerate(contacts) if c["id"] == contact_id), None)
+    if idx is None:
+        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
+    allowed = ["nome","empresa","whatsapp","email","origem","status","tags","obs"]
+    for field in allowed:
+        if field in data:
+            contacts[idx][field] = data[field]
+    contacts[idx]["updated_at"] = int(time.time())
+    save_contacts(contacts)
+    return jsonify({"success": True, "contact": contacts[idx]})
+
+@app.route('/api/crm/contacts/<contact_id>', methods=['DELETE'])
+@limiter.limit("60 per minute")
+def crm_delete(contact_id):
+    contacts = load_contacts()
+    original = len(contacts)
+    contacts = [c for c in contacts if c["id"] != contact_id]
+    if len(contacts) == original:
+        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
+    save_contacts(contacts)
+    return jsonify({"success": True, "message": "Contato excluído."})
+
+@app.route('/api/crm/export', methods=['GET'])
+def crm_export():
+    import csv, io
+    contacts = load_contacts()
+    output   = io.StringIO()
+    writer   = csv.writer(output)
+    headers  = ["nome","empresa","whatsapp","email","origem","status","tags","obs","created_at"]
+    writer.writerow(headers)
+    for c in contacts:
+        writer.writerow([
+            c.get("nome",""), c.get("empresa",""), c.get("whatsapp",""),
+            c.get("email",""), c.get("origem",""), c.get("status",""),
+            ";".join(c.get("tags",[])), c.get("obs",""),
+            c.get("created_at","")
+        ])
+    output.seek(0)
+    from flask import Response
+    return Response(
+        "\ufeff" + output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=crm_export_{int(time.time())}.csv"}
+    )
+
+# ─────────────────────────────────────────────
+# MINERADOR — GOOGLE MAPS, INSTAGRAM, LINKEDIN
+# ─────────────────────────────────────────────
+def _limpar_telefone(txt):
+    nums = re.sub(r'\D', '', str(txt))
+    if len(nums) >= 10:
+        return f"55{nums}" if not nums.startswith('55') else nums
+    return None
+
+def _extrair_email_txt(txt):
+    m = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', str(txt))
+    return m.group(0) if m else None
+
+def _extrair_whatsapp_txt(txt):
+    padrao = r'(?:(?:\+|00)?55\s?)?(?:\(?([1-9][0-9])\)?\s?)?(?:((?:9\d|[2-9])\d{3})\-?(\d{4}))'
+    match  = re.search(padrao, str(txt))
+    if match:
+        ddd, p1, p2 = match.groups()
+        if not ddd: ddd = "11"
+        return f"55{ddd}{p1}{p2}".replace(" ","").replace("-","")
+    return None
+
+def _serper_places(query):
+    if not SERPER_API_KEY:
+        return []
+    try:
+        res = requests.post(
+            "https://google.serper.dev/places",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "gl": "br", "hl": "pt-br"},
+            timeout=15
+        )
+        return res.json().get("places", [])
+    except Exception as e:
+        print(f"[Minerador] Serper places error: {e}")
+        return []
+
+def _serper_search(query, num=15):
+    if not SERPER_API_KEY:
+        return []
+    try:
+        res = requests.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
+            timeout=15
+        )
+        return res.json().get("organic", [])
+    except Exception as e:
+        print(f"[Minerador] Serper search error: {e}")
+        return []
+
+@app.route('/api/minerador', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_minerador():
+    data    = request.json or {}
+    fonte   = data.get("fonte", "maps")
+    nicho   = data.get("nicho", "").strip()
+    cidade  = data.get("cidade", "").strip()
+    bairros = data.get("bairros", "").strip()
+    results = []
+
+    if fonte == "maps":
+        lista_bairros = [b.strip() for b in bairros.split(',') if b.strip()] if bairros else [""]
+        for bairro in lista_bairros:
+            query = f"{nicho} em {bairro} {cidade}".strip() if bairro else f"{nicho} {cidade}".strip()
+            places = _serper_places(query)
+            for p in places:
+                nome    = p.get("title","")
+                tel_raw = p.get("phoneNumber","")
+                tel     = _limpar_telefone(tel_raw) if tel_raw else None
+                results.append({
+                    "nome":     "", "empresa": nome,
+                    "whatsapp": tel or "",
+                    "email":    "",
+                    "endereco": p.get("address",""),
+                    "info":     p.get("address",""),
+                    "fonte":    "maps",
+                    "link":     p.get("website",""),
+                })
+            time.sleep(0.3)
+
+    elif fonte == "instagram":
+        queries = [
+            f'site:instagram.com "{nicho}" "{cidade}"',
+            f'site:instagram.com "{nicho}" {cidade} whatsapp',
+        ]
+        seen = set()
+        for q in queries:
+            items = _serper_search(q, 20)
+            for item in items:
+                txt      = (item.get("title","") + " " + item.get("snippet",""))
+                wpp      = _extrair_whatsapp_txt(txt)
+                email    = _extrair_email_txt(txt)
+                empresa  = item.get("title","").split("|")[0].split("•")[0].strip()[:60]
+                key      = wpp or email or empresa
+                if key and key not in seen:
+                    seen.add(key)
+                    results.append({
+                        "nome": "", "empresa": empresa,
+                        "whatsapp": wpp or "",
+                        "email":    email or "",
+                        "endereco": "", "info": item.get("snippet","")[:100],
+                        "fonte":    "instagram",
+                        "link":     item.get("link",""),
+                    })
+
+    elif fonte == "linkedin":
+        queries = [
+            f'site:linkedin.com/company "{nicho}" "{cidade}"',
+            f'site:linkedin.com/in "{nicho}" "{cidade}"',
+        ]
+        seen = set()
+        for q in queries:
+            items = _serper_search(q, 20)
+            for item in items:
+                txt    = (item.get("title","") + " " + item.get("snippet",""))
+                wpp    = _extrair_whatsapp_txt(txt)
+                email  = _extrair_email_txt(txt)
+                emp    = item.get("title","").split("|")[0].split("-")[0].strip()[:60]
+                key    = wpp or email or emp
+                if key and key not in seen:
+                    seen.add(key)
+                    results.append({
+                        "nome": "", "empresa": emp,
+                        "whatsapp": wpp or "",
+                        "email":    email or "",
+                        "endereco": "", "info": item.get("snippet","")[:100],
+                        "fonte":    "linkedin",
+                        "link":     item.get("link",""),
+                    })
+
+    if not results:
+        return jsonify({"success": True, "results": [], "message": "Nenhum contato encontrado. Tente outro nicho ou cidade."})
+
+    return jsonify({"success": True, "results": results, "total": len(results)})
 
 
 if __name__ == '__main__':
