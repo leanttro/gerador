@@ -51,13 +51,14 @@
         transition: background-color var(--transition), color var(--transition);
     }
 
-    .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0;}
-    .brand { padding: 24px 24px 20px; margin-bottom: 8px; }
+    .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease, min-width 0.3s ease; overflow-x: hidden; }
+    .sidebar.collapsed-horiz { width: 0 !important; min-width: 0 !important; border-right: none; }
+    .brand { padding: 24px 24px 20px; margin-bottom: 8px; min-width: 260px; }
     .brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
     [data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
     .brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 8px; display: block; }
     
-    .nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
+    .nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; min-width: 260px; }
     .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; border-radius: var(--radius); transition: all var(--transition); }
     .nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; }
     .nav-link:hover { color: var(--text-main); background: var(--bg-body); }
@@ -87,12 +88,31 @@
         display: flex;
         flex-direction: column;
         overflow-y: auto;
+        overflow-x: hidden;
         flex-shrink: 0;
+        transition: width 0.3s ease, min-width 0.3s ease;
     }
+    .creation-panel.collapsed-horiz { width: 0 !important; min-width: 0 !important; border-right: none; }
 
-    .panel-section { border-bottom: 1px solid var(--border); }
+    .v-toggle {
+        width: 16px;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        z-index: 20;
+        transition: all var(--transition);
+        color: var(--text-muted);
+    }
+    .v-toggle:hover { background: var(--primary-bg); color: var(--accent); }
+    .v-toggle svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; transition: transform 0.3s ease; }
+    .v-toggle.collapsed svg { transform: rotate(180deg); }
+
+    .panel-section { border-bottom: 1px solid var(--border); min-width: 420px; }
     
-    /* MODIFICAÇÃO: Título Colapsável */
     .panel-title { font-size: 14px; font-weight: 600; padding: 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: color var(--transition); }
     .panel-title:hover { color: var(--accent); }
     .panel-title-left { display: flex; align-items: center; gap: 8px; }
@@ -148,7 +168,6 @@
     .col-count { background: var(--bg-body); color: var(--text-muted); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
     .col-body { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 150px; }
 
-    /* MODIFICAÇÃO: Título Editável no Kanban */
     .board-title { outline: none; border-bottom: 1px dashed transparent; transition: border-color var(--transition); min-width: 50px; display: inline-block; padding-bottom: 2px; }
     .board-title:hover, .board-title:focus { border-color: var(--text-muted); }
 
@@ -181,7 +200,7 @@
 </head>
 <body data-theme="light">
 
-<div class="sidebar">
+<div class="sidebar" id="mainSidebar">
     <div class="brand">
         <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro Tecnologia" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
@@ -191,6 +210,9 @@
         <a href="/conteudo" class="nav-link active"><svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>Conteúdo & Variáveis</a>
         <a href="/" class="nav-link"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Criação</a>
     </div>
+</div>
+<div class="v-toggle" id="btnToggleSidebar" onclick="toggleMainSidebar()" title="Minimizar Menu">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
 </div>
 
 <div class="main">
@@ -206,7 +228,7 @@
     </div>
 
     <div class="workspace">
-        <div class="creation-panel">
+        <div class="creation-panel" id="creationPanel">
             
             <div class="panel-section" id="panel-tendencias">
                 <div class="panel-title" onclick="togglePanel('panel-tendencias')">
@@ -340,6 +362,9 @@
                 </div>
             </div>
         </div>
+        <div class="v-toggle" id="btnTogglePanel" onclick="toggleCreationPanel()" title="Minimizar Painel">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </div>
 
         <div class="kanban-area" id="kanbanBoard">
             <div class="kanban-col">
@@ -438,6 +463,16 @@
 
     function togglePanel(id) {
         document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    function toggleMainSidebar() {
+        document.getElementById('mainSidebar').classList.toggle('collapsed-horiz');
+        document.getElementById('btnToggleSidebar').classList.toggle('collapsed');
+    }
+
+    function toggleCreationPanel() {
+        document.getElementById('creationPanel').classList.toggle('collapsed-horiz');
+        document.getElementById('btnTogglePanel').classList.toggle('collapsed');
     }
 
     function saveBoardTitles() {
