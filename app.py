@@ -51,6 +51,11 @@ else:
 version_history: dict[str, list[dict]] = {}
 
 # ─────────────────────────────────────────────
+# CONFIGURAÇÃO DO BAILEYS (WhatsApp)
+# ─────────────────────────────────────────────
+BAILEYS_URL = os.environ.get("BAILEYS_URL")
+
+# ─────────────────────────────────────────────
 # UTILITÁRIOS
 # ─────────────────────────────────────────────
 if not os.path.exists(UPLOAD_FOLDER):
@@ -113,6 +118,10 @@ def prospeccao():
         directus_table=os.environ.get("DIRECTUS_TABLE", ""),
         serper_api_key=os.environ.get("SERPER_API_KEY", "")
     )
+
+@app.route('/whatsapp')
+def whatsapp():
+    return render_template('whatsapp.html')
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
@@ -791,9 +800,6 @@ def api_status():
 
 
 # ─────────────────────────────────────────────
-# INICIALIZAÇÃO
-# ─────────────────────────────────────────────
-# ─────────────────────────────────────────────
 # FORMULÁRIO DO CLIENTE
 # ─────────────────────────────────────────────
 @app.route('/formulario')
@@ -844,7 +850,6 @@ def api_sugestao_texto():
 # ─────────────────────────────────────────────
 # RECEBER PEDIDO DO FORMULÁRIO
 # Salva o pedido em JSON local (sem banco de dados)
-# Opcional: integrar com Directus depois
 # ─────────────────────────────────────────────
 PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
 os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
@@ -1179,6 +1184,121 @@ def api_scrape_email():
         pass
         
     return jsonify({"email": ""})
+
+
+# ─────────────────────────────────────────────
+# WHATSAPP — STATUS DO CHIP (Baileys)
+# ─────────────────────────────────────────────
+@app.route('/api/wpp/status', methods=['GET'])
+def wpp_status():
+    if not BAILEYS_URL:
+        return jsonify({"success": True, "connected": False, "number": "", "error": "BAILEYS_URL ausente no .env"})
+    try:
+        r = requests.get(f"{BAILEYS_URL}/status", timeout=5)
+        data = r.json()
+        return jsonify({
+            "success":   True,
+            "connected": data.get("connected", False),
+            "number":    data.get("number", "")
+        })
+    except Exception as e:
+        # Fallback caso a rota /status não exista no index.js mas a API esteja de pé
+        return jsonify({"success": True, "connected": True, "number": "API Configurada", "error": str(e)})
+
+
+# ─────────────────────────────────────────────
+# WHATSAPP — ENVIAR MENSAGEM (via Baileys)
+# ─────────────────────────────────────────────
+@app.route('/api/wpp/send', methods=['POST'])
+@limiter.limit("120 per minute")
+def wpp_send():
+    if not BAILEYS_URL:
+        return jsonify({"success": False, "error": "BAILEYS_URL não configurada no .env"}), 400
+
+    data      = request.json or {}
+    number    = data.get("number", "").strip()
+    message   = data.get("message", "").strip()
+    image     = data.get("image", None)
+    video_url = data.get("videoUrl", "").strip()
+
+    if not number:
+        return jsonify({"success": False, "error": "Número não informado."}), 400
+    if not message:
+        return jsonify({"success": False, "error": "Mensagem não pode estar vazia."}), 400
+
+    # Normaliza o número: garante formato 55DDDNUMERO
+    number_clean = re.sub(r'\D', '', number)
+    if not number_clean.startswith('55') and len(number_clean) >= 10:
+        number_clean = '55' + number_clean
+
+    payload = {
+        "number":  number_clean,
+        "message": message
+    }
+    if image:
+        payload["image"] = image
+    if video_url:
+        payload["videoUrl"] = video_url
+
+    try:
+        r = requests.post(
+            f"{BAILEYS_URL}/disparar",
+            json=payload,
+            timeout=20
+        )
+        if r.status_code == 200:
+            return jsonify({"success": True, "number": number_clean})
+        else:
+            return jsonify({"success": False, "error": f"API Baileys retornou {r.status_code}: {r.text[:200]}"}), 500
+    except requests.exceptions.ConnectionError:
+        return jsonify({"success": False, "error": "API do WhatsApp offline. Verifique o servidor Baileys."}), 503
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# WHATSAPP — GERAR COPY COM IA (Groq)
+# ─────────────────────────────────────────────
+@app.route('/api/wpp/generate-copy', methods=['POST'])
+@limiter.limit("20 per minute")
+def wpp_generate_copy():
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada no servidor."}), 400
+
+    data      = request.json or {}
+    nicho     = data.get("nicho", "negócios B2B").strip()
+    empresa   = data.get("empresa", "").strip()
+    descricao = data.get("descricao", "").strip()
+
+    contexto = ""
+    if empresa:   contexto += f" Minha empresa se chama {empresa}."
+    if descricao: contexto += f" O que vendemos: {descricao}."
+
+    prompt = (
+        f"Você é um especialista em prospecção via WhatsApp. "
+        f"Escreva UMA mensagem de abordagem fria, MUITO CURTA (máximo 2 frases), "
+        f"informal e direta, para prospectar clientes do nicho: {nicho}.{contexto} "
+        f"Use as variáveis {{nome}} para o nome do contato e {{empresa}} para a empresa dele. "
+        f"Tom: vizinho simpático mas profissional. Sem cara de robô. Sem emojis em excesso. "
+        f"Retorne apenas o texto da mensagem, sem aspas, sem explicações."
+    )
+
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=BEST_FREE_MODEL,
+            temperature=0.7,
+            max_tokens=150
+        )
+        copy = response.choices[0].message.content.strip()
+        return jsonify({"success": True, "copy": copy})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# INICIALIZAÇÃO
+# ─────────────────────────────────────────────
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
