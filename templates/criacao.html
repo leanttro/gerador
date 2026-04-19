@@ -700,9 +700,13 @@ function init() {
                 document.getElementById('btnSalvarKanban').classList.remove('hidden');
             }
 
-            // Se veio templateId, carrega o template no preview
+            // Se veio templateId, carrega o template no preview e inicia processamento
             if (data.templateId) {
-                loadTemplateById(data.templateId);
+                loadTemplateById(data.templateId).then(() => {
+                    setTimeout(() => autoProcessPendingTask(data), 1000);
+                });
+            } else {
+                setTimeout(() => autoProcessPendingTask(data), 1000);
             }
         } catch(e) { console.error('Erro ao ler contexto do Kanban:', e); }
     }
@@ -1329,7 +1333,7 @@ function handleConteudoClick(event) {
 }
 
 /* ════════════════════════════════════════════
-   UTILITÁRIOS
+   UTILITÁRIOS E PROCESSAMENTO AUTOMÁTICO
 ════════════════════════════════════════════ */
 function escapeHtml(str) {
     if (!str) return '';
@@ -1360,6 +1364,45 @@ function showToast(type, title, message, duration = 4000) {
         toast.classList.add('removing');
         toast.addEventListener('animationend', () => toast.remove());
     }, duration);
+}
+
+async function autoProcessPendingTask(data) {
+    const isCarousel = data.tipo === 'Carrossel' || data.templateId === 'carrossel_multi';
+    if (isCarousel) {
+        const pages = new Set();
+        for (const k of Object.keys(data.chaves || {})) {
+            const match = k.match(/^\[P(\d+)\]/);
+            if (match) pages.add(match[1]);
+        }
+        const pageNumbers = Array.from(pages).sort((a,b)=> Number(a) - Number(b));
+        if (pageNumbers.length > 0) {
+            showToast('info', 'Modo Automático', `Gerando carrossel de ${pageNumbers.length} páginas...`);
+            for (const p of pageNumbers) {
+                showToast('info', `Gerando Página ${p}...`, 'Aguarde.');
+                let prompt = `Template Name: ${data.templateName}\n`;
+                if (data.titulo) prompt += `Título: ${data.titulo}\n`;
+                if (data.copy) prompt += `Copy: ${data.copy}\n\n`;
+                prompt += `ATENÇÃO: GERE APENAS A PÁGINA ${p} DO CARROSSEL AGORA.\n`;
+                prompt += `Variáveis para substituição na página ${p}:\n`;
+                for (const [k, v] of Object.entries(data.chaves)) {
+                    if (k.startsWith(`[P${p}]`) && v) {
+                        prompt += `${k.replace(`[P${p}] `, '')}: ${v}\n`;
+                    }
+                }
+                document.getElementById('promptInput').value = prompt;
+                updateCharCounter();
+                await generateCode();
+                await new Promise(r => setTimeout(r, 2000));
+                showToast('info', `Baixando Página ${p}...`, 'Capturando frame.');
+                await captureImage();
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            showToast('success', 'Carrossel Concluído', 'Todas as páginas foram geradas e baixadas.');
+            return;
+        }
+    }
+    showToast('info', 'Modo Automático', 'Iniciando geração da arte...');
+    await generateCode();
 }
 
 // ── START ──
