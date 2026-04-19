@@ -90,9 +90,17 @@
         flex-shrink: 0;
     }
 
-    .panel-section { padding: 24px; border-bottom: 1px solid var(--border); }
-    .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .panel-title svg { width: 16px; height: 16px; stroke: var(--accent); stroke-width: 2; fill: none; }
+    .panel-section { border-bottom: 1px solid var(--border); }
+    
+    /* MODIFICAÇÃO: Título Colapsável */
+    .panel-title { font-size: 14px; font-weight: 600; padding: 24px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; transition: color var(--transition); }
+    .panel-title:hover { color: var(--accent); }
+    .panel-title-left { display: flex; align-items: center; gap: 8px; }
+    .panel-title-left svg { width: 16px; height: 16px; stroke: var(--accent); stroke-width: 2; fill: none; }
+    .panel-chevron { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; transition: transform var(--transition); }
+    .panel-body { padding: 0 24px 24px 24px; transition: all 0.3s; }
+    .panel-section.collapsed .panel-body { display: none; }
+    .panel-section.collapsed .panel-chevron { transform: rotate(-90deg); }
 
     .input-group { margin-bottom: 16px; position: relative; }
     .input-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
@@ -139,6 +147,10 @@
     .col-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
     .col-count { background: var(--bg-body); color: var(--text-muted); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
     .col-body { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 150px; }
+
+    /* MODIFICAÇÃO: Título Editável no Kanban */
+    .board-title { outline: none; border-bottom: 1px dashed transparent; transition: border-color var(--transition); min-width: 50px; display: inline-block; padding-bottom: 2px; }
+    .board-title:hover, .board-title:focus { border-color: var(--text-muted); }
 
     .k-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: grab; box-shadow: var(--shadow); transition: box-shadow var(--transition), transform var(--transition); display: flex; flex-direction: column; gap: 10px; position: relative;}
     .k-card:active { cursor: grabbing; }
@@ -196,135 +208,154 @@
     <div class="workspace">
         <div class="creation-panel">
             
-            <div class="panel-section">
-                <div class="panel-title">
-                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    Busca de Tendências (IA & Serper)
+            <div class="panel-section" id="panel-tendencias">
+                <div class="panel-title" onclick="togglePanel('panel-tendencias')">
+                    <div class="panel-title-left">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Busca de Tendências (IA & Serper)
+                    </div>
+                    <svg class="panel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
-                <div class="input-group">
-                    <label>Nicho de Mercado</label>
-                    <input type="text" id="nicheInput" class="input-control" placeholder="Ex: tecnologia, moda, estética">
-                </div>
-                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                    <button class="btn btn-secondary" onclick="buscarInspiracoes()" id="btnBusca" style="flex:1; padding:8px; font-size:12px;">🔍 Serper (Web)</button>
-                    <button class="btn btn-secondary" onclick="gerarIdeiasIA()" id="btnIdeiasIA" style="flex:1; padding:8px; font-size:12px; background:var(--primary-bg); border-color:var(--accent); color:var(--accent);">✦ IA Estratégica</button>
-                </div>
-                
-                <div class="inspirations-list" id="inspList">
-                    <div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">
-                        Digite o nicho acima e escolha o método de busca para gerar ideias.
+                <div class="panel-body">
+                    <div class="input-group">
+                        <label>Nicho de Mercado</label>
+                        <input type="text" id="nicheInput" class="input-control" placeholder="Ex: tecnologia, moda, estética">
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <button class="btn btn-secondary" onclick="buscarInspiracoes()" id="btnBusca" style="flex:1; padding:8px; font-size:12px;">🔍 Serper (Web)</button>
+                        <button class="btn btn-secondary" onclick="gerarIdeiasIA()" id="btnIdeiasIA" style="flex:1; padding:8px; font-size:12px; background:var(--primary-bg); border-color:var(--accent); color:var(--accent);">✦ IA Estratégica</button>
+                    </div>
+                    
+                    <div class="inspirations-list" id="inspList">
+                        <div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">
+                            Digite o nicho acima e escolha o método de busca para gerar ideias.
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="panel-section">
-                <div class="panel-title"><svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>Direção de Arte e Copy</div>
-                
-                <div class="input-group">
-                    <label>Título / Instrução Base</label>
-                    <input type="text" id="draftTitle" class="input-control" placeholder="Ex: 5 motivos para ter um CRM">
+            <div class="panel-section" id="panel-criacao">
+                <div class="panel-title" onclick="togglePanel('panel-criacao')">
+                    <div class="panel-title-left">
+                        <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        Direção de Arte e Copy
+                    </div>
+                    <svg class="panel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
-
-                <div class="row-2">
+                <div class="panel-body">
                     <div class="input-group">
-                        <label>Formato</label>
-                        <select id="draftType" class="input-control" onchange="toggleFormatUI()">
-                            <option>Carrossel</option>
-                            <option>Reels / TikTok</option>
-                            <option>Postagem Estática</option>
+                        <label>Título / Instrução Base</label>
+                        <input type="text" id="draftTitle" class="input-control" placeholder="Ex: 5 motivos para ter um CRM">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Template (Opcional)</label>
+                        <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
+                            <option value="">✨ Deixar a IA escolher o melhor</option>
                         </select>
                     </div>
-                    <div class="input-group">
-                        <label>Fundo da Arte</label>
-                        <select id="draftTheme" class="input-control">
-                            <option value="Escuro">Escuro (Dark Mode)</option>
-                            <option value="Claro">Claro (Light Mode)</option>
-                            <option value="Vibrante">Vibrante (Cores fortes)</option>
-                        </select>
-                    </div>
-                </div>
 
-                <div class="input-group">
-                    <label>Cores da Marca (Salvas)</label>
-                    <div style="display:flex; gap:8px; margin-bottom:4px; align-items:center;">
-                        <input type="color" id="brandColorFundo" title="Fundo (Ex: Preto)" value="#18181b" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
-                        <input type="color" id="brandColorTexto" title="Texto (Ex: Branco)" value="#ffffff" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
-                        <input type="color" id="brandColorDestaque" title="Destaque (Ex: Azul)" value="#2563eb" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
-                        <input type="color" id="brandColorSec" title="Secundária (Ex: Cinza)" value="#71717a" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
-                        <label style="display:flex; gap:6px; align-items:center; font-size:11px; margin-left:8px; cursor:pointer;">
-                            <input type="checkbox" id="useBrandColors" checked onchange="saveBrandColors(); onTemplateChange();"> Usar na IA
-                        </label>
-                    </div>
-                </div>
-
-                <div class="input-group" id="singleTemplateWrap" style="display:none;">
-                    <label>Template (Opcional)</label>
-                    <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
-                        <option value="">✨ Deixar a IA escolher o melhor</option>
-                    </select>
-                </div>
-
-                <div class="input-group" id="carouselTemplateWrap" style="background: var(--bg-body); padding:12px; border-radius:var(--radius); border: 1px solid var(--border);">
-                    <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        Páginas do Carrossel
-                        <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="addCarouselPage()">+ Página</button>
-                    </label>
-                    <div id="carouselPagesContainer" style="display:flex; flex-direction:column; gap:8px;">
+                    <div class="row-2">
+                        <div class="input-group">
+                            <label>Formato</label>
+                            <select id="draftType" class="input-control" onchange="toggleFormatUI()">
+                                <option>Carrossel</option>
+                                <option>Reels / TikTok</option>
+                                <option>Postagem Estática</option>
+                            </select>
                         </div>
-                </div>
-
-                <div class="input-group mt-6">
-                    <label>Logo da Empresa</label>
-                    <div class="upload-btn-wrap">
-                        <button class="upload-btn" onclick="document.getElementById('logoInput').click()" id="btnUploadLogo">Fazer Upload</button>
-                        <img id="logoPreview" class="logo-preview" src="">
+                        <div class="input-group">
+                            <label>Fundo da Arte</label>
+                            <select id="draftTheme" class="input-control">
+                                <option value="Escuro">Escuro (Dark Mode)</option>
+                                <option value="Claro">Claro (Light Mode)</option>
+                                <option value="Vibrante">Vibrante (Cores fortes)</option>
+                            </select>
+                        </div>
                     </div>
-                    <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="uploadLogo(this)">
-                    <input type="hidden" id="logoUrl" value="">
-                </div>
 
-                <button class="ai-btn" onclick="gerarComIA()" id="btnIA">
-                    <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    Gerar Copy + Chaves Visuais
-                </button>
+                    <div class="input-group">
+                        <label>Cores da Marca (Salvas)</label>
+                        <div style="display:flex; gap:8px; margin-bottom:4px; align-items:center;">
+                            <input type="color" id="brandColorFundo" title="Fundo (Ex: Preto)" value="#18181b" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                            <input type="color" id="brandColorTexto" title="Texto (Ex: Branco)" value="#ffffff" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                            <input type="color" id="brandColorDestaque" title="Destaque (Ex: Azul)" value="#2563eb" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                            <input type="color" id="brandColorSec" title="Secundária (Ex: Cinza)" value="#71717a" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                            <label style="display:flex; gap:6px; align-items:center; font-size:11px; margin-left:8px; cursor:pointer;">
+                                <input type="checkbox" id="useBrandColors" checked onchange="saveBrandColors(); onTemplateChange();"> Usar na IA
+                            </label>
+                        </div>
+                    </div>
 
-                <div class="input-group">
-                    <label>Legenda para a Rede Social</label>
-                    <textarea id="draftCopy" class="input-control" placeholder="A IA vai escrever a legenda aqui..."></textarea>
-                </div>
+                    <div class="input-group" id="singleTemplateWrap" style="display:none;">
+                        <label>Template (Opcional)</label>
+                        <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
+                            <option value="">✨ Deixar a IA escolher o melhor</option>
+                        </select>
+                    </div>
 
-                <div class="ai-suggestion-box" id="aiSuggestionBox">
-                    <div class="ai-sugg-header">✦ Variáveis do Template Mapeadas</div>
-                    <div style="font-size:12px; font-weight:600; color:var(--text-main); margin-bottom:4px;" id="suggestedName">Nenhum template</div>
-                    <div style="font-size:11px; color:var(--text-muted);" id="suggestedReason">Você pode editar os campos abaixo antes de enviar para o Kanban.</div>
-                    
-                    <div class="keys-grid" id="keysGrid"></div>
-                    
-                    <button class="btn btn-secondary" style="width:100%; margin-top:12px; font-size:11px;" onclick="copiarChavesPainel()">
-                        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;margin-right:6px;vertical-align:-2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copiar Chaves Mapeadas
+                    <div class="input-group" id="carouselTemplateWrap" style="background: var(--bg-body); padding:12px; border-radius:var(--radius); border: 1px solid var(--border);">
+                        <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            Páginas do Carrossel
+                            <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="addCarouselPage()">+ Página</button>
+                        </label>
+                        <div id="carouselPagesContainer" style="display:flex; flex-direction:column; gap:8px;">
+                            </div>
+                    </div>
+
+                    <div class="input-group mt-6">
+                        <label>Logo da Empresa</label>
+                        <div class="upload-btn-wrap">
+                            <button class="upload-btn" onclick="document.getElementById('logoInput').click()" id="btnUploadLogo">Fazer Upload</button>
+                            <img id="logoPreview" class="logo-preview" src="">
+                        </div>
+                        <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="uploadLogo(this)">
+                        <input type="hidden" id="logoUrl" value="">
+                    </div>
+
+                    <button class="ai-btn" onclick="gerarComIA()" id="btnIA">
+                        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        Gerar Copy + Chaves Visuais
                     </button>
-                </div>
 
-                <input type="hidden" id="currentTemplateId" value="">
-                <button class="btn btn-primary" style="margin-top: 20px;" onclick="adicionarAoKanban()">Salvar no Kanban →</button>
+                    <div class="input-group">
+                        <label>Legenda para a Rede Social</label>
+                        <textarea id="draftCopy" class="input-control" placeholder="A IA vai escrever a legenda aqui..."></textarea>
+                    </div>
+
+                    <div class="ai-suggestion-box" id="aiSuggestionBox">
+                        <div class="ai-sugg-header">✦ Variáveis do Template Mapeadas</div>
+                        <div style="font-size:12px; font-weight:600; color:var(--text-main); margin-bottom:4px;" id="suggestedName">Nenhum template</div>
+                        <div style="font-size:11px; color:var(--text-muted);" id="suggestedReason">Você pode editar os campos abaixo antes de enviar para o Kanban.</div>
+                        
+                        <div class="keys-grid" id="keysGrid"></div>
+                        
+                        <button class="btn btn-secondary" style="width:100%; margin-top:12px; font-size:11px;" onclick="copiarChavesPainel()">
+                            <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;margin-right:6px;vertical-align:-2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copiar Chaves Mapeadas
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="currentTemplateId" value="">
+                    <button class="btn btn-primary" style="margin-top: 20px;" onclick="adicionarAoKanban()">Salvar no Kanban →</button>
+                </div>
             </div>
         </div>
 
         <div class="kanban-area" id="kanbanBoard">
             <div class="kanban-col">
-                <div class="col-header"><span>💡 Backlog de Ideias</span><span class="col-count">0</span></div>
+                <div class="col-header"><span contenteditable="true" spellcheck="false" class="board-title" id="board-title-1" onblur="saveBoardTitles()">💡 Backlog de Ideias</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-ideias"></div>
             </div>
             <div class="kanban-col">
-                <div class="col-header"><span>✍️ Revisão de Copy/Chaves</span><span class="col-count">0</span></div>
+                <div class="col-header"><span contenteditable="true" spellcheck="false" class="board-title" id="board-title-2" onblur="saveBoardTitles()">✍️ Revisão de Copy/Chaves</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-copy"></div>
             </div>
             <div class="kanban-col">
-                <div class="col-header"><span>✨ Pronto para Render</span><span class="col-count">0</span></div>
+                <div class="col-header"><span contenteditable="true" spellcheck="false" class="board-title" id="board-title-3" onblur="saveBoardTitles()">✨ Pronto para Render</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-criacao"></div>
             </div>
             <div class="kanban-col">
-                <div class="col-header"><span>🚀 Finalizado</span><span class="col-count">0</span></div>
+                <div class="col-header"><span contenteditable="true" spellcheck="false" class="board-title" id="board-title-4" onblur="saveBoardTitles()">🚀 Finalizado</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-pronto"></div>
             </div>
         </div>
@@ -361,6 +392,9 @@
 
         // Load Brand Colors
         loadBrandColors();
+
+        // Load Board Titles
+        loadBoardTitles();
 
         // Recupera o Logo do LocalStorage
         const savedLogo = localStorage.getItem('wl_logo_url');
@@ -400,6 +434,30 @@
         const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
         body.setAttribute('data-theme', newTheme);
         localStorage.setItem('wl_theme', newTheme);
+    }
+
+    function togglePanel(id) {
+        document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    function saveBoardTitles() {
+        const titles = [];
+        for(let i=1; i<=4; i++) {
+            titles.push(document.getElementById('board-title-'+i).innerText);
+        }
+        localStorage.setItem('wl_board_titles', JSON.stringify(titles));
+    }
+
+    function loadBoardTitles() {
+        const saved = localStorage.getItem('wl_board_titles');
+        if(saved) {
+            try {
+                const titles = JSON.parse(saved);
+                for(let i=1; i<=4; i++) {
+                    if(titles[i-1]) document.getElementById('board-title-'+i).innerText = titles[i-1];
+                }
+            } catch(e) {}
+        }
     }
 
     function loadBrandColors() {
@@ -785,7 +843,12 @@
         ${isUseBrand ? `O usuário EXIGIU usar as cores da marca: Fundo: ${bBg}, Texto: ${bText}, Destaque: ${bAcc}, Secundária: ${bSec}. UTILIZE EXATAMENTE ESTES HEX CODES se as variáveis de cor (CHAVE_COR_FUNDO, etc.) existirem no template.` : `Gere uma paleta de cores HEX real (CHAVE_COR_FUNDO, etc.) focada no Tema Visual (${tema}).`}
         Apenas insira a URL do logo na variável CHAVE_LOGO.
 
-        Retorne APENAS um JSON estrito sem formatação markdown, exatamente assim:
+        ATENÇÃO CRÍTICA PARA O JSON: 
+        - Retorne APENAS um JSON estrito, sem formatação markdown.
+        - NUNCA use quebras de linha reais (Enter) dentro das strings do JSON. Se precisar de parágrafos no texto, escreva literalmente os caracteres "\\n".
+        - Escape corretamente todas as aspas duplas internas usando \\".
+
+        Formato exigido:
         {
             "copy": "Texto persuasivo e humano da legenda para o Instagram...",
             "template_id": "ID do template (se carrossel, separe com vírgulas: id1,id2)",
@@ -793,7 +856,6 @@
             "motivo": "Justificativa visual",
             "chaves": {
                 "CHAVE_XXX": "Valor longo e real criado por você..."
-                // Se carrossel, inclua o prefixo exato: "[P1] CHAVE_...", "[P2] CHAVE_..."
             }
         }`;
 
@@ -884,8 +946,8 @@
         document.getElementById('currentTemplateId').value = '';
         
         // Reset selections
-        const type = document.getElementById('draftType').value;
-        if(type === 'Carrossel') {
+        const typeSelect = document.getElementById('draftType').value;
+        if(typeSelect === 'Carrossel') {
             document.getElementById('carouselPagesContainer').innerHTML = '';
             addCarouselPage();
             addCarouselPage();
