@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conteúdo & Kanban | Leanttro Tecnologia</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<style>
+    :root {
+        --bg-body: #f4f4f5;
+        --bg-surface: #ffffff;
+        --bg-kanban: #f8fafc;
+        --text-main: #09090b;
+        --text-muted: #71717a;
+        --border: #e4e4e7;
+        --primary: #18181b;
+        --primary-bg: rgba(24, 24, 27, 0.05);
+        --accent: #2563eb;
+        --success: #10b981;
+        --radius: 6px;
+        --radius-lg: 10px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.05);
+        --shadow-hover: 0 4px 12px rgba(0,0,0,0.1);
+        --transition: 0.2s ease;
+    }
+
+    [data-theme="dark"] {
+        --bg-body: #09090b;
+        --bg-surface: #121214;
+        --bg-kanban: #0f0f11;
+        --text-main: #fafafa;
+        --text-muted: #a1a1aa;
+        --border: #27272a;
+        --primary: #fafafa;
+        --primary-bg: rgba(250, 250, 250, 0.05);
+        --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        --shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* BARRA LATERAL (Idêntica à Home) */
+    .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .brand { padding: 24px 24px 20px; margin-bottom: 8px; }
+    .brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
+    [data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
+    .brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 8px; display: block; }
+    
+    .nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; border-radius: var(--radius); transition: all var(--transition); }
+    .nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+    .nav-link:hover { color: var(--text-main); background: var(--bg-body); }
+    .nav-link.active { background: var(--primary-bg); color: var(--text-main); font-weight: 600; }
+
+    /* CONTEÚDO PRINCIPAL */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .topbar { height: 64px; background: var(--bg-surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+    .topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+    .topbar-right { display: flex; align-items: center; gap: 20px; }
+    
+    .theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; }
+    .theme-toggle:hover { color: var(--text-main); border-color: var(--text-muted); }
+    .theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+    [data-theme="dark"] .icon-moon { display: none; }
+    [data-theme="light"] .icon-sun { display: none; }
+
+    .user-profile { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; border-left: 1px solid var(--border); padding-left: 20px; }
+    .avatar { width: 32px; height: 32px; background: var(--text-main); color: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
+
+    .workspace {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* PAINEL DE CRIAÇÃO (ESQUERDA) */
+    .creation-panel {
+        width: 400px;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        flex-shrink: 0;
+    }
+
+    .panel-section {
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .panel-title svg { width: 16px; height: 16px; stroke: var(--accent); stroke-width: 2; fill: none; }
+
+    .input-group { margin-bottom: 16px; position: relative; }
+    .input-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .input-control { width: 100%; padding: 10px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); }
+    .input-control:focus { border-color: var(--text-muted); }
+    textarea.input-control { resize: vertical; min-height: 100px; line-height: 1.5; padding-right: 48px; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; transition: all var(--transition); border: none; width: 100%; }
+    .btn-primary { background: var(--text-main); color: var(--bg-surface); }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--text-muted); }
+    
+    .ai-btn { position: absolute; right: 8px; top: 32px; background: var(--text-main); color: var(--bg-surface); border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .ai-btn:hover { opacity: 0.8; }
+    .ai-btn:disabled { opacity: 0.5; cursor: wait; }
+
+    .inspirations-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 4px; }
+    .insp-card { background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; cursor: pointer; transition: all var(--transition); }
+    .insp-card:hover { border-color: var(--accent); }
+    .insp-type { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; margin-bottom: 4px; }
+    .insp-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.4; }
+    .insp-snippet { font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* KANBAN BOARD (DIREITA) */
+    .kanban-area {
+        flex: 1;
+        background: var(--bg-kanban);
+        padding: 24px;
+        overflow-x: auto;
+        display: flex;
+        gap: 20px;
+    }
+
+    .kanban-col {
+        width: 320px;
+        min-width: 320px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        display: flex;
+        flex-direction: column;
+        max-height: 100%;
+    }
+
+    .col-header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .col-count { background: var(--bg-body); color: var(--text-muted); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+
+    .col-body {
+        padding: 12px;
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 150px;
+    }
+
+    .k-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        cursor: grab;
+        box-shadow: var(--shadow);
+        transition: box-shadow var(--transition), transform var(--transition);
+    }
+
+    .k-card:active { cursor: grabbing; }
+    .k-card:hover { box-shadow: var(--shadow-hover); }
+
+    .k-card-type { display: inline-block; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: var(--primary-bg); color: var(--text-main); margin-bottom: 8px; }
+    .k-card-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; }
+    .k-card-copy { font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    
+    .sortable-ghost { opacity: 0.4; background: var(--bg-body); border: 2px dashed var(--text-muted); }
+
+</style>
+</head>
+<body data-theme="light">
+
+<div class="sidebar">
+    <div class="brand">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro Tecnologia" class="brand-logo">
+        <span class="brand-sub">Marketing OS</span>
+    </div>
+    
+    <div class="nav-menu">
+        <a href="/home" class="nav-link">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Hub de Controle
+        </a>
+        <a href="/conteudo" class="nav-link active">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            Conteúdo
+        </a>
+        <a href="/" class="nav-link">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Criação
+        </a>
+        <a href="#" class="nav-link">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+            Prospecção
+        </a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div class="topbar-title">MÓDULO DE CONTEÚDO</div>
+        
+        <div class="topbar-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <div class="user-profile">
+                <span>Diretoria Leanttro</span>
+                <div class="avatar">LT</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        
+        <div class="creation-panel">
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Busca de Tendências (Serper)
+                </div>
+                <div class="input-group">
+                    <label>Nicho de Mercado</label>
+                    <input type="text" id="nicheInput" class="input-control" placeholder="Ex: tecnologia, moda, estética">
+                </div>
+                <button class="btn btn-secondary" onclick="buscarInspiracoes()" id="btnBusca">Buscar Ideias Virais</button>
+                
+                <div class="inspirations-list" id="inspList">
+                    <div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">
+                        Digite o nicho acima para ver o que está em alta no momento.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    Gerador de Copy (IA)
+                </div>
+                
+                <div class="input-group">
+                    <label>Título / Tema Base</label>
+                    <input type="text" id="draftTitle" class="input-control" placeholder="Título da postagem">
+                </div>
+                
+                <div class="input-group">
+                    <label>Formato do Post</label>
+                    <select id="draftType" class="input-control">
+                        <option>Carrossel</option>
+                        <option>Reels / TikTok</option>
+                        <option>Postagem Estática</option>
+                        <option>Story Interativo</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Texto da Postagem (Copy)</label>
+                    <textarea id="draftCopy" class="input-control" placeholder="Escreva a base ou peça para a IA expandir..."></textarea>
+                    <button class="ai-btn" onclick="expandirCopyIA()" id="btnIA">✦ IA Sugerir</button>
+                </div>
+
+                <button class="btn btn-primary" onclick="adicionarAoKanban()">Adicionar ao Kanban →</button>
+            </div>
+        </div>
+
+        <div class="kanban-area" id="kanbanBoard">
+            
+            <div class="kanban-col">
+                <div class="col-header">
+                    <span>💡 Ideias & Backlog</span>
+                    <span class="col-count">0</span>
+                </div>
+                <div class="col-body" id="col-ideias">
+                    </div>
+            </div>
+
+            <div class="kanban-col">
+                <div class="col-header">
+                    <span>✍️ Escrevendo Copy</span>
+                    <span class="col-count">0</span>
+                </div>
+                <div class="col-body" id="col-copy"></div>
+            </div>
+
+            <div class="kanban-col">
+                <div class="col-header">
+                    <span>✨ Pronto para Criação</span>
+                    <span class="col-count">0</span>
+                </div>
+                <div class="col-body" id="col-criacao"></div>
+            </div>
+
+            <div class="kanban-col">
+                <div class="col-header">
+                    <span>🚀 Agendado / Publicado</span>
+                    <span class="col-count">0</span>
+                </div>
+                <div class="col-body" id="col-pronto"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Gerenciamento de Tema
+    function toggleTheme() {
+        const body = document.body;
+        if (body.getAttribute('data-theme') === 'light') {
+            body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('wl_theme', 'dark');
+        } else {
+            body.setAttribute('data-theme', 'light');
+            localStorage.setItem('wl_theme', 'light');
+        }
+    }
+    const savedTheme = localStorage.getItem('wl_theme');
+    if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+
+    // Inicializar Kanban (SortableJS)
+    document.addEventListener('DOMContentLoaded', () => {
+        const colunas = document.querySelectorAll('.col-body');
+        colunas.forEach(col => {
+            new Sortable(col, {
+                group: 'kanban',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: atualizarContadores
+            });
+        });
+    });
+
+    function atualizarContadores() {
+        document.querySelectorAll('.kanban-col').forEach(col => {
+            const count = col.querySelectorAll('.k-card').length;
+            col.querySelector('.col-count').innerText = count;
+        });
+    }
+
+    // Busca no Serper
+    async function buscarInspiracoes() {
+        const niche = document.getElementById('nicheInput').value.trim();
+        if (!niche) { alert('Digite um nicho primeiro!'); return; }
+        
+        const listDiv = document.getElementById('inspList');
+        const btn = document.getElementById('btnBusca');
+        btn.innerText = 'Buscando...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/inspirations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ niche })
+            });
+            const data = await res.json();
+            
+            if (data.success && data.inspirations.length > 0) {
+                listDiv.innerHTML = '';
+                data.inspirations.forEach(insp => {
+                    const item = document.createElement('div');
+                    item.className = 'insp-card';
+                    item.innerHTML = `
+                        <div class="insp-type">${insp.type}</div>
+                        <div class="insp-title">${insp.title}</div>
+                        <div class="insp-snippet">${insp.snippet}</div>
+                    `;
+                    item.onclick = () => carregarNoFormulario(insp);
+                    listDiv.appendChild(item);
+                });
+            } else {
+                listDiv.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">Nenhuma ideia encontrada.</div>';
+            }
+        } catch (e) {
+            listDiv.innerHTML = '<div style="color:var(--accent);font-size:12px;text-align:center;">Erro ao buscar dados.</div>';
+        }
+        
+        btn.innerText = 'Buscar Ideias Virais';
+        btn.disabled = false;
+    }
+
+    function carregarNoFormulario(insp) {
+        document.getElementById('draftTitle').value = insp.title;
+        document.getElementById('draftType').value = insp.type.includes('Reels') ? 'Reels / TikTok' : (insp.type.includes('Carrossel') ? 'Carrossel' : 'Postagem Estática');
+        document.getElementById('draftCopy').value = `Inspirado em:\n${insp.snippet}\n\n`;
+    }
+
+    // Sugestão de Texto IA
+    async function expandirCopyIA() {
+        const titulo = document.getElementById('draftTitle').value.trim();
+        const baseCopy = document.getElementById('draftCopy').value.trim();
+        const tipo = document.getElementById('draftType').value;
+        const nicho = document.getElementById('nicheInput').value.trim() || 'geral';
+
+        if (!titulo) { alert('Preencha um título base primeiro.'); return; }
+
+        const btn = document.getElementById('btnIA');
+        btn.innerText = '...';
+        btn.disabled = true;
+
+        const prompt = `Atue como um Copywriter Elite. Nicho: ${nicho}. Formato: ${tipo}. Título: "${titulo}". Base atual: "${baseCopy}". Escreva uma legenda persuasiva e completa pronta para postar, incluindo CTA e hashtags. Não use aspas no começo ou no fim.`;
+
+        try {
+            const res = await fetch('/api/sugestao-texto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('draftCopy').value = data.text;
+            }
+        } catch (e) {
+            alert('Erro ao conectar com a IA.');
+        }
+
+        btn.innerText = '✦ IA Sugerir';
+        btn.disabled = false;
+    }
+
+    // Adicionar Card ao Kanban
+    function adicionarAoKanban() {
+        const titulo = document.getElementById('draftTitle').value.trim();
+        const tipo = document.getElementById('draftType').value;
+        const copy = document.getElementById('draftCopy').value.trim();
+
+        if (!titulo) { alert('Preencha pelo menos o título.'); return; }
+
+        const card = document.createElement('div');
+        card.className = 'k-card';
+        card.innerHTML = `
+            <span class="k-card-type">${tipo}</span>
+            <div class="k-card-title">${titulo}</div>
+            <div class="k-card-copy">${copy || 'Sem legenda ainda...'}</div>
+        `;
+
+        // Adiciona na primeira coluna (Ideias)
+        document.getElementById('col-ideias').appendChild(card);
+        atualizarContadores();
+
+        // Limpa o formulário
+        document.getElementById('draftTitle').value = '';
+        document.getElementById('draftCopy').value = '';
+    }
+</script>
+
+</body>
+</html>
