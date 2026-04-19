@@ -378,7 +378,7 @@ textarea.input-control {
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Hub de Controle
         </a>
-        <a href="/conteudo" class="nav-link">
+        <a href="/conteudo" class="nav-link" onclick="handleConteudoClick(event)">
             <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             Conteúdo
         </a>
@@ -1195,38 +1195,73 @@ function downloadHTML() {
 }
 
 async function captureImage() {
-    if (!state.currentHTML) { showToast('warning', 'Atenção', 'Gere uma animação primeiro.'); return; }
-    const iframe    = document.getElementById('previewFrame');
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
+        return;
+    }
+
+    const iframe = document.getElementById('previewFrame');
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-    try { await iframeDoc.fonts.ready; } catch(e) {}
+    try {
+        await iframeDoc.fonts.ready;
+        const images = iframeDoc.querySelectorAll('img');
+        await Promise.all(Array.from(images).map(img => {
+            if (img.complete) return Promise.resolve();
+            return new Promise(resolve => { img.onload = img.onerror = resolve; });
+        }));
+    } catch(e) { console.warn(e); }
 
     if (!iframe.contentWindow.html2canvas) {
         showToast('info', 'Preparando', 'Carregando engine de captura...');
         const script = iframeDoc.createElement('script');
-        script.src   = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
+        script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
         iframeDoc.head.appendChild(script);
-        await new Promise(r => { script.onload = r; setTimeout(r, 2000); });
+        await new Promise(resolve => { script.onload = resolve; setTimeout(resolve, 2000); });
     }
 
-    showToast('info', 'Capturando...', 'Processando imagem...');
+    showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
+
     try {
         const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
-            scale: 3, backgroundColor: null, useCORS: true, allowTaint: false, logging: false,
-            width: iframe.clientWidth, height: iframe.clientHeight,
-            windowWidth: iframe.clientWidth, windowHeight: iframe.clientHeight,
-            onclone: (doc) => {
-                doc.querySelectorAll('canvas').forEach(c => { if (!c.width) c.width = 1; if (!c.height) c.height = 1; });
-                doc.querySelectorAll('*').forEach(el => { el.style.animation = 'none'; el.style.transition = 'none'; });
+            scale: 3,
+            backgroundColor: null,
+            useCORS: true,
+            allowTaint: false,
+            logging: false,
+            width: iframe.clientWidth,
+            height: iframe.clientHeight,
+            windowWidth: iframe.clientWidth,
+            windowHeight: iframe.clientHeight,
+            onclone: (clonedDoc) => {
+                // Corrige canvas 0x0 que causam crash no html2canvas
+                clonedDoc.querySelectorAll('canvas').forEach(c => {
+                    if (!c.width || c.width === 0) c.width = 1;
+                    if (!c.height || c.height === 0) c.height = 1;
+                });
+                const allElements = clonedDoc.querySelectorAll('*');
+                allElements.forEach(el => {
+                    const style = clonedDoc.defaultView.getComputedStyle(el);
+                    if (style.opacity === '0') {
+                        el.style.opacity = '1';
+                    }
+                    if (style.visibility === 'hidden') {
+                        el.style.visibility = 'visible';
+                    }
+                    el.style.animation = 'none';
+                    el.style.transition = 'none';
+                });
             }
         });
-        const link  = document.createElement('a');
-        link.download = `criacao_${Date.now()}.png`;
-        link.href     = canvas.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.download = `motordark_frame_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
         link.click();
-        showToast('success', 'Foto salva!', 'Imagem PNG baixada com sucesso.');
-    } catch(e) {
-        showToast('error', 'Erro na captura', 'Tente novamente.');
+        showToast('success', 'Foto salva!', 'A imagem foi baixada com todos os textos visíveis.');
+    } catch (e) {
+        console.error(e);
+        showToast('error', 'Erro na captura', 'Não foi possível gerar a imagem. Tente novamente.');
     }
 }
 
@@ -1265,7 +1300,7 @@ async function recordScreen() {
 }
 
 /* ════════════════════════════════════════════
-   SALVAR NO KANBAN (volta para conteudo.html)
+   SALVAR NO KANBAN / CONTEUDO
 ════════════════════════════════════════════ */
 function salvarNoKanban() {
     if (!state.pendingCardId) {
@@ -1279,6 +1314,18 @@ function salvarNoKanban() {
     localStorage.removeItem('wl_pending_creation');
     showToast('success', 'Salvo!', 'Card marcado como pronto. Voltando para Conteúdo...');
     setTimeout(() => { window.location.href = '/conteudo'; }, 1600);
+}
+
+function handleConteudoClick(event) {
+    if (state.pendingCardId) {
+        event.preventDefault();
+        if (state.currentHTML) {
+            salvarNoKanban();
+        } else {
+            limparContexto();
+            window.location.href = '/conteudo';
+        }
+    }
 }
 
 /* ════════════════════════════════════════════
