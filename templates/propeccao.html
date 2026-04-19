@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospecção & CRM | Leanttro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+:root {
+    --bg-body:      #f4f4f5;
+    --bg-surface:   #ffffff;
+    --text-main:    #09090b;
+    --text-muted:   #71717a;
+    --border:       #e4e4e7;
+    --accent:       #2563eb;
+    --accent-bg:    rgba(37,99,235,0.08);
+    --accent-light: rgba(37,99,235,0.15);
+    --danger:       #ef4444;
+    --danger-bg:    rgba(239,68,68,0.08);
+    --success:      #10b981;
+    --success-bg:   rgba(16,185,129,0.08);
+    --warning:      #f59e0b;
+    --warning-bg:   rgba(245,158,11,0.08);
+    --primary:      #18181b;
+    --primary-bg:   rgba(24,24,27,0.05);
+    --radius:       6px;
+    --radius-lg:    10px;
+    --shadow:       0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.1);
+    --transition:   0.2s ease;
+    --panel-width:  360px;
+}
+[data-theme="dark"] {
+    --bg-body:      #09090b;
+    --bg-surface:   #121214;
+    --text-main:    #fafafa;
+    --text-muted:   #a1a1aa;
+    --border:       #27272a;
+    --primary:      #fafafa;
+    --primary-bg:   rgba(250,250,250,0.05);
+    --accent-bg:    rgba(37,99,235,0.15);
+    --accent-light: rgba(37,99,235,0.25);
+    --danger-bg:    rgba(239,68,68,0.15);
+    --success-bg:   rgba(16,185,129,0.15);
+    --warning-bg:   rgba(245,158,11,0.15);
+    --shadow:       0 4px 20px rgba(0,0,0,0.3);
+    --shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
+    display: flex;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: background var(--transition), color var(--transition);
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ════ SIDEBAR ════ */
+.sidebar {
+    width: 260px; min-width: 260px;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transition: background var(--transition), border-color var(--transition);
+    z-index: 10;
+}
+.brand { padding: 24px 24px 20px; }
+.brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
+[data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
+.brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 8px; display: block; }
+.nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
+.nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 500; border-radius: var(--radius); transition: all var(--transition); }
+.nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; flex-shrink: 0; }
+.nav-link:hover { color: var(--text-main); background: var(--bg-body); }
+.nav-link.active { background: var(--primary-bg); color: var(--text-main); font-weight: 600; }
+
+/* ════ MAIN ════ */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; position: relative; }
+
+/* ════ TOPBAR ════ */
+.topbar {
+    height: 64px; background: var(--bg-surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
+    flex-shrink: 0; transition: background var(--transition);
+}
+.topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+.theme-toggle:hover { color: var(--text-main); border-color: var(--text-muted); }
+.theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+[data-theme="dark"]  .icon-moon { display: none; }
+[data-theme="light"] .icon-sun  { display: none; }
+.user-profile { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; border-left: 1px solid var(--border); padding-left: 16px; }
+.avatar { width: 32px; height: 32px; background: var(--text-main); color: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
+
+/* ════ CONTENT ════ */
+.content-area { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+/* ════ PRONTOS PARA DISPARO ════ */
+.disparo-section {
+    margin: 20px 24px 0;
+    background: var(--bg-surface);
+    border: 1px solid rgba(37,99,235,0.3);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all var(--transition);
+}
+.disparo-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; cursor: pointer; user-select: none;
+    border-bottom: 1px solid transparent; transition: border-color var(--transition);
+}
+.disparo-header.open { border-bottom-color: var(--border); }
+.disparo-header-left { display: flex; align-items: center; gap: 10px; }
+.disparo-badge { font-size: 9px; font-weight: 700; background: var(--accent); color: #fff; padding: 2px 7px; border-radius: 10px; }
+.disparo-title { font-size: 13px; font-weight: 600; }
+.disparo-sub { font-size: 11px; color: var(--text-muted); }
+.disparo-toggle { font-size: 10px; color: var(--text-muted); transition: transform var(--transition); }
+.disparo-toggle.open { transform: rotate(180deg); }
+.disparo-body { display: none; padding: 16px 20px; gap: 12px; flex-wrap: wrap; }
+.disparo-body.open { display: flex; }
+.disparo-card {
+    flex: 0 0 calc(50% - 6px);
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    min-width: 240px;
+}
+.disparo-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.3; }
+.disparo-card-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 12px; }
+.disparo-card-actions { display: flex; gap: 8px; }
+.btn-disparo { display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; border: none; border-radius: var(--radius); font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; transition: all var(--transition); }
+.btn-wpp { background: #22c55e; color: #fff; }
+.btn-wpp:hover { background: #16a34a; }
+.btn-email { background: var(--accent); color: #fff; }
+.btn-email:hover { opacity: 0.9; }
+.disparo-empty { padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+/* ════ TABS ════ */
+.tabs-bar {
+    display: flex; border-bottom: 1px solid var(--border);
+    padding: 0 24px; margin-top: 20px; flex-shrink: 0;
+    background: var(--bg-surface);
+}
+.tab-btn {
+    padding: 12px 0; margin-right: 28px; background: none; border: none;
+    border-bottom: 2px solid transparent; color: var(--text-muted);
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    letter-spacing: 0.4px; text-transform: uppercase; transition: all var(--transition);
+    white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text-main); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-panel { display: none; padding: 24px; }
+.tab-panel.active { display: block; }
+
+/* ════ FILTROS / TOOLBAR ════ */
+.filter-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.filter-search { position: relative; flex: 1; min-width: 200px; }
+.filter-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--text-muted); stroke-width: 2; fill: none; }
+.filter-search input { width: 100%; padding: 8px 12px 8px 32px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 12px; outline: none; transition: border-color var(--transition); }
+.filter-search input:focus { border-color: var(--accent); }
+.filter-select { padding: 8px 28px 8px 10px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 12px; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+.filter-divider { width: 1px; height: 24px; background: var(--border); }
+
+/* ════ BARRA DE AÇÃO EM MASSA ════ */
+.bulk-bar {
+    display: none; align-items: center; gap: 12px;
+    background: var(--accent-bg); border: 1px solid rgba(37,99,235,0.2);
+    border-radius: var(--radius); padding: 10px 16px; margin-bottom: 12px;
+    font-size: 12px; font-weight: 500;
+}
+.bulk-bar.show { display: flex; }
+.bulk-count { color: var(--accent); font-weight: 700; }
+.bulk-actions { display: flex; gap: 8px; margin-left: auto; }
+
+/* ════ TABELA CRM ════ */
+.table-wrap { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.crm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.crm-table thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-body); white-space: nowrap; }
+.crm-table tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); cursor: pointer; }
+.crm-table tbody tr:last-child { border-bottom: none; }
+.crm-table tbody tr:hover { background: var(--bg-body); }
+.crm-table tbody tr.selected { background: var(--accent-bg); }
+.crm-table td { padding: 10px 14px; vertical-align: middle; }
+.crm-table .col-check { width: 36px; }
+.crm-table .col-actions { width: 60px; text-align: right; }
+.crm-table input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.badge-maps    { background: rgba(16,185,129,0.1); color: #059669; }
+.badge-instagram { background: rgba(236,72,153,0.1); color: #db2777; }
+.badge-linkedin  { background: rgba(37,99,235,0.1); color: var(--accent); }
+.badge-csv     { background: rgba(245,158,11,0.1); color: #d97706; }
+.badge-manual  { background: var(--primary-bg); color: var(--text-muted); }
+.badge-novo       { background: var(--accent-bg); color: var(--accent); }
+.badge-em_contato { background: var(--warning-bg); color: #d97706; }
+.badge-convertido { background: var(--success-bg); color: #059669; }
+.badge-bloqueado  { background: var(--danger-bg); color: var(--danger); }
+
+/* Tags inline */
+.tag { display: inline-block; padding: 1px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; background: var(--primary-bg); color: var(--text-muted); margin: 1px 2px; }
+.tag-lead     { background: var(--accent-bg);   color: var(--accent); }
+.tag-cliente  { background: var(--success-bg);  color: #059669; }
+.tag-inativo  { background: var(--danger-bg);   color: var(--danger); }
+
+/* Row actions */
+.row-actions { display: flex; gap: 4px; justify-content: flex-end; opacity: 0; transition: opacity var(--transition); }
+.crm-table tbody tr:hover .row-actions { opacity: 1; }
+.icon-btn { background: none; border: none; padding: 4px; border-radius: 4px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+.icon-btn:hover { background: var(--bg-body); color: var(--text-main); }
+.icon-btn.danger:hover { color: var(--danger); background: var(--danger-bg); }
+.icon-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+/* Empty state */
+.empty-table { text-align: center; padding: 60px 20px; }
+.empty-table svg { width: 40px; height: 40px; stroke: var(--border); stroke-width: 1.5; fill: none; margin-bottom: 12px; }
+.empty-table p { font-size: 13px; color: var(--text-muted); }
+
+/* Pagination */
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+.pagination-btns { display: flex; gap: 6px; }
+.pg-btn { padding: 5px 10px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; cursor: pointer; font-family: inherit; color: var(--text-muted); transition: all var(--transition); }
+.pg-btn:hover:not(:disabled) { color: var(--text-main); border-color: var(--text-muted); }
+.pg-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pg-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ════ MINERADOR ════ */
+.miner-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.miner-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; cursor: pointer; transition: all var(--transition); }
+.miner-card:hover, .miner-card.selected { border-color: var(--accent); background: var(--accent-bg); }
+.miner-card-icon { font-size: 22px; margin-bottom: 8px; }
+.miner-card-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.miner-card-desc { font-size: 11px; color: var(--text-muted); }
+.miner-form { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; display: none; }
+.miner-form.show { display: block; }
+.miner-form-grid { display: grid; gap: 12px; }
+.miner-form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.miner-form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.miner-results { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.miner-results-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.miner-results-title { font-size: 13px; font-weight: 600; }
+.miner-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.miner-table th { padding: 8px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-body); }
+.miner-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.miner-table tr:last-child td { border-bottom: none; }
+.miner-table tr:hover td { background: var(--bg-body); }
+.miner-table input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+
+/* ════ IMPORTAR CSV ════ */
+.import-upload { border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 40px; text-align: center; cursor: pointer; transition: all var(--transition); position: relative; margin-bottom: 16px; }
+.import-upload:hover, .import-upload.drag-over { border-color: var(--accent); background: var(--accent-bg); }
+.import-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.import-upload-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+.import-upload-text { font-size: 13px; color: var(--text-muted); }
+.import-upload-text strong { color: var(--accent); }
+.col-mapping { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+.col-map-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+.col-map-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+.col-map-arrow { color: var(--text-muted); font-size: 14px; }
+
+/* ════ PAINEL LATERAL ════ */
+.side-panel {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: var(--panel-width); background: var(--bg-surface);
+    border-left: 1px solid var(--border); z-index: 100;
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform 0.3s ease;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.08);
+}
+.side-panel.open { transform: translateX(0); }
+.side-panel-header {
+    padding: 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.side-panel-title { font-size: 14px; font-weight: 600; }
+.side-panel-close { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: var(--radius); display: flex; transition: all var(--transition); }
+.side-panel-close:hover { color: var(--text-main); background: var(--bg-body); }
+.side-panel-close svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+.side-panel-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.side-panel-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; }
+
+/* Formulário do painel */
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input { padding: 9px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); width: 100%; }
+.form-input:focus { border-color: var(--accent); }
+.form-input:read-only { opacity: 0.7; cursor: default; background: var(--border); }
+select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
+.tags-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); min-height: 42px; }
+.tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: default; }
+.tag-chip-lead    { background: var(--accent-bg);   color: var(--accent); }
+.tag-chip-cliente { background: var(--success-bg);  color: #059669; }
+.tag-chip-inativo { background: var(--danger-bg);   color: var(--danger); }
+.tag-chip-default { background: var(--primary-bg);  color: var(--text-muted); }
+.tag-chip button { background: none; border: none; cursor: pointer; color: inherit; padding: 0; line-height: 1; font-size: 12px; opacity: 0.7; }
+.tag-chip button:hover { opacity: 1; }
+.tags-add { display: flex; gap: 6px; margin-top: 6px; }
+
+/* Contact detail mode */
+.detail-field { display: flex; flex-direction: column; gap: 3px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.detail-field:last-child { border-bottom: none; }
+.detail-key { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-value { font-size: 13px; color: var(--text-main); }
+.detail-value a { color: var(--accent); text-decoration: none; }
+.detail-value a:hover { text-decoration: underline; }
+.detail-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ════ BOTÕES ════ */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border: none; border-radius: var(--radius); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
+.btn-secondary:hover:not(:disabled) { border-color: var(--text-muted); }
+.btn-outline { background: none; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-outline:hover:not(:disabled) { color: var(--text-main); border-color: var(--text-muted); }
+.btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+.btn-danger:hover:not(:disabled) { background: var(--danger); color: #fff; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover:not(:disabled) { background: #059669; }
+.btn-full { width: 100%; }
+.btn-sm { padding: 6px 10px; font-size: 11px; }
+
+/* ════ INPUTS GLOBAIS ════ */
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.input-ctrl { padding: 9px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); width: 100%; }
+.input-ctrl:focus { border-color: var(--accent); }
+select.input-ctrl { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; background-image: none; }
+
+/* ════ STATS CARDS ════ */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 24px 0; }
+.stat-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; }
+.stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px; }
+.stat-value { font-size: 24px; font-weight: 700; line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+/* ════ LOADING / SPINNER ════ */
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(37,99,235,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-row td { text-align: center; padding: 40px; }
+.progress-bar-wrap { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 10px; }
+.progress-bar { height: 4px; background: var(--accent); border-radius: 4px; transition: width 0.3s; width: 0%; }
+
+/* ════ TOAST ════ */
+.toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 16px; min-width: 260px; max-width: 360px; display: flex; align-items: flex-start; gap: 10px; box-shadow: var(--shadow-hover); pointer-events: all; font-size: 13px; animation: toast-in 0.3s ease; }
+@keyframes toast-in { from{opacity:0;transform:translateX(100%)} to{opacity:1;transform:translateX(0)} }
+.toast.removing { animation: toast-out 0.3s ease forwards; }
+@keyframes toast-out { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(100%)} }
+.toast-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.toast-title { font-weight: 600; margin-bottom: 2px; font-size: 13px; }
+.toast-msg { font-size: 11px; color: var(--text-muted); }
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error   { border-left: 3px solid var(--danger); }
+.toast.info    { border-left: 3px solid var(--accent); }
+.toast.warning { border-left: 3px solid var(--warning); }
+
+/* ════ MODAL DISPARO ════ */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 500; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 460px; max-width: 90vw; box-shadow: var(--shadow-hover); }
+.modal-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ════ SIDEBAR ════ -->
+<div class="sidebar">
+    <div class="brand">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
+        <span class="brand-sub">Marketing OS</span>
+    </div>
+    <div class="nav-menu">
+        <a href="/home" class="nav-link">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Hub de Controle
+        </a>
+        <a href="/conteudo" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Conteúdo
+        </a>
+        <a href="/criacao" class="nav-link">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Criação
+        </a>
+        <a href="/prospeccao" class="nav-link active">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Prospecção
+        </a>
+        <a href="#" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp
+        </a>
+        <a href="#" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            E-mail
+        </a>
+        <a href="#" class="nav-link">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Métricas
+        </a>
+    </div>
+</div>
+
+<!-- ════ MAIN ════ -->
+<div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-title">PROSPECÇÃO & CRM</div>
+        <div class="topbar-right">
+            <button class="btn btn-primary btn-sm" onclick="abrirPainel('novo')">
+                <svg style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Novo Contato
+            </button>
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <div class="user-profile">
+                <span>Leanttro</span>
+                <div class="avatar">LT</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-area" id="contentArea">
+
+        <!-- Stats -->
+        <div style="padding: 20px 24px 0;">
+            <div class="stats-row" style="margin: 0;">
+                <div class="stat-card">
+                    <div class="stat-label">Total Contatos</div>
+                    <div class="stat-value" id="statTotal">—</div>
+                    <div class="stat-sub">no CRM</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Novos</div>
+                    <div class="stat-value" id="statNovos" style="color:var(--accent);">—</div>
+                    <div class="stat-sub">não contatados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Convertidos</div>
+                    <div class="stat-value" id="statConvertidos" style="color:var(--success);">—</div>
+                    <div class="stat-sub">clientes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Prontos p/ Disparo</div>
+                    <div class="stat-value" id="statProntos" style="color:#f59e0b;">—</div>
+                    <div class="stat-sub">posts finalizados</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prontos para Disparo -->
+        <div class="disparo-section" id="disparoSection" style="display:none;">
+            <div class="disparo-header" onclick="toggleDisparo()">
+                <div class="disparo-header-left">
+                    <span style="font-size:16px;">🚀</span>
+                    <div>
+                        <div class="disparo-title">Prontos para Disparo <span class="disparo-badge" id="disparoBadge">0</span></div>
+                        <div class="disparo-sub">Posts finalizados aguardando disparo</div>
+                    </div>
+                </div>
+                <span class="disparo-toggle" id="disparoToggle">▼</span>
+            </div>
+            <div class="disparo-body" id="disparoBody"></div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-bar">
+            <button class="tab-btn active" onclick="switchTab('crm')">📋 CRM</button>
+            <button class="tab-btn" onclick="switchTab('minerador')">⛏️ Minerador</button>
+            <button class="tab-btn" onclick="switchTab('importar')">📥 Importar CSV</button>
+        </div>
+
+        <!-- ── TAB CRM ── -->
+        <div id="tab-crm" class="tab-panel active">
+
+            <!-- Filtros -->
+            <div class="filter-bar">
+                <div class="filter-search">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="Buscar por nome, WhatsApp ou empresa..." oninput="filtrarTabela()">
+                </div>
+                <div class="filter-divider"></div>
+                <select class="filter-select" id="filterOrigem" onchange="filtrarTabela()">
+                    <option value="">Todas as origens</option>
+                    <option value="maps">Google Maps</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="csv">CSV</option>
+                    <option value="manual">Manual</option>
+                </select>
+                <select class="filter-select" id="filterStatus" onchange="filtrarTabela()">
+                    <option value="">Todos os status</option>
+                    <option value="novo">Novo</option>
+                    <option value="em_contato">Em Contato</option>
+                    <option value="convertido">Convertido</option>
+                    <option value="bloqueado">Bloqueado</option>
+                </select>
+                <div class="filter-divider"></div>
+                <button class="btn btn-outline btn-sm" onclick="exportarCSV()">⬇ Exportar CSV</button>
+            </div>
+
+            <!-- Barra de ação em massa -->
+            <div class="bulk-bar" id="bulkBar">
+                <span><span class="bulk-count" id="bulkCount">0</span> contatos selecionados</span>
+                <div class="bulk-actions">
+                    <select class="filter-select" id="bulkStatusSel">
+                        <option value="">Alterar status...</option>
+                        <option value="novo">Novo</option>
+                        <option value="em_contato">Em Contato</option>
+                        <option value="convertido">Convertido</option>
+                        <option value="bloqueado">Bloqueado</option>
+                    </select>
+                    <button class="btn btn-outline btn-sm" onclick="aplicarBulkStatus()">Aplicar</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportarSelecionados()">⬇ Exportar</button>
+                    <button class="btn btn-danger btn-sm" onclick="excluirSelecionados()">🗑 Excluir</button>
+                    <button class="btn btn-success btn-sm" onclick="prepararDisparoSelecionados()">🚀 Disparar</button>
+                </div>
+            </div>
+
+            <!-- Tabela -->
+            <div class="table-wrap">
+                <table class="crm-table">
+                    <thead>
+                        <tr>
+                            <th class="col-check"><input type="checkbox" id="checkAll" onchange="toggleAllChecks(this)"></th>
+                            <th>Nome / Empresa</th>
+                            <th>WhatsApp</th>
+                            <th>E-mail</th>
+                            <th>Origem</th>
+                            <th>Tags</th>
+                            <th>Status</th>
+                            <th class="col-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="crmTableBody">
+                        <tr class="loading-row">
+                            <td colspan="8"><div class="spinner"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <span id="paginationInfo">—</span>
+                    <div class="pagination-btns" id="paginationBtns"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TAB MINERADOR ── -->
+        <div id="tab-minerador" class="tab-panel">
+
+            <!-- Cards de fonte -->
+            <div class="miner-grid">
+                <div class="miner-card selected" id="mcard-maps" onclick="selecionarFonte('maps')">
+                    <div class="miner-card-icon">📍</div>
+                    <div class="miner-card-name">Google Maps</div>
+                    <div class="miner-card-desc">Empresas por nicho e cidade</div>
+                </div>
+                <div class="miner-card" id="mcard-instagram" onclick="selecionarFonte('instagram')">
+                    <div class="miner-card-icon">📸</div>
+                    <div class="miner-card-name">Instagram</div>
+                    <div class="miner-card-desc">Perfis e negócios por nicho</div>
+                </div>
+                <div class="miner-card" id="mcard-linkedin" onclick="selecionarFonte('linkedin')">
+                    <div class="miner-card-icon">💼</div>
+                    <div class="miner-card-name">LinkedIn</div>
+                    <div class="miner-card-desc">Empresas e profissionais</div>
+                </div>
+            </div>
+
+            <!-- Formulário Google Maps -->
+            <div class="miner-form show" id="form-maps">
+                <div class="miner-form-grid cols-3" style="margin-bottom:12px;">
+                    <div class="input-group">
+                        <label class="input-label">Nicho / Segmento</label>
+                        <input type="text" class="input-ctrl" id="m-maps-nicho" placeholder="Ex: Clínica Odontológica">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Cidade Base</label>
+                        <input type="text" class="input-ctrl" id="m-maps-cidade" placeholder="Ex: São Paulo">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Bairros (separados por vírgula)</label>
+                        <input type="text" class="input-ctrl" id="m-maps-bairros" placeholder="Ex: Pinheiros, Itaim">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="iniciarExtracao('maps')" id="btnExtrairMaps">
+                    🔍 Iniciar Extração
+                </button>
+            </div>
+
+            <!-- Formulário Instagram -->
+            <div class="miner-form" id="form-instagram">
+                <div class="miner-form-grid cols-2" style="margin-bottom:12px;">
+                    <div class="input-group">
+                        <label class="input-label">Nicho / Hashtag</label>
+                        <input type="text" class="input-ctrl" id="m-insta-nicho" placeholder="Ex: clínica estética SP">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Cidade (opcional)</label>
+                        <input type="text" class="input-ctrl" id="m-insta-cidade" placeholder="Ex: São Paulo">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="iniciarExtracao('instagram')" id="btnExtrairInsta">
+                    🔍 Iniciar Extração
+                </button>
+            </div>
+
+            <!-- Formulário LinkedIn -->
+            <div class="miner-form" id="form-linkedin">
+                <div class="miner-form-grid cols-2" style="margin-bottom:12px;">
+                    <div class="input-group">
+                        <label class="input-label">Segmento / Cargo</label>
+                        <input type="text" class="input-ctrl" id="m-li-nicho" placeholder="Ex: clínica dermatologia">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">Cidade (opcional)</label>
+                        <input type="text" class="input-ctrl" id="m-li-cidade" placeholder="Ex: São Paulo">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="iniciarExtracao('linkedin')" id="btnExtrairLi">
+                    🔍 Iniciar Extração
+                </button>
+            </div>
+
+            <!-- Progress -->
+            <div id="minerProgress" class="hidden" style="margin-bottom:16px;">
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;" id="minerProgressText">Buscando...</div>
+                <div class="progress-bar-wrap"><div class="progress-bar" id="minerProgressBar"></div></div>
+            </div>
+
+            <!-- Resultados Minerador -->
+            <div class="miner-results hidden" id="minerResults">
+                <div class="miner-results-header">
+                    <div class="miner-results-title">Resultados <span id="minerCount" style="color:var(--accent); font-weight:700;"></span></div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-outline btn-sm" onclick="exportarMinerados()">⬇ Baixar Excel</button>
+                        <button class="btn btn-success btn-sm" onclick="salvarSelecionadosCRM()" id="btnSalvarCRM">💾 Salvar no CRM</button>
+                    </div>
+                </div>
+                <table class="miner-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="checkAllMiner" onchange="toggleAllMiner(this)"></th>
+                            <th>Empresa / Nome</th>
+                            <th>WhatsApp</th>
+                            <th>E-mail</th>
+                            <th>Endereço / Info</th>
+                            <th>Fonte</th>
+                        </tr>
+                    </thead>
+                    <tbody id="minerTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── TAB IMPORTAR CSV ── -->
+        <div id="tab-importar" class="tab-panel">
+            <div class="import-upload" id="importUpload">
+                <input type="file" id="csvFileInput" accept=".csv,.xlsx,.xls" onchange="handleCSVUpload(this.files[0])">
+                <span class="import-upload-icon">📄</span>
+                <div class="import-upload-text"><strong>Clique ou arraste</strong> um arquivo CSV ou Excel aqui</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">Formatos: .csv, .xlsx, .xls</div>
+            </div>
+
+            <div class="col-mapping hidden" id="colMapping">
+                <div class="col-map-title">🗂 Mapeie as colunas do seu arquivo</div>
+                <div id="colMapRows"></div>
+                <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button class="btn btn-primary" onclick="executarImport()">✓ Importar Contatos</button>
+                    <button class="btn btn-secondary" onclick="cancelarImport()">✕ Cancelar</button>
+                </div>
+            </div>
+
+            <div class="miner-results hidden" id="importPreview">
+                <div class="miner-results-header">
+                    <div class="miner-results-title">Preview — <span id="importCount"></span> contatos</div>
+                </div>
+                <table class="miner-table" id="importTable">
+                    <thead><tr id="importTableHead"></tr></thead>
+                    <tbody id="importTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /content-area -->
+
+    <!-- ════ PAINEL LATERAL ════ -->
+    <div class="side-panel" id="sidePanel">
+        <div class="side-panel-header">
+            <span class="side-panel-title" id="panelTitle">Contato</span>
+            <button class="side-panel-close" onclick="fecharPainel()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="side-panel-body" id="panelBody"></div>
+        <div class="side-panel-footer" id="panelFooter"></div>
+    </div>
+
+</div><!-- /main -->
+
+<!-- Modal Disparo -->
+<div class="modal-overlay" id="modalDisparo">
+    <div class="modal">
+        <div class="modal-title">🚀 Preparar Disparo</div>
+        <div id="modalDisparoContent"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+            <button class="btn btn-success" onclick="confirmarDisparo('wpp')">📱 Disparar WPP</button>
+            <button class="btn btn-primary" onclick="confirmarDisparo('email')">📧 Disparar E-mail</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   ESTADO GLOBAL
+════════════════════════════════════════════ */
+let contacts = [];          // todos os contatos do CRM
+let filteredContacts = [];  // após filtros
+let selectedIds = new Set();
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let currentContact = null;  // contato sendo editado/visualizado
+let panelMode = 'view';     // 'view' | 'edit' | 'novo'
+let fonte = 'maps';         // fonte do minerador selecionada
+let minerResults = [];      // resultados do minerador
+let csvData = [];           // dados do CSV importado
+let csvHeaders = [];
+let pendingDisparoCard = null;
+
+const CAMPOS_CRM = ['nome','empresa','whatsapp','email','origem','status','tags','obs'];
+const TAGS_OPTIONS = ['Lead','Cliente','Ativo','Inativo'];
+const STATUS_OPTIONS = ['novo','em_contato','convertido','bloqueado'];
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+function init() {
+    const saved = localStorage.getItem('wl_theme');
+    if (saved) document.body.setAttribute('data-theme', saved);
+    carregarContatos();
+    carregarProntos();
+
+    // Drag-over no import
+    const upz = document.getElementById('importUpload');
+    upz.addEventListener('dragover', e => { e.preventDefault(); upz.classList.add('drag-over'); });
+    upz.addEventListener('dragleave', () => upz.classList.remove('drag-over'));
+    upz.addEventListener('drop', e => {
+        e.preventDefault(); upz.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) handleCSVUpload(e.dataTransfer.files[0]);
+    });
+}
+
+/* ════════════════════════════════════════════
+   TEMA
+════════════════════════════════════════════ */
+function toggleTheme() {
+    const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.body.setAttribute('data-theme', t);
+    localStorage.setItem('wl_theme', t);
+}
+
+/* ════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════ */
+function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach((b,i) => {
+        b.classList.toggle('active', ['crm','minerador','importar'][i] === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+}
+
+/* ════════════════════════════════════════════
+   PRONTOS PARA DISPARO (localStorage do Kanban)
+════════════════════════════════════════════ */
+function carregarProntos() {
+    // Lê cards prontos do localStorage (salvos pelo conteudo.html)
+    let prontos = [];
+    try {
+        const raw = localStorage.getItem('wl_kanban_prontos');
+        if (raw) prontos = JSON.parse(raw);
+    } catch(e) {}
+
+    document.getElementById('statProntos').textContent = prontos.length;
+
+    if (!prontos.length) {
+        document.getElementById('disparoSection').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('disparoSection').style.display = '';
+    document.getElementById('disparoBadge').textContent = prontos.length;
+
+    const body = document.getElementById('disparoBody');
+    body.innerHTML = '';
+    prontos.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'disparo-card';
+        div.innerHTML = `
+            <div class="disparo-card-title">${escHtml(card.titulo || 'Post sem título')}</div>
+            <div class="disparo-card-meta">${escHtml(card.tipo || '')}${card.templateName ? ' • ' + escHtml(card.templateName) : ''} • Arte finalizada</div>
+            <div class="disparo-card-actions">
+                <button class="btn-disparo btn-wpp" onclick="abrirModalDisparo(${JSON.stringify(card).replace(/"/g,"'")}, 'wpp')">📱 Disparar WPP</button>
+                <button class="btn-disparo btn-email" onclick="abrirModalDisparo(${JSON.stringify(card).replace(/"/g,"'")}, 'email')">📧 E-mail</button>
+            </div>
+        `;
+        body.appendChild(div);
+    });
+}
+
+function toggleDisparo() {
+    const body = document.getElementById('disparoBody');
+    const toggle = document.getElementById('disparoToggle');
+    const header = document.querySelector('.disparo-header');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+}
+
+/* ════════════════════════════════════════════
+   CARREGAR CONTATOS
+════════════════════════════════════════════ */
+async function carregarContatos() {
+    try {
+        const res  = await fetch('/api/crm/contacts');
+        const data = await res.json();
+        if (data.success) {
+            contacts = data.contacts;
+            atualizarStats();
+            filtrarTabela();
+        }
+    } catch(e) {
+        document.getElementById('crmTableBody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--danger);">Erro ao carregar contatos.</td></tr>`;
+    }
+}
+
+function atualizarStats() {
+    document.getElementById('statTotal').textContent = contacts.length;
+    document.getElementById('statNovos').textContent = contacts.filter(c => c.status === 'novo').length;
+    document.getElementById('statConvertidos').textContent = contacts.filter(c => c.status === 'convertido').length;
+}
+
+/* ════════════════════════════════════════════
+   FILTRAR E RENDERIZAR TABELA
+════════════════════════════════════════════ */
+function filtrarTabela() {
+    const q       = document.getElementById('searchInput').value.toLowerCase();
+    const origem  = document.getElementById('filterOrigem').value;
+    const status  = document.getElementById('filterStatus').value;
+
+    filteredContacts = contacts.filter(c => {
+        const matchQ = !q || (c.nome||'').toLowerCase().includes(q) || (c.empresa||'').toLowerCase().includes(q) || (c.whatsapp||'').includes(q) || (c.email||'').toLowerCase().includes(q);
+        const matchO = !origem || c.origem === origem;
+        const matchS = !status || c.status === status;
+        return matchQ && matchO && matchS;
+    });
+
+    currentPage = 1;
+    renderTabela();
+}
+
+function renderTabela() {
+    const body  = document.getElementById('crmTableBody');
+    const total = filteredContacts.length;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = filteredContacts.slice(start, start + PAGE_SIZE);
+
+    if (!slice.length) {
+        body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:50px;color:var(--text-muted);font-size:12px;">Nenhum contato encontrado.</td></tr>`;
+        renderPagination(total);
+        return;
+    }
+
+    body.innerHTML = slice.map(c => {
+        const tags    = (c.tags || []).map(t => `<span class="tag tag-${t.toLowerCase()}">${escHtml(t)}</span>`).join('');
+        const origBadge = badgeOrigem(c.origem);
+        const statBadge = badgeStatus(c.status);
+        const checked   = selectedIds.has(c.id);
+        return `<tr class="${checked ? 'selected' : ''}" onclick="linhaClick(event, '${c.id}')">
+            <td class="col-check"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCheck('${c.id}', this)" onclick="e=>e.stopPropagation()"></td>
+            <td>
+                <div style="font-weight:600; font-size:13px;">${escHtml(c.nome || '—')}</div>
+                ${c.empresa ? `<div style="font-size:11px;color:var(--text-muted);">${escHtml(c.empresa)}</div>` : ''}
+            </td>
+            <td style="font-family:monospace; font-size:12px;">${escHtml(c.whatsapp || '—')}</td>
+            <td style="font-size:12px; color:var(--text-muted);">${escHtml(c.email || '—')}</td>
+            <td>${origBadge}</td>
+            <td>${tags || '<span style="color:var(--text-muted);font-size:11px;">—</span>'}</td>
+            <td>${statBadge}</td>
+            <td class="col-actions">
+                <div class="row-actions">
+                    <button class="icon-btn" onclick="event.stopPropagation();abrirPainel('edit','${c.id}')" title="Editar">
+                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="icon-btn danger" onclick="event.stopPropagation();excluirContato('${c.id}')" title="Excluir">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    renderPagination(total);
+    atualizarBulkBar();
+}
+
+function renderPagination(total) {
+    const pages = Math.ceil(total / PAGE_SIZE);
+    document.getElementById('paginationInfo').textContent =
+        total === 0 ? '0 contatos' : `Mostrando ${Math.min((currentPage-1)*PAGE_SIZE+1, total)}–${Math.min(currentPage*PAGE_SIZE, total)} de ${total}`;
+
+    const btns = document.getElementById('paginationBtns');
+    if (pages <= 1) { btns.innerHTML = ''; return; }
+
+    let html = `<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let p = 1; p <= pages; p++) {
+        if (p === 1 || p === pages || Math.abs(p - currentPage) <= 1)
+            html += `<button class="pg-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+        else if (Math.abs(p - currentPage) === 2)
+            html += `<span style="color:var(--text-muted);padding:0 4px;">…</span>`;
+    }
+    html += `<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
+    btns.innerHTML = html;
+}
+
+function goPage(p) {
+    const pages = Math.ceil(filteredContacts.length / PAGE_SIZE);
+    if (p < 1 || p > pages) return;
+    currentPage = p;
+    renderTabela();
+}
+
+/* ════════════════════════════════════════════
+   SELEÇÃO
+════════════════════════════════════════════ */
+function linhaClick(event, id) {
+    if (event.target.type === 'checkbox' || event.target.closest('.row-actions')) return;
+    abrirPainel('view', id);
+}
+
+function toggleCheck(id, el) {
+    el.checked ? selectedIds.add(id) : selectedIds.delete(id);
+    atualizarBulkBar();
+    renderTabela();
+}
+
+function toggleAllChecks(el) {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const slice = filteredContacts.slice(start, start + PAGE_SIZE);
+    slice.forEach(c => el.checked ? selectedIds.add(c.id) : selectedIds.delete(c.id));
+    atualizarBulkBar();
+    renderTabela();
+}
+
+function atualizarBulkBar() {
+    const bar   = document.getElementById('bulkBar');
+    const count = document.getElementById('bulkCount');
+    const n     = selectedIds.size;
+    bar.classList.toggle('show', n > 0);
+    count.textContent = n;
+}
+
+async function aplicarBulkStatus() {
+    const status = document.getElementById('bulkStatusSel').value;
+    if (!status || !selectedIds.size) return;
+    for (const id of selectedIds) {
+        await fetch(`/api/crm/contacts/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+    }
+    showToast('success', 'Atualizado', `${selectedIds.size} contatos atualizados.`);
+    selectedIds.clear();
+    carregarContatos();
+}
+
+async function excluirSelecionados() {
+    if (!selectedIds.size || !confirm(`Excluir ${selectedIds.size} contato(s)?`)) return;
+    for (const id of selectedIds) {
+        await fetch(`/api/crm/contacts/${id}`, { method: 'DELETE' });
+    }
+    showToast('success', 'Excluído', `${selectedIds.size} contato(s) removido(s).`);
+    selectedIds.clear();
+    carregarContatos();
+}
+
+function prepararDisparoSelecionados() {
+    if (!selectedIds.size) return;
+    const selecionados = contacts.filter(c => selectedIds.has(c.id));
+    pendingDisparoCard = { titulo: 'Disparo manual', selecionados };
+    document.getElementById('modalDisparoContent').innerHTML = `
+        <p style="font-size:13px; margin-bottom:12px;">Você selecionou <strong>${selecionados.length} contato(s)</strong> para disparo.</p>
+        <div class="input-group">
+            <label class="input-label">Mensagem</label>
+            <textarea class="input-ctrl" id="disparoMsg" rows="4" placeholder="Olá {nome}, tudo bem?"></textarea>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">Use {nome} e {empresa} para personalizar.</p>`;
+    document.getElementById('modalDisparo').classList.add('show');
+}
+
+/* ════════════════════════════════════════════
+   PAINEL LATERAL — MODOS
+════════════════════════════════════════════ */
+function abrirPainel(mode, id = null) {
+    panelMode = mode;
+    currentContact = id ? contacts.find(c => c.id === id) : null;
+
+    const panel   = document.getElementById('sidePanel');
+    const title   = document.getElementById('panelTitle');
+    const body    = document.getElementById('panelBody');
+    const footer  = document.getElementById('panelFooter');
+
+    if (mode === 'view' && currentContact) {
+        title.textContent = currentContact.nome || 'Contato';
+        body.innerHTML    = renderPanelView(currentContact);
+        footer.innerHTML  = `
+            <button class="btn btn-primary btn-full" onclick="abrirPainel('edit','${currentContact.id}')">✏ Editar</button>
+            <button class="btn btn-danger" onclick="excluirContato('${currentContact.id}')">🗑</button>`;
+    } else if (mode === 'edit' && currentContact) {
+        title.textContent = 'Editar Contato';
+        body.innerHTML    = renderPanelForm(currentContact);
+        footer.innerHTML  = `
+            <button class="btn btn-primary btn-full" onclick="salvarContato()">💾 Salvar</button>
+            <button class="btn btn-secondary" onclick="abrirPainel('view','${currentContact.id}')">Cancelar</button>`;
+    } else {
+        title.textContent = 'Novo Contato';
+        body.innerHTML    = renderPanelForm(null);
+        footer.innerHTML  = `
+            <button class="btn btn-primary btn-full" onclick="salvarContato()">+ Criar Contato</button>
+            <button class="btn btn-secondary" onclick="fecharPainel()">Cancelar</button>`;
+    }
+
+    panel.classList.add('open');
+}
+
+function fecharPainel() {
+    document.getElementById('sidePanel').classList.remove('open');
+    currentContact = null;
+}
+
+function renderPanelView(c) {
+    const tags = (c.tags||[]).map(t => `<span class="tag-chip tag-chip-${t.toLowerCase()}">${escHtml(t)}</span>`).join('');
+    const wppLink = c.whatsapp ? `<a href="https://api.whatsapp.com/send?phone=${c.whatsapp}" target="_blank">${escHtml(c.whatsapp)}</a>` : '—';
+    const emailLink = c.email ? `<a href="mailto:${c.email}">${escHtml(c.email)}</a>` : '—';
+
+    return `
+        <div class="detail-field"><div class="detail-key">Nome</div><div class="detail-value">${escHtml(c.nome||'—')}</div></div>
+        <div class="detail-field"><div class="detail-key">Empresa</div><div class="detail-value">${escHtml(c.empresa||'—')}</div></div>
+        <div class="detail-field"><div class="detail-key">WhatsApp</div><div class="detail-value">${wppLink}</div></div>
+        <div class="detail-field"><div class="detail-key">E-mail</div><div class="detail-value">${emailLink}</div></div>
+        <div class="detail-field"><div class="detail-key">Origem</div><div class="detail-value">${badgeOrigem(c.origem)}</div></div>
+        <div class="detail-field"><div class="detail-key">Status</div><div class="detail-value">${badgeStatus(c.status)}</div></div>
+        <div class="detail-field"><div class="detail-key">Tags</div><div class="detail-value">${tags || '—'}</div></div>
+        <div class="detail-field"><div class="detail-key">Observações</div><div class="detail-value">${escHtml(c.obs||'—')}</div></div>
+        ${c.created_at ? `<div class="detail-field"><div class="detail-key">Criado em</div><div class="detail-value">${new Date(c.created_at).toLocaleString('pt-BR')}</div></div>` : ''}
+        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+            ${c.whatsapp ? `<a href="https://api.whatsapp.com/send?phone=${c.whatsapp}" target="_blank" class="btn btn-success btn-sm">📱 WPP</a>` : ''}
+            ${c.email ? `<a href="mailto:${c.email}" class="btn btn-outline btn-sm">📧 E-mail</a>` : ''}
+        </div>`;
+}
+
+function renderPanelForm(c) {
+    const tags = c ? (c.tags||[]) : [];
+    const tagsHtml = tags.map(t => `<span class="tag-chip tag-chip-${t.toLowerCase()}">${escHtml(t)}<button onclick="removerTag('${t}')">×</button></span>`).join('');
+
+    return `
+        <div class="form-group">
+            <label class="form-label">Nome</label>
+            <input type="text" class="form-input" id="f-nome" value="${escHtml(c?.nome||'')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Empresa</label>
+            <input type="text" class="form-input" id="f-empresa" value="${escHtml(c?.empresa||'')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">WhatsApp (com DDI/DDD)</label>
+            <input type="text" class="form-input" id="f-whatsapp" placeholder="5511999999999" value="${escHtml(c?.whatsapp||'')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-input" id="f-email" value="${escHtml(c?.email||'')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Origem</label>
+            <select class="form-input" id="f-origem">
+                ${['maps','instagram','linkedin','csv','manual'].map(o => `<option value="${o}" ${(c?.origem||'manual')===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-input" id="f-status">
+                ${STATUS_OPTIONS.map(s => `<option value="${s}" ${(c?.status||'novo')===s?'selected':''}>${s.replace('_',' ')}</option>`).join('')}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tags</label>
+            <div class="tags-input-wrap" id="tagsWrap">${tagsHtml}</div>
+            <div class="tags-add">
+                ${TAGS_OPTIONS.map(t => `<button class="btn btn-outline btn-sm" onclick="adicionarTag('${t}')">${t}</button>`).join('')}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Observações</label>
+            <textarea class="form-input" id="f-obs" rows="3">${escHtml(c?.obs||'')}</textarea>
+        </div>`;
+}
+
+let tagsCurrent = [];
+function adicionarTag(t) {
+    const wrap = document.getElementById('tagsWrap');
+    if (!wrap) return;
+    const existing = [...wrap.querySelectorAll('.tag-chip')].map(el => el.textContent.replace('×','').trim());
+    if (existing.includes(t)) return;
+    const span = document.createElement('span');
+    span.className = `tag-chip tag-chip-${t.toLowerCase()}`;
+    span.innerHTML = `${t}<button onclick="removerTag('${t}')">×</button>`;
+    wrap.appendChild(span);
+}
+function removerTag(t) {
+    const wrap = document.getElementById('tagsWrap');
+    if (!wrap) return;
+    wrap.querySelectorAll('.tag-chip').forEach(el => {
+        if (el.textContent.replace('×','').trim() === t) el.remove();
+    });
+}
+function getTagsFromWrap() {
+    const wrap = document.getElementById('tagsWrap');
+    if (!wrap) return [];
+    return [...wrap.querySelectorAll('.tag-chip')].map(el => el.textContent.replace('×','').trim());
+}
+
+/* ════════════════════════════════════════════
+   SALVAR CONTATO (novo / editar)
+════════════════════════════════════════════ */
+async function salvarContato() {
+    const payload = {
+        nome:    document.getElementById('f-nome')?.value.trim() || '',
+        empresa: document.getElementById('f-empresa')?.value.trim() || '',
+        whatsapp:document.getElementById('f-whatsapp')?.value.trim() || '',
+        email:   document.getElementById('f-email')?.value.trim() || '',
+        origem:  document.getElementById('f-origem')?.value || 'manual',
+        status:  document.getElementById('f-status')?.value || 'novo',
+        tags:    getTagsFromWrap(),
+        obs:     document.getElementById('f-obs')?.value.trim() || '',
+    };
+
+    if (!payload.nome && !payload.empresa) {
+        showToast('warning', 'Atenção', 'Preencha pelo menos o nome ou a empresa.'); return;
+    }
+
+    try {
+        let res;
+        if (panelMode === 'novo') {
+            res = await fetch('/api/crm/contacts', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        } else {
+            res = await fetch(`/api/crm/contacts/${currentContact.id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        }
+        const data = await res.json();
+        if (data.success) {
+            showToast('success', panelMode === 'novo' ? 'Contato criado!' : 'Contato atualizado!', payload.nome || payload.empresa);
+            fecharPainel();
+            carregarContatos();
+        } else {
+            showToast('error', 'Erro', data.error || 'Não foi possível salvar.');
+        }
+    } catch(e) {
+        showToast('error', 'Erro de conexão', String(e));
+    }
+}
+
+/* ════════════════════════════════════════════
+   EXCLUIR CONTATO
+════════════════════════════════════════════ */
+async function excluirContato(id) {
+    const c = contacts.find(x => x.id === id);
+    if (!confirm(`Excluir "${c?.nome || 'este contato'}"?`)) return;
+    try {
+        const res  = await fetch(`/api/crm/contacts/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('success', 'Excluído', 'Contato removido do CRM.');
+            fecharPainel();
+            carregarContatos();
+        }
+    } catch(e) { showToast('error', 'Erro', String(e)); }
+}
+
+/* ════════════════════════════════════════════
+   EXPORTAR CSV
+════════════════════════════════════════════ */
+function exportarCSV() {
+    const list = selectedIds.size > 0 ? contacts.filter(c => selectedIds.has(c.id)) : filteredContacts;
+    if (!list.length) { showToast('warning','Atenção','Nenhum contato para exportar.'); return; }
+    const headers = ['nome','empresa','whatsapp','email','origem','status','tags','obs'];
+    const rows    = list.map(c => headers.map(h => h === 'tags' ? (c.tags||[]).join(';') : `"${(c[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+    const csv     = [headers.join(','), ...rows].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+    a.download = `crm_export_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('success', 'Exportado!', `${list.length} contatos no arquivo.`);
+}
+
+function exportarSelecionados() { exportarCSV(); }
+
+/* ════════════════════════════════════════════
+   MINERADOR
+════════════════════════════════════════════ */
+function selecionarFonte(f) {
+    fonte = f;
+    document.querySelectorAll('.miner-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`mcard-${f}`).classList.add('selected');
+    document.querySelectorAll('.miner-form').forEach(el => el.classList.remove('show'));
+    document.getElementById(`form-${f}`).classList.add('show');
+}
+
+async function iniciarExtracao(src) {
+    let payload = { fonte: src };
+
+    if (src === 'maps') {
+        const nicho   = document.getElementById('m-maps-nicho').value.trim();
+        const cidade  = document.getElementById('m-maps-cidade').value.trim();
+        const bairros = document.getElementById('m-maps-bairros').value.trim();
+        if (!nicho) { showToast('warning','Atenção','Preencha o nicho.'); return; }
+        payload = { ...payload, nicho, cidade, bairros };
+    } else if (src === 'instagram') {
+        const nicho  = document.getElementById('m-insta-nicho').value.trim();
+        const cidade = document.getElementById('m-insta-cidade').value.trim();
+        if (!nicho) { showToast('warning','Atenção','Preencha o nicho.'); return; }
+        payload = { ...payload, nicho, cidade };
+    } else {
+        const nicho  = document.getElementById('m-li-nicho').value.trim();
+        const cidade = document.getElementById('m-li-cidade').value.trim();
+        if (!nicho) { showToast('warning','Atenção','Preencha o segmento.'); return; }
+        payload = { ...payload, nicho, cidade };
+    }
+
+    const btnId = src === 'maps' ? 'btnExtrairMaps' : src === 'instagram' ? 'btnExtrairInsta' : 'btnExtrairLi';
+    document.getElementById(btnId).disabled = true;
+    document.getElementById('minerProgress').classList.remove('hidden');
+    document.getElementById('minerProgressBar').style.width = '10%';
+    document.getElementById('minerProgressText').textContent = 'Buscando contatos...';
+    document.getElementById('minerResults').classList.add('hidden');
+
+    try {
+        const res = await fetch('/api/minerador', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        document.getElementById('minerProgressBar').style.width = '80%';
+        const data = await res.json();
+        document.getElementById('minerProgressBar').style.width = '100%';
+
+        if (data.success) {
+            minerResults = data.results;
+            // Filtra duplicados já no CRM
+            const wzSet = new Set(contacts.map(c => c.whatsapp).filter(Boolean));
+            const emSet = new Set(contacts.map(c => c.email).filter(Boolean));
+            const novos = minerResults.filter(r => !wzSet.has(r.whatsapp) && !emSet.has(r.email));
+            const dups  = minerResults.length - novos.length;
+            minerResults = novos;
+
+            if (dups > 0) showToast('info','Duplicados ocultados', `${dups} já existem no CRM.`);
+            renderMinerResults();
+            showToast('success', 'Extração concluída!', `${minerResults.length} contatos inéditos encontrados.`);
+        } else {
+            showToast('error','Erro na extração', data.error || 'Tente novamente.');
+        }
+    } catch(e) {
+        showToast('error','Erro de conexão', String(e));
+    } finally {
+        document.getElementById(btnId).disabled = false;
+        document.getElementById('minerProgress').classList.add('hidden');
+        document.getElementById('minerProgressBar').style.width = '0%';
+    }
+}
+
+function renderMinerResults() {
+    if (!minerResults.length) {
+        document.getElementById('minerResults').classList.add('hidden'); return;
+    }
+    document.getElementById('minerResults').classList.remove('hidden');
+    document.getElementById('minerCount').textContent = `${minerResults.length} contatos`;
+    const body = document.getElementById('minerTableBody');
+    body.innerHTML = minerResults.map((r, i) => `
+        <tr>
+            <td><input type="checkbox" class="miner-check" data-idx="${i}" checked></td>
+            <td style="font-weight:600;">${escHtml(r.empresa||r.nome||'—')}</td>
+            <td style="font-family:monospace;font-size:11px;">${escHtml(r.whatsapp||'—')}</td>
+            <td style="font-size:11px;">${escHtml(r.email||'—')}</td>
+            <td style="font-size:11px; color:var(--text-muted);">${escHtml(r.endereco||r.info||'—')}</td>
+            <td>${badgeOrigem(r.fonte||fonte)}</td>
+        </tr>`).join('');
+}
+
+function toggleAllMiner(el) {
+    document.querySelectorAll('.miner-check').forEach(c => c.checked = el.checked);
+}
+
+function getMinerSelecionados() {
+    return [...document.querySelectorAll('.miner-check:checked')].map(el => minerResults[+el.dataset.idx]);
+}
+
+function exportarMinerados() {
+    const list = getMinerSelecionados();
+    if (!list.length) { showToast('warning','Atenção','Selecione ao menos um.'); return; }
+    const headers = ['empresa','whatsapp','email','endereco','fonte'];
+    const rows    = list.map(r => headers.map(h => `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+    const csv     = [headers.join(','), ...rows].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
+    a.download = `minerados_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('success','Exportado!', `${list.length} contatos.`);
+}
+
+async function salvarSelecionadosCRM() {
+    const list = getMinerSelecionados();
+    if (!list.length) { showToast('warning','Atenção','Selecione ao menos um contato.'); return; }
+    document.getElementById('btnSalvarCRM').disabled = true;
+
+    let salvos = 0;
+    for (const r of list) {
+        const payload = {
+            nome: r.nome || '', empresa: r.empresa || '',
+            whatsapp: r.whatsapp || '', email: r.email || '',
+            origem: r.fonte || fonte, status: 'novo',
+            obs: r.endereco || r.info || '', tags: ['Lead'],
+        };
+        const res = await fetch('/api/crm/contacts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const d   = await res.json();
+        if (d.success) salvos++;
+    }
+
+    showToast('success','Salvos no CRM!', `${salvos} de ${list.length} contatos adicionados.`);
+    document.getElementById('btnSalvarCRM').disabled = false;
+    carregarContatos();
+}
+
+/* ════════════════════════════════════════════
+   IMPORTAR CSV
+════════════════════════════════════════════ */
+function handleCSVUpload(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const text = e.target.result;
+        const lines = text.split('\n').filter(l => l.trim());
+        if (!lines.length) return;
+        csvHeaders = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+        csvData    = lines.slice(1).map(l => {
+            const vals = l.split(',').map(v => v.trim().replace(/^"|"$/g,''));
+            const obj  = {};
+            csvHeaders.forEach((h, i) => obj[h] = vals[i] || '');
+            return obj;
+        });
+        renderColMapping();
+        renderCSVPreview();
+    };
+    reader.readAsText(file, 'utf-8');
+}
+
+const CRM_FIELDS = { 'nome':'Nome','empresa':'Empresa','whatsapp':'WhatsApp','email':'E-mail','obs':'Observações' };
+
+function renderColMapping() {
+    const rows = document.getElementById('colMapRows');
+    rows.innerHTML = Object.entries(CRM_FIELDS).map(([field, label]) => {
+        const opts = csvHeaders.map(h => `<option value="${escHtml(h)}" ${h.toLowerCase().includes(field)?'selected':''}>${escHtml(h)}</option>`).join('');
+        return `<div class="col-map-grid">
+            <span style="font-size:12px;font-weight:600;">${label} (CRM)</span>
+            <span class="col-map-arrow">←</span>
+            <select class="filter-select" id="map-${field}"><option value="">Ignorar</option>${opts}</select>
+        </div>`;
+    }).join('');
+    document.getElementById('colMapping').classList.remove('hidden');
+}
+
+function renderCSVPreview() {
+    const preview = document.getElementById('importPreview');
+    const head    = document.getElementById('importTableHead');
+    const body    = document.getElementById('importTableBody');
+    document.getElementById('importCount').textContent = csvData.length;
+    head.innerHTML  = csvHeaders.map(h => `<th>${escHtml(h)}</th>`).join('');
+    const slice     = csvData.slice(0, 5);
+    body.innerHTML  = slice.map(row => `<tr>${csvHeaders.map(h => `<td style="font-size:11px;">${escHtml(row[h]||'')}</td>`).join('')}</tr>`).join('');
+    preview.classList.remove('hidden');
+}
+
+async function executarImport() {
+    const mapping = {};
+    Object.keys(CRM_FIELDS).forEach(field => {
+        const sel = document.getElementById(`map-${field}`);
+        if (sel && sel.value) mapping[field] = sel.value;
+    });
+
+    if (!mapping.whatsapp && !mapping.email && !mapping.nome) {
+        showToast('warning','Atenção','Mapeie ao menos nome, WhatsApp ou e-mail.'); return;
+    }
+
+    let salvos = 0;
+    for (const row of csvData) {
+        const payload = { status: 'novo', origem: 'csv', tags: ['Lead'] };
+        Object.entries(mapping).forEach(([field, col]) => { payload[field] = row[col] || ''; });
+        if (!payload.nome && !payload.empresa && !payload.whatsapp) continue;
+        const res = await fetch('/api/crm/contacts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const d   = await res.json();
+        if (d.success) salvos++;
+    }
+
+    showToast('success','Importação concluída!', `${salvos} contatos adicionados.`);
+    cancelarImport();
+    carregarContatos();
+}
+
+function cancelarImport() {
+    csvData = []; csvHeaders = [];
+    document.getElementById('colMapping').classList.add('hidden');
+    document.getElementById('importPreview').classList.add('hidden');
+    document.getElementById('csvFileInput').value = '';
+}
+
+/* ════════════════════════════════════════════
+   MODAL DISPARO
+════════════════════════════════════════════ */
+function abrirModalDisparo(card, tipo) {
+    pendingDisparoCard = card;
+    document.getElementById('modalDisparoContent').innerHTML = `
+        <p style="font-size:13px; margin-bottom:4px;">Post: <strong>${escHtml(card.titulo||'—')}</strong></p>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Selecione os contatos que receberão este disparo.</p>
+        <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Filtrar por tag</label>
+            <select class="form-input" id="dispaFiltroTag">
+                <option value="">Todos os contatos</option>
+                ${TAGS_OPTIONS.map(t => `<option value="${t}">${t}</option>`).join('')}
+            </select>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted);">Os contatos serão filtrados na hora do disparo.</p>`;
+    document.getElementById('modalDisparo').classList.add('show');
+}
+
+function fecharModal() { document.getElementById('modalDisparo').classList.remove('show'); }
+
+function confirmarDisparo(tipo) {
+    if (!pendingDisparoCard) return;
+    const tag = document.getElementById('dispaFiltroTag')?.value || '';
+    const lista = tag ? contacts.filter(c => (c.tags||[]).includes(tag)) : contacts;
+    const info  = { card: pendingDisparoCard, tipo, lista: lista.map(c => c.id), tag };
+    localStorage.setItem('wl_pending_disparo', JSON.stringify(info));
+    showToast('info','Disparo preparado!', `${lista.length} contatos. Redirecionando...`);
+    fecharModal();
+    setTimeout(() => { window.location.href = '/disparo'; }, 1500);
+}
+
+/* ════════════════════════════════════════════
+   UTILITÁRIOS — BADGES
+════════════════════════════════════════════ */
+function badgeOrigem(o) {
+    const map = { maps:'badge-maps', instagram:'badge-instagram', linkedin:'badge-linkedin', csv:'badge-csv', manual:'badge-manual' };
+    const labels = { maps:'📍 Maps', instagram:'📸 Instagram', linkedin:'💼 LinkedIn', csv:'📄 CSV', manual:'✍ Manual' };
+    return `<span class="badge ${map[o]||'badge-manual'}">${labels[o]||o||'—'}</span>`;
+}
+
+function badgeStatus(s) {
+    const map = { novo:'badge-novo', em_contato:'badge-em_contato', convertido:'badge-convertido', bloqueado:'badge-bloqueado' };
+    const labels = { novo:'Novo', em_contato:'Em Contato', convertido:'Convertido', bloqueado:'Bloqueado' };
+    return `<span class="badge ${map[s]||'badge-novo'}">${labels[s]||s||'—'}</span>`;
+}
+
+function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════ */
+const ICONS = { success:'✓', error:'✕', info:'ℹ', warning:'⚠' };
+function showToast(type, title, msg, dur=4000) {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span class="toast-icon">${ICONS[type]}</span><div><div class="toast-title">${title}</div>${msg?`<div class="toast-msg">${msg}</div>`:''}</div>`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.classList.add('removing'); t.addEventListener('animationend', () => t.remove()); }, dur);
+}
+
+init();
+</script>
+</body>
+</html>
