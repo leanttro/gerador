@@ -1033,14 +1033,14 @@ def _extrair_whatsapp_txt(txt):
         return f"55{ddd}{p1}{p2}".replace(" ","").replace("-","")
     return None
 
-def _serper_places(query):
+def _serper_places(query, num=20):
     if not SERPER_API_KEY:
         return []
     try:
         res = requests.post(
-            "https://google.serper.dev/places",
+            "[https://google.serper.dev/places](https://google.serper.dev/places)",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
-            json={"q": query, "gl": "br", "hl": "pt-br"},
+            json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
         )
         return res.json().get("places", [])
@@ -1048,12 +1048,12 @@ def _serper_places(query):
         print(f"[Minerador] Serper places error: {e}")
         return []
 
-def _serper_search(query, num=15):
+def _serper_search(query, num=20):
     if not SERPER_API_KEY:
         return []
     try:
         res = requests.post(
-            "https://google.serper.dev/search",
+            "[https://google.serper.dev/search](https://google.serper.dev/search)",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1071,13 +1071,14 @@ def api_minerador():
     nicho   = data.get("nicho", "").strip()
     cidade  = data.get("cidade", "").strip()
     bairros = data.get("bairros", "").strip()
+    quantidade = int(data.get("quantidade", 20))
     results = []
 
     if fonte == "maps":
         lista_bairros = [b.strip() for b in bairros.split(',') if b.strip()] if bairros else [""]
         for bairro in lista_bairros:
             query = f"{nicho} em {bairro} {cidade}".strip() if bairro else f"{nicho} {cidade}".strip()
-            places = _serper_places(query)
+            places = _serper_places(query, quantidade)
             for p in places:
                 nome    = p.get("title","")
                 tel_raw = p.get("phoneNumber","")
@@ -1100,7 +1101,7 @@ def api_minerador():
         ]
         seen = set()
         for q in queries:
-            items = _serper_search(q, 20)
+            items = _serper_search(q, quantidade)
             for item in items:
                 txt      = (item.get("title","") + " " + item.get("snippet",""))
                 wpp      = _extrair_whatsapp_txt(txt)
@@ -1120,12 +1121,12 @@ def api_minerador():
 
     elif fonte == "linkedin":
         queries = [
-            f'site:linkedin.com/company "{nicho}" "{cidade}"',
-            f'site:linkedin.com/in "{nicho}" "{cidade}"',
+            f'site:[linkedin.com/company](https://linkedin.com/company) "{nicho}" "{cidade}"',
+            f'site:[linkedin.com/in](https://linkedin.com/in) "{nicho}" "{cidade}"',
         ]
         seen = set()
         for q in queries:
-            items = _serper_search(q, 20)
+            items = _serper_search(q, quantidade)
             for item in items:
                 txt    = (item.get("title","") + " " + item.get("snippet",""))
                 wpp    = _extrair_whatsapp_txt(txt)
