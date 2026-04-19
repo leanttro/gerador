@@ -51,7 +51,7 @@
         transition: background-color var(--transition), color var(--transition);
     }
 
-    .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease, min-width 0.3s ease; overflow-x: hidden; }
+    .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease; overflow-x: hidden; }
     .sidebar.collapsed-horiz { width: 0 !important; min-width: 0 !important; border-right: none; }
     .brand { padding: 24px 24px 20px; margin-bottom: 8px; min-width: 260px; }
     .brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
@@ -196,6 +196,22 @@
     .modal-body { padding: 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;}
     .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 
+    /* ════════════════════════════════════════════
+       MOBILE RESPONSIVITY
+    ════════════════════════════════════════════ */
+    .mobile-menu-btn { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding-right: 12px; }
+    
+    @media (max-width: 768px) {
+        .mobile-menu-btn { display: block; }
+        .sidebar { position: absolute; height: 100%; z-index: 999; transform: translateX(0); width: 260px; min-width: 260px; box-shadow: var(--shadow-hover); }
+        .sidebar.collapsed-horiz { transform: translateX(-100%); width: 260px !important; min-width: 260px !important; overflow: visible; }
+        .v-toggle { display: none !important; }
+        .workspace { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+        .creation-panel { width: 100% !important; min-width: 100% !important; border-right: none; border-bottom: 1px solid var(--border); overflow: visible; flex-shrink: 0; }
+        .panel-section { min-width: 100%; }
+        .kanban-area { min-height: 600px; padding: 16px; flex-shrink: 0; }
+        .topbar { padding: 0 16px; }
+    }
 </style>
 </head>
 <body data-theme="light">
@@ -217,7 +233,12 @@
 
 <div class="main">
     <div class="topbar">
-        <div class="topbar-title">MÓDULO DE CONTEÚDO</div>
+        <div style="display:flex; align-items:center;">
+            <button class="mobile-menu-btn" onclick="toggleMainSidebar()">
+                <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div class="topbar-title">MÓDULO DE CONTEÚDO</div>
+        </div>
         <div class="topbar-right">
             <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -437,6 +458,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
         loadKanbanBoard();
 
+        if (window.innerWidth <= 768) {
+            document.getElementById('mainSidebar').classList.add('collapsed-horiz');
+        }
+
         const cardDoneRaw = localStorage.getItem('wl_card_done');
         if (cardDoneRaw) {
             try {
@@ -462,6 +487,19 @@
                         img.style.cssText = 'width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid var(--border);';
                         card.insertBefore(img, card.querySelector('.k-card-title'));
                     }
+
+                    const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+                    if (!prontos.find(p => p.id === cardId)) {
+                        prontos.push({
+                            id: cardId,
+                            titulo: card.querySelector('.k-card-title')?.innerText || '',
+                            tipo: card.querySelector('.k-card-type')?.innerText || '',
+                            templateName: card.getAttribute('data-template-name') || '',
+                            copy: card.getAttribute('data-copy') || '',
+                            chaves: JSON.parse(card.getAttribute('data-chaves') || '{}')
+                        });
+                        localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos));
+                    }
                     
                     atualizarContadores();
                 }
@@ -485,7 +523,33 @@
         }
 
         document.querySelectorAll('.col-body').forEach(col => {
-            new Sortable(col, { group: 'kanban', animation: 150, ghostClass: 'sortable-ghost', onEnd: atualizarContadores });
+            new Sortable(col, { 
+                group: 'kanban', 
+                animation: 150, 
+                ghostClass: 'sortable-ghost', 
+                onEnd: function(evt) {
+                    atualizarContadores();
+                    const cardEl = evt.item;
+                    const cardId = cardEl.id;
+                    if (evt.to.id === 'col-pronto') {
+                        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+                        if (!prontos.find(p => p.id === cardId)) {
+                            prontos.push({
+                                id: cardId,
+                                titulo: cardEl.querySelector('.k-card-title')?.innerText || '',
+                                tipo: cardEl.querySelector('.k-card-type')?.innerText || '',
+                                templateName: cardEl.getAttribute('data-template-name') || '',
+                                copy: cardEl.getAttribute('data-copy') || '',
+                                chaves: JSON.parse(cardEl.getAttribute('data-chaves') || '{}')
+                            });
+                            localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos));
+                        }
+                    } else if (evt.from.id === 'col-pronto' && evt.to.id !== 'col-pronto') {
+                        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+                        localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos.filter(p => p.id !== cardId)));
+                    }
+                } 
+            });
         });
 
         try {
@@ -519,7 +583,8 @@
 
     function toggleMainSidebar() {
         document.getElementById('mainSidebar').classList.toggle('collapsed-horiz');
-        document.getElementById('btnToggleSidebar').classList.toggle('collapsed');
+        const btn = document.getElementById('btnToggleSidebar');
+        if(btn) btn.classList.toggle('collapsed');
     }
 
     function toggleCreationPanel() {
@@ -1134,6 +1199,10 @@
     function excluirCard(id) {
         if(confirm('Excluir este card?')) {
             document.getElementById(id).remove();
+            
+            const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+            localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos.filter(p => p.id !== id)));
+
             atualizarContadores();
         }
     }
