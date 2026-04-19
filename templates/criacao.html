@@ -59,15 +59,25 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 /* ════════════════════════════════════════════
-   SIDEBAR — idêntico ao conteudo.html
+   SIDEBAR & TOGGLES
 ════════════════════════════════════════════ */
 .sidebar {
     width: 260px; min-width: 260px;
     background: var(--bg-surface);
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
-    transition: background var(--transition), border-color var(--transition);
+    transition: all 0.3s ease;
 }
+.collapsed-horiz { width: 0 !important; min-width: 0 !important; border-right: none; overflow: hidden; padding: 0 !important; }
+.v-toggle {
+    width: 16px; background: var(--bg-surface); border-right: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    flex-shrink: 0; z-index: 20; transition: all var(--transition); color: var(--text-muted);
+}
+.v-toggle:hover { background: var(--primary-bg); color: var(--accent); }
+.v-toggle svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; transition: transform 0.3s ease; }
+.v-toggle.collapsed svg { transform: rotate(180deg); }
+
 .brand { padding: 24px 24px 20px; margin-bottom: 8px; }
 .brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
 [data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
@@ -87,6 +97,7 @@ body {
     display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
     flex-shrink: 0; transition: background var(--transition), border-color var(--transition);
 }
+.mobile-menu-btn { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding-right: 12px; }
 .topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
 .topbar-right { display: flex; align-items: center; gap: 20px; }
 .theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
@@ -110,7 +121,7 @@ body {
     background: var(--bg-surface);
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
-    transition: background var(--transition), border-color var(--transition);
+    transition: all 0.3s ease;
 }
 
 /* Tabs do painel */
@@ -318,7 +329,7 @@ textarea.input-control {
 ════════════════════════════════════════════ */
 .loading-overlay {
     display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(4px);
     z-index: 1000; align-items: center; justify-content: center;
     flex-direction: column; gap: 16px;
 }
@@ -363,12 +374,29 @@ textarea.input-control {
 .toast.info    { border-left: 3px solid var(--accent); }
 .toast.warning { border-left: 3px solid #f59e0b; }
 
+/* ════════════════════════════════════════════
+   MOBILE RESPONSIVITY
+════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .mobile-menu-btn { display: block; }
+    .sidebar { position: absolute; height: 100%; z-index: 999; transform: translateX(0); width: 260px; min-width: 260px; box-shadow: var(--shadow-hover); }
+    .sidebar.collapsed-horiz { transform: translateX(-100%); width: 260px !important; min-width: 260px !important; overflow: visible; }
+    .v-toggle { display: none; }
+    .workspace { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+    .creation-panel { width: 100% !important; min-width: 100% !important; border-right: none; border-bottom: 1px solid var(--border); }
+    .preview-area { min-height: 80vh; }
+    .preview-toolbar { flex-wrap: wrap; height: auto; padding: 12px; gap: 8px; justify-content: center; }
+    .toolbar-left, .toolbar-right { width: 100%; justify-content: center; flex-wrap: wrap; }
+    .topbar { padding: 0 16px; }
+    .preview-wrapper { transform: scale(0.65) !important; transform-origin: top center; margin-top: 20px; }
+}
+
 .hidden { display: none !important; }
 </style>
 </head>
 <body data-theme="light">
 
-<div class="sidebar">
+<div class="sidebar" id="mainSidebar">
     <div class="brand">
         <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
@@ -404,11 +432,19 @@ textarea.input-control {
         </a>
     </div>
 </div>
+<div class="v-toggle" id="btnToggleSidebar" onclick="toggleMainSidebar()" title="Minimizar Menu">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+</div>
 
 <div class="main">
 
     <div class="topbar">
-        <div class="topbar-title">ESTÚDIO DE CRIAÇÃO</div>
+        <div style="display:flex; align-items:center;">
+            <button class="mobile-menu-btn" onclick="toggleMainSidebar()">
+                <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <div class="topbar-title">ESTÚDIO DE CRIAÇÃO</div>
+        </div>
         <div class="topbar-right">
             <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -423,7 +459,7 @@ textarea.input-control {
 
     <div class="workspace">
 
-        <div class="creation-panel">
+        <div class="creation-panel" id="creationPanel">
 
             <div class="panel-tabs">
                 <button class="ptab-btn active" onclick="switchTab('gerar')">✦ Gerar</button>
@@ -552,7 +588,13 @@ textarea.input-control {
                 </button>
             </div>
 
-        </div><div class="preview-area">
+        </div>
+        
+        <div class="v-toggle" id="btnTogglePanel" onclick="toggleCreationPanel()" title="Minimizar Painel">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </div>
+        
+        <div class="preview-area">
 
             <div class="preview-toolbar">
                 <div class="toolbar-left">
@@ -569,7 +611,7 @@ textarea.input-control {
                         💾 Salvar no Kanban
                     </button>
                     <button class="btn btn-outline" onclick="openFullscreen()">⛶</button>
-                    <button class="btn btn-outline" onclick="captureImage()" title="Baixar como foto">📸 Foto</button>
+                    <button class="btn btn-outline" onclick="captureImageAndDownload()" title="Baixar como foto">📸 Foto</button>
                     <button class="btn btn-outline" onclick="downloadHTML()" title="Baixar HTML">⬇ HTML</button>
                     <button class="btn btn-green" id="btnRecord" onclick="recordScreen()">⏺ Gravar</button>
                 </div>
@@ -647,17 +689,31 @@ function getHeaders(extra = {}) {
 }
 
 /* ════════════════════════════════════════════
-   INIT
+   INIT & TOGGLES
 ════════════════════════════════════════════ */
+function toggleMainSidebar() {
+    document.getElementById('mainSidebar').classList.toggle('collapsed-horiz');
+    const btn = document.getElementById('btnToggleSidebar');
+    if(btn) btn.classList.toggle('collapsed');
+}
+
+function toggleCreationPanel() {
+    document.getElementById('creationPanel').classList.toggle('collapsed-horiz');
+    const btn = document.getElementById('btnTogglePanel');
+    if(btn) btn.classList.toggle('collapsed');
+}
+
 function init() {
-    // Tema salvo
     const savedTheme = localStorage.getItem('wl_theme');
     if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+
+    if (window.innerWidth <= 768) {
+        document.getElementById('mainSidebar').classList.add('collapsed-horiz');
+    }
 
     updatePreviewFormat();
     updateCharCounter();
 
-    // Carrega o logo salvo no conteudo.html
     const savedLogo = localStorage.getItem('wl_logo_url');
     if (savedLogo && !state.assets.some(a => a.url === savedLogo)) {
         state.assets.push({ url: savedLogo, type: 'image', name: 'Logo da Empresa' });
@@ -665,7 +721,6 @@ function init() {
         updateAssetStatus();
     }
 
-    // ── Contexto vindo do Kanban (conteudo.html) ──
     const pendingRaw = localStorage.getItem('wl_pending_creation');
     if (pendingRaw) {
         try {
@@ -673,7 +728,6 @@ function init() {
             state.pendingCardId = data.cardId || null;
             state.kanbanData = data;
 
-            // Monta prompt automático com as chaves do card se o input estiver vazio
             if (!document.getElementById('promptInput').value.trim()) {
                 let prompt = '';
                 if (data.templateName) prompt += `Template: ${data.templateName}\n`;
@@ -689,18 +743,14 @@ function init() {
                 updateCharCounter();
             }
 
-            // Banner de contexto
             document.getElementById('contextTitle').textContent = data.titulo || '(sem título)';
-            document.getElementById('contextMeta').textContent =
-                [data.templateName, data.tipo].filter(Boolean).join(' • ');
+            document.getElementById('contextMeta').textContent = [data.templateName, data.tipo].filter(Boolean).join(' • ');
             document.getElementById('contextBanner').classList.remove('hidden');
 
-            // Botão "Salvar no Kanban"
             if (state.pendingCardId) {
                 document.getElementById('btnSalvarKanban').classList.remove('hidden');
             }
 
-            // Se veio templateId, carrega o template no preview e inicia processamento
             if (data.templateId) {
                 loadTemplateById(data.templateId).then(() => {
                     setTimeout(() => autoProcessPendingTask(data), 1000);
@@ -711,31 +761,23 @@ function init() {
         } catch(e) { console.error('Erro ao ler contexto do Kanban:', e); }
     }
 
-    // Verifica API
     fetch('/api/status').then(r => r.json()).then(d => {
-        if (d.success) {
-            document.getElementById('statusText').textContent = 'IA Pronta';
-        }
+        if (d.success) document.getElementById('statusText').textContent = 'IA Pronta';
     }).catch(() => {
         document.getElementById('statusDot').className = 'status-dot offline';
         document.getElementById('statusText').textContent = 'API offline';
     });
 
-    // Drag & drop na zona de upload
     const zone = document.getElementById('uploadZone');
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
-        handleFileSelect(e.dataTransfer.files);
-    });
+    zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFileSelect(e.dataTransfer.files); });
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFullscreen(); });
 }
 
 /* ════════════════════════════════════════════
-   TEMA
+   TEMA & TABS & CONTEXTO
 ════════════════════════════════════════════ */
 function toggleTheme() {
     const body = document.body;
@@ -744,22 +786,14 @@ function toggleTheme() {
     localStorage.setItem('wl_theme', newTheme);
 }
 
-/* ════════════════════════════════════════════
-   TABS DO PAINEL
-════════════════════════════════════════════ */
 function switchTab(name) {
-    document.querySelectorAll('.ptab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['gerar','templates','historico','codigo'][i] === name);
-    });
+    document.querySelectorAll('.ptab-btn').forEach((b, i) => { b.classList.toggle('active', ['gerar','templates','historico','codigo'][i] === name); });
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     if (name === 'templates') loadTemplates();
     if (name === 'historico') loadHistory();
 }
 
-/* ════════════════════════════════════════════
-   CONTEXTO (limpar banner)
-════════════════════════════════════════════ */
 function limparContexto() {
     state.pendingCardId = null;
     state.kanbanData = null;
@@ -796,9 +830,7 @@ async function handleFileSelect(files) {
             } else {
                 showToast('error', 'Erro no upload', data.error);
             }
-        } catch(e) {
-            showToast('error', 'Erro de conexão', `Falha ao enviar: ${file.name}`);
-        }
+        } catch(e) { showToast('error', 'Erro de conexão', `Falha ao enviar: ${file.name}`); }
     }
 
     bar.style.width = '100%';
@@ -809,7 +841,7 @@ async function handleFileSelect(files) {
 }
 
 async function searchPixabay() {
-    const query      = document.getElementById('pixabayInput').value.trim();
+    const query = document.getElementById('pixabayInput').value.trim();
     const resultsDiv = document.getElementById('pixabayResults');
     if (!query) return;
     resultsDiv.innerHTML = '<span style="font-size:10px;color:var(--text-muted)">Buscando...</span>';
@@ -830,22 +862,19 @@ async function searchPixabay() {
         } else {
             resultsDiv.innerHTML = `<span style="font-size:10px;color:var(--text-muted)">${data.error || 'Sem resultados.'}</span>`;
         }
-    } catch(e) {
-        resultsDiv.innerHTML = '<span style="font-size:10px;color:var(--danger)">Erro de conexão.</span>';
-    }
+    } catch(e) { resultsDiv.innerHTML = '<span style="font-size:10px;color:var(--danger)">Erro de conexão.</span>'; }
 }
 
 function addPixabayAsset(url) {
     state.assets.push({ url, type: 'image', name: 'Pixabay' });
-    renderAssetGrid();
-    updateAssetStatus();
+    renderAssetGrid(); updateAssetStatus();
     showToast('success', 'Asset adicionado', 'Imagem do Pixabay adicionada.');
     document.getElementById('pixabayResults').classList.remove('active');
     document.getElementById('pixabayInput').value = '';
 }
 
 function renderAssetGrid() {
-    const grid     = document.getElementById('assetGrid');
+    const grid = document.getElementById('assetGrid');
     const clearBtn = document.getElementById('clearAssetsBtn');
     grid.innerHTML = '';
     if (!state.assets.length) { clearBtn.classList.add('hidden'); return; }
@@ -870,18 +899,15 @@ function updateAssetStatus() {
 }
 
 /* ════════════════════════════════════════════
-   CONTADOR DE CARACTERES
+   CONTADOR DE CARACTERES E GERAR IA
 ════════════════════════════════════════════ */
 function updateCharCounter() {
-    const len     = document.getElementById('promptInput').value.length;
+    const len = document.getElementById('promptInput').value.length;
     const counter = document.getElementById('charCounter');
     counter.textContent = `${len} / 3000`;
-    counter.className   = 'char-counter' + (len > 2700 ? ' error' : len > 2200 ? ' warn' : '');
+    counter.className = 'char-counter' + (len > 2700 ? ' error' : len > 2200 ? ' warn' : '');
 }
 
-/* ════════════════════════════════════════════
-   GERAR — sempre OpenRouter, modo automático
-════════════════════════════════════════════ */
 async function generateCode() {
     const prompt = document.getElementById('promptInput').value.trim();
     if (!prompt) { showToast('warning', 'Atenção', 'Escreva uma instrução antes de gerar.'); return false; }
@@ -892,7 +918,6 @@ async function generateCode() {
     document.getElementById('generateBtn').disabled = true;
     setStatus('Gerando...', false);
 
-    // mode: 'replace' se já tem HTML carregado (template), senão 'generate'
     const generationMode = state.currentHTML ? 'replace' : 'generate';
 
     const payload = {
@@ -918,10 +943,7 @@ async function generateCode() {
             renderIframe(data.html);
             showPreview();
 
-            if (data.tokens_used) {
-                document.getElementById('tokenInfo').textContent = `${data.tokens_used.toLocaleString()} tokens`;
-            }
-
+            if (data.tokens_used) document.getElementById('tokenInfo').textContent = `${data.tokens_used.toLocaleString()} tokens`;
             document.getElementById('versionStatus').classList.remove('hidden');
             document.getElementById('versionNum').textContent = data.version_count || '1';
 
@@ -1010,7 +1032,7 @@ function closeFullscreen() {
 }
 
 /* ════════════════════════════════════════════
-   TEMPLATES
+   TEMPLATES & HISTÓRICO
 ════════════════════════════════════════════ */
 let templatesLoaded = false;
 async function loadTemplates() {
@@ -1026,13 +1048,8 @@ async function loadTemplates() {
                 card.className = 'template-mini-card';
                 card.id = 'tmpl_' + tmpl.id;
                 card.innerHTML = `
-                    <div class="tmpl-preview-box">
-                        <iframe src="${tmpl.url}" scrolling="no"></iframe>
-                    </div>
-                    <div>
-                        <div class="tmpl-name">${tmpl.name}</div>
-                        <div class="tmpl-desc">Clique para usar como base</div>
-                    </div>`;
+                    <div class="tmpl-preview-box"><iframe src="${tmpl.url}" scrolling="no"></iframe></div>
+                    <div><div class="tmpl-name">${tmpl.name}</div><div class="tmpl-desc">Clique para usar como base</div></div>`;
                 card.addEventListener('click', () => useTemplate(tmpl));
                 grid.appendChild(card);
             });
@@ -1040,15 +1057,13 @@ async function loadTemplates() {
         } else {
             grid.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--text-muted);">Nenhum template disponível.</div>';
         }
-    } catch(e) {
-        grid.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--danger);">Erro ao carregar templates.</div>';
-    }
+    } catch(e) { grid.innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--danger);">Erro ao carregar templates.</div>'; }
 }
 
 function useTemplate(tmpl) {
     if (!tmpl.html) return;
-    state.currentHTML      = tmpl.html;
-    state.selectedTmplId   = tmpl.id;
+    state.currentHTML = tmpl.html;
+    state.selectedTmplId = tmpl.id;
     document.getElementById('codeEditor').value = tmpl.html;
 
     let finalPrompt = tmpl.prompt || '';
@@ -1069,11 +1084,10 @@ function useTemplate(tmpl) {
         updateCharCounter();
     }
 
-    if (tmpl.style)  document.getElementById('styleSelect').value = tmpl.style;
+    if (tmpl.style) document.getElementById('styleSelect').value = tmpl.style;
     renderIframe(tmpl.html);
     showPreview();
     
-    // Destacar template selecionado
     document.querySelectorAll('.template-mini-card').forEach(c => c.classList.remove('selected'));
     const el = document.getElementById('tmpl_' + tmpl.id);
     if (el) el.classList.add('selected');
@@ -1092,17 +1106,12 @@ async function loadTemplateById(id) {
     } catch(e) { console.error('Erro ao carregar template por ID:', e); }
 }
 
-/* ════════════════════════════════════════════
-   HISTÓRICO
-════════════════════════════════════════════ */
 async function loadHistory() {
     try {
         const res  = await fetch('/api/history', { headers: getHeaders() });
         const data = await res.json();
         renderHistory(data.history || []);
-    } catch(e) {
-        document.getElementById('historyList').innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--danger);">Erro ao carregar histórico.</div>';
-    }
+    } catch(e) { document.getElementById('historyList').innerHTML = '<div style="text-align:center;padding:20px;font-size:12px;color:var(--danger);">Erro ao carregar histórico.</div>'; }
 }
 
 function renderHistory(history) {
@@ -1113,9 +1122,9 @@ function renderHistory(history) {
     }
     list.innerHTML = '';
     history.forEach(v => {
-        const card    = document.createElement('div');
+        const card = document.createElement('div');
         card.className = 'history-card' + (v.id === state.currentVersionId ? ' active-version' : '');
-        const date    = new Date(v.timestamp * 1000);
+        const date = new Date(v.timestamp * 1000);
         const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const dateStr = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         card.innerHTML = `
@@ -1150,12 +1159,8 @@ async function restoreVersion(versionId) {
             switchTab('gerar');
             showToast('success', 'Versão restaurada', 'Continue editando desta versão.');
             setStatus('Versão restaurada', true);
-        } else {
-            showToast('error', 'Erro', data.error || 'Versão não encontrada.');
-        }
-    } catch(e) {
-        showToast('error', 'Erro de conexão', 'Não foi possível restaurar a versão.');
-    }
+        } else { showToast('error', 'Erro', data.error || 'Versão não encontrada.'); }
+    } catch(e) { showToast('error', 'Erro de conexão', 'Não foi possível restaurar a versão.'); }
 }
 
 async function clearHistory() {
@@ -1164,9 +1169,7 @@ async function clearHistory() {
         await fetch('/api/history', { method: 'DELETE', headers: getHeaders() });
         renderHistory([]);
         showToast('info', 'Histórico limpo', 'Todas as versões foram removidas.');
-    } catch(e) {
-        showToast('error', 'Erro', 'Não foi possível limpar o histórico.');
-    }
+    } catch(e) { showToast('error', 'Erro', 'Não foi possível limpar o histórico.'); }
 }
 
 /* ════════════════════════════════════════════
@@ -1182,9 +1185,7 @@ async function copyCode() {
     try {
         await navigator.clipboard.writeText(state.currentHTML);
         showToast('success', 'Copiado!', 'HTML copiado para a área de transferência.');
-    } catch(e) {
-        showToast('error', 'Erro', 'Não foi possível copiar.');
-    }
+    } catch(e) { showToast('error', 'Erro', 'Não foi possível copiar.'); }
 }
 function applyCodeEditorChanges() {
     state.currentHTML = document.getElementById('codeEditor').value;
@@ -1195,24 +1196,9 @@ function applyCodeEditorChanges() {
 }
 
 /* ════════════════════════════════════════════
-   DOWNLOAD / CAPTURA / GRAVAÇÃO
+   CANVAS CORE (USADO PARA DOWNLOAD E SALVAR KANBAN)
 ════════════════════════════════════════════ */
-function downloadHTML() {
-    if (!state.currentHTML) { showToast('warning', 'Atenção', 'Gere uma animação primeiro.'); return; }
-    const a = document.createElement('a');
-    a.href     = URL.createObjectURL(new Blob([state.currentHTML], { type: 'text/html' }));
-    a.download = `criacao_${Date.now()}.html`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    showToast('success', 'Download iniciado', 'Arquivo HTML salvo.');
-}
-
-async function captureImage() {
-    if (!state.currentHTML) {
-        showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
-        return;
-    }
-
+async function getCanvasFromIframe() {
     const iframe = document.getElementById('previewFrame');
     const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
@@ -1233,40 +1219,50 @@ async function captureImage() {
         await new Promise(resolve => { script.onload = resolve; setTimeout(resolve, 2000); });
     }
 
+    return await iframe.contentWindow.html2canvas(iframeDoc.body, {
+        scale: 3,
+        backgroundColor: null,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        width: iframe.clientWidth,
+        height: iframe.clientHeight,
+        windowWidth: iframe.clientWidth,
+        windowHeight: iframe.clientHeight,
+        onclone: (clonedDoc) => {
+            clonedDoc.querySelectorAll('canvas').forEach(c => {
+                if (!c.width || c.width === 0) c.width = 1;
+                if (!c.height || c.height === 0) c.height = 1;
+            });
+            clonedDoc.querySelectorAll('*').forEach(el => {
+                const style = clonedDoc.defaultView.getComputedStyle(el);
+                if (style.opacity === '0') el.style.opacity = '1';
+                if (style.visibility === 'hidden') el.style.visibility = 'visible';
+                el.style.animation = 'none';
+                el.style.transition = 'none';
+            });
+        }
+    });
+}
+
+function downloadHTML() {
+    if (!state.currentHTML) { showToast('warning', 'Atenção', 'Gere uma animação primeiro.'); return; }
+    const a = document.createElement('a');
+    a.href     = URL.createObjectURL(new Blob([state.currentHTML], { type: 'text/html' }));
+    a.download = `criacao_${Date.now()}.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('success', 'Download iniciado', 'Arquivo HTML salvo.');
+}
+
+async function captureImageAndDownload() {
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação ou carrossel primeiro.');
+        return;
+    }
     showToast('info', 'Capturando...', 'Processando imagem, por favor aguarde.');
-
     try {
-        const canvas = await iframe.contentWindow.html2canvas(iframeDoc.body, {
-            scale: 3,
-            backgroundColor: null,
-            useCORS: true,
-            allowTaint: false,
-            logging: false,
-            width: iframe.clientWidth,
-            height: iframe.clientHeight,
-            windowWidth: iframe.clientWidth,
-            windowHeight: iframe.clientHeight,
-            onclone: (clonedDoc) => {
-                // Corrige canvas 0x0 que causam crash no html2canvas
-                clonedDoc.querySelectorAll('canvas').forEach(c => {
-                    if (!c.width || c.width === 0) c.width = 1;
-                    if (!c.height || c.height === 0) c.height = 1;
-                });
-                const allElements = clonedDoc.querySelectorAll('*');
-                allElements.forEach(el => {
-                    const style = clonedDoc.defaultView.getComputedStyle(el);
-                    if (style.opacity === '0') {
-                        el.style.opacity = '1';
-                    }
-                    if (style.visibility === 'hidden') {
-                        el.style.visibility = 'visible';
-                    }
-                    el.style.animation = 'none';
-                    el.style.transition = 'none';
-                });
-            }
-        });
-
+        const canvas = await getCanvasFromIframe();
         const link = document.createElement('a');
         link.download = `motordark_frame_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
@@ -1313,20 +1309,50 @@ async function recordScreen() {
 }
 
 /* ════════════════════════════════════════════
-   SALVAR NO KANBAN / CONTEUDO
+   SALVAR NO KANBAN COM MINIATURA AUTOMÁTICA
 ════════════════════════════════════════════ */
-function salvarNoKanban() {
+async function salvarNoKanban() {
     if (!state.pendingCardId) {
         showToast('warning', 'Atenção', 'Nenhum card associado a esta criação.');
         return;
     }
-    localStorage.setItem('wl_card_done', JSON.stringify({
-        cardId: state.pendingCardId,
-        status: 'pronto',
-    }));
-    localStorage.removeItem('wl_pending_creation');
-    showToast('success', 'Salvo!', 'Card marcado como pronto. Voltando para Conteúdo...');
-    setTimeout(() => { window.location.href = '/conteudo'; }, 1600);
+    if (!state.currentHTML) {
+        showToast('warning', 'Atenção', 'Gere uma animação primeiro.');
+        return;
+    }
+
+    setLoading(true, 'Salvando no Kanban', 'Gerando miniatura da arte...');
+    try {
+        const canvas = await getCanvasFromIframe();
+        canvas.toBlob(async (blob) => {
+            const fd = new FormData();
+            fd.append('file', blob, 'thumb_' + Date.now() + '.png');
+            
+            let thumbUrl = '';
+            try {
+                const res = await fetch('/api/upload', { method: 'POST', body: fd });
+                const data = await res.json();
+                if(data.success) thumbUrl = data.url;
+            } catch(e) {
+                console.error('Erro no upload da thumbnail', e);
+            }
+
+            localStorage.setItem('wl_card_done', JSON.stringify({
+                cardId: state.pendingCardId,
+                status: 'pronto',
+                thumb: thumbUrl
+            }));
+            localStorage.removeItem('wl_pending_creation');
+            
+            setLoading(false);
+            showToast('success', 'Salvo com Foto!', 'Card pronto. Voltando para o Conteúdo...');
+            setTimeout(() => { window.location.href = '/conteudo'; }, 1600);
+        }, 'image/png');
+    } catch (e) {
+        console.error(e);
+        setLoading(false);
+        showToast('error', 'Erro', 'Falha ao processar e salvar miniatura.');
+    }
 }
 
 function handleConteudoClick(event) {
@@ -1409,7 +1435,7 @@ async function autoProcessPendingTask(data) {
 
                 await new Promise(r => setTimeout(r, 2000));
                 showToast('info', `Baixando Página ${p}...`, 'Capturando frame.');
-                await captureImage();
+                await captureImageAndDownload();
                 await new Promise(r => setTimeout(r, 1500));
             }
             showToast('success', 'Carrossel Concluído', 'Todas as páginas foram geradas e baixadas.');
