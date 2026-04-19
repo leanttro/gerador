@@ -50,7 +50,6 @@
         transition: background-color var(--transition), color var(--transition);
     }
 
-    /* BARRA LATERAL (Idêntica à Home) */
     .sidebar { width: 260px; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
     .brand { padding: 24px 24px 20px; margin-bottom: 8px; }
     .brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
@@ -63,7 +62,6 @@
     .nav-link:hover { color: var(--text-main); background: var(--bg-body); }
     .nav-link.active { background: var(--primary-bg); color: var(--text-main); font-weight: 600; }
 
-    /* CONTEÚDO PRINCIPAL */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     
     .topbar { height: 64px; background: var(--bg-surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
@@ -79,15 +77,10 @@
     .user-profile { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; border-left: 1px solid var(--border); padding-left: 20px; }
     .avatar { width: 32px; height: 32px; background: var(--text-main); color: var(--bg-surface); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
 
-    .workspace {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-    }
+    .workspace { display: flex; flex: 1; overflow: hidden; }
 
-    /* PAINEL DE CRIAÇÃO (ESQUERDA) */
     .creation-panel {
-        width: 400px;
+        width: 420px;
         background: var(--bg-surface);
         border-right: 1px solid var(--border);
         display: flex;
@@ -96,27 +89,15 @@
         flex-shrink: 0;
     }
 
-    .panel-section {
-        padding: 24px;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .panel-title {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
+    .panel-section { padding: 24px; border-bottom: 1px solid var(--border); }
+    .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .panel-title svg { width: 16px; height: 16px; stroke: var(--accent); stroke-width: 2; fill: none; }
 
     .input-group { margin-bottom: 16px; position: relative; }
     .input-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
     .input-control { width: 100%; padding: 10px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); }
     .input-control:focus { border-color: var(--text-muted); }
-    textarea.input-control { resize: vertical; min-height: 100px; line-height: 1.5; padding-right: 48px; }
+    textarea.input-control { resize: vertical; min-height: 120px; line-height: 1.5; }
 
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; transition: all var(--transition); border: none; width: 100%; }
     .btn-primary { background: var(--text-main); color: var(--bg-surface); }
@@ -124,7 +105,7 @@
     .btn-secondary { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border); }
     .btn-secondary:hover { border-color: var(--text-muted); }
     
-    .ai-btn { position: absolute; right: 8px; top: 32px; background: var(--text-main); color: var(--bg-surface); border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .ai-btn { background: var(--text-main); color: var(--bg-surface); border: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 6px;}
     .ai-btn:hover { opacity: 0.8; }
     .ai-btn:disabled { opacity: 0.5; cursor: wait; }
 
@@ -135,66 +116,54 @@
     .insp-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; line-height: 1.4; }
     .insp-snippet { font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-    /* KANBAN BOARD (DIREITA) */
-    .kanban-area {
-        flex: 1;
-        background: var(--bg-kanban);
-        padding: 24px;
-        overflow-x: auto;
-        display: flex;
-        gap: 20px;
-    }
-
-    .kanban-col {
-        width: 320px;
-        min-width: 320px;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        display: flex;
-        flex-direction: column;
-        max-height: 100%;
-    }
-
-    .col-header {
+    .ai-suggestion-box {
+        display: none;
+        margin-top: 16px;
         padding: 16px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    .col-count { background: var(--bg-body); color: var(--text-muted); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
-
-    .col-body {
-        padding: 12px;
-        flex: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        min-height: 150px;
-    }
-
-    .k-card {
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
+        background: rgba(37, 99, 235, 0.05);
         border-radius: var(--radius);
-        padding: 16px;
-        cursor: grab;
-        box-shadow: var(--shadow);
-        transition: box-shadow var(--transition), transform var(--transition);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+    .ai-suggestion-box.active { display: block; }
+    .ai-sugg-header { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+    
+    .tpl-preview-mini {
+        width: 70px;
+        height: 124px;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        background: #000;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+    }
+    .tpl-preview-mini iframe {
+        width: 338px;
+        height: 600px;
+        transform: scale(0.207);
+        transform-origin: top left;
+        border: none;
+        pointer-events: none;
     }
 
+    .kanban-area { flex: 1; background: var(--bg-kanban); padding: 24px; overflow-x: auto; display: flex; gap: 20px; }
+    .kanban-col { width: 320px; min-width: 320px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); display: flex; flex-direction: column; max-height: 100%; }
+    .col-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
+    .col-count { background: var(--bg-body); color: var(--text-muted); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+    .col-body { padding: 12px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 150px; }
+
+    .k-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: grab; box-shadow: var(--shadow); transition: box-shadow var(--transition), transform var(--transition); display: flex; flex-direction: column; gap: 10px; }
     .k-card:active { cursor: grabbing; }
     .k-card:hover { box-shadow: var(--shadow-hover); }
-
-    .k-card-type { display: inline-block; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: var(--primary-bg); color: var(--text-main); margin-bottom: 8px; }
-    .k-card-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 8px; }
+    .k-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .k-card-type { font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 4px; background: var(--primary-bg); color: var(--text-main); }
+    .k-card-title { font-size: 13px; font-weight: 600; line-height: 1.4; }
     .k-card-copy { font-size: 11px; color: var(--text-muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     
+    .k-card-integration { display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--border); margin-top: 4px; }
+    .k-card-integration svg { width: 14px; height: 14px; stroke: var(--success); fill: none; }
+    .k-card-integration span { font-size: 10px; font-weight: 500; color: var(--text-muted); }
+
     .sortable-ghost { opacity: 0.4; background: var(--bg-body); border: 2px dashed var(--text-muted); }
 
 </style>
@@ -267,7 +236,7 @@
             <div class="panel-section">
                 <div class="panel-title">
                     <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                    Gerador de Copy (IA)
+                    Gerador Inteligente (Copy + Design)
                 </div>
                 
                 <div class="input-group">
@@ -281,79 +250,67 @@
                         <option>Carrossel</option>
                         <option>Reels / TikTok</option>
                         <option>Postagem Estática</option>
-                        <option>Story Interativo</option>
                     </select>
                 </div>
 
+                <button class="ai-btn" onclick="expandirCopyIA()" id="btnIA">
+                    <svg viewBox="0 0 24 24" style="width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    Gerar Legenda e Template
+                </button>
+
                 <div class="input-group">
-                    <label>Texto da Postagem (Copy)</label>
-                    <textarea id="draftCopy" class="input-control" placeholder="Escreva a base ou peça para a IA expandir..."></textarea>
-                    <button class="ai-btn" onclick="expandirCopyIA()" id="btnIA">✦ IA Sugerir</button>
+                    <label>Legenda Gerada</label>
+                    <textarea id="draftCopy" class="input-control" placeholder="A IA vai escrever a legenda aqui..."></textarea>
                 </div>
 
-                <button class="btn btn-primary" onclick="adicionarAoKanban()">Adicionar ao Kanban →</button>
+                <div class="ai-suggestion-box" id="aiSuggestionBox">
+                    <div class="ai-sugg-header">✦ Template Recomendado</div>
+                    <div style="display: flex; gap: 16px;">
+                        <div class="tpl-preview-mini">
+                            <iframe id="suggestedFrame" srcdoc=""></iframe>
+                        </div>
+                        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                            <div id="suggestedName" style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 6px;">Nenhum selecionado</div>
+                            <div id="suggestedReason" style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">Clique em Gerar para a IA analisar o contexto e sugerir a melhor arte.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="currentTemplateId" value="">
+                <button class="btn btn-primary" style="margin-top: 20px;" onclick="adicionarAoKanban()">Adicionar ao Kanban →</button>
             </div>
         </div>
 
         <div class="kanban-area" id="kanbanBoard">
-            
             <div class="kanban-col">
-                <div class="col-header">
-                    <span>💡 Ideias & Backlog</span>
-                    <span class="col-count">0</span>
-                </div>
-                <div class="col-body" id="col-ideias">
-                    </div>
+                <div class="col-header"><span>💡 Ideias & Backlog</span><span class="col-count">0</span></div>
+                <div class="col-body" id="col-ideias"></div>
             </div>
-
             <div class="kanban-col">
-                <div class="col-header">
-                    <span>✍️ Escrevendo Copy</span>
-                    <span class="col-count">0</span>
-                </div>
+                <div class="col-header"><span>✍️ Escrevendo Copy</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-copy"></div>
             </div>
-
             <div class="kanban-col">
-                <div class="col-header">
-                    <span>✨ Pronto para Criação</span>
-                    <span class="col-count">0</span>
-                </div>
+                <div class="col-header"><span>✨ Pronto para Criação</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-criacao"></div>
             </div>
-
             <div class="kanban-col">
-                <div class="col-header">
-                    <span>🚀 Agendado / Publicado</span>
-                    <span class="col-count">0</span>
-                </div>
+                <div class="col-header"><span>🚀 Agendado</span><span class="col-count">0</span></div>
                 <div class="col-body" id="col-pronto"></div>
             </div>
-
         </div>
 
     </div>
 </div>
 
 <script>
-    // Gerenciamento de Tema
-    function toggleTheme() {
-        const body = document.body;
-        if (body.getAttribute('data-theme') === 'light') {
-            body.setAttribute('data-theme', 'dark');
-            localStorage.setItem('wl_theme', 'dark');
-        } else {
-            body.setAttribute('data-theme', 'light');
-            localStorage.setItem('wl_theme', 'light');
-        }
-    }
-    const savedTheme = localStorage.getItem('wl_theme');
-    if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+    window.appTemplates = [];
 
-    // Inicializar Kanban (SortableJS)
-    document.addEventListener('DOMContentLoaded', () => {
-        const colunas = document.querySelectorAll('.col-body');
-        colunas.forEach(col => {
+    document.addEventListener('DOMContentLoaded', async () => {
+        const body = document.body;
+        if (localStorage.getItem('wl_theme')) body.setAttribute('data-theme', localStorage.getItem('wl_theme'));
+
+        document.querySelectorAll('.col-body').forEach(col => {
             new Sortable(col, {
                 group: 'kanban',
                 animation: 150,
@@ -361,24 +318,34 @@
                 onEnd: atualizarContadores
             });
         });
+
+        try {
+            const res = await fetch('/api/templates');
+            const data = await res.json();
+            if (data.success) window.appTemplates = data.templates;
+        } catch(e) { console.error("Erro ao carregar templates", e); }
     });
+
+    function toggleTheme() {
+        const body = document.body;
+        const newTheme = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('wl_theme', newTheme);
+    }
 
     function atualizarContadores() {
         document.querySelectorAll('.kanban-col').forEach(col => {
-            const count = col.querySelectorAll('.k-card').length;
-            col.querySelector('.col-count').innerText = count;
+            col.querySelector('.col-count').innerText = col.querySelectorAll('.k-card').length;
         });
     }
 
-    // Busca no Serper
     async function buscarInspiracoes() {
         const niche = document.getElementById('nicheInput').value.trim();
         if (!niche) { alert('Digite um nicho primeiro!'); return; }
         
         const listDiv = document.getElementById('inspList');
         const btn = document.getElementById('btnBusca');
-        btn.innerText = 'Buscando...';
-        btn.disabled = true;
+        btn.innerText = 'Buscando...'; btn.disabled = true;
 
         try {
             const res = await fetch('/api/inspirations', {
@@ -398,7 +365,11 @@
                         <div class="insp-title">${insp.title}</div>
                         <div class="insp-snippet">${insp.snippet}</div>
                     `;
-                    item.onclick = () => carregarNoFormulario(insp);
+                    item.onclick = () => {
+                        document.getElementById('draftTitle').value = insp.title;
+                        document.getElementById('draftType').value = insp.type.includes('Reels') ? 'Reels / TikTok' : (insp.type.includes('Carrossel') ? 'Carrossel' : 'Postagem Estática');
+                        document.getElementById('draftCopy').value = `Inspirado em: ${insp.snippet}`;
+                    };
                     listDiv.appendChild(item);
                 });
             } else {
@@ -407,73 +378,119 @@
         } catch (e) {
             listDiv.innerHTML = '<div style="color:var(--accent);font-size:12px;text-align:center;">Erro ao buscar dados.</div>';
         }
-        
-        btn.innerText = 'Buscar Ideias Virais';
-        btn.disabled = false;
+        btn.innerText = 'Buscar Ideias Virais'; btn.disabled = false;
     }
 
-    function carregarNoFormulario(insp) {
-        document.getElementById('draftTitle').value = insp.title;
-        document.getElementById('draftType').value = insp.type.includes('Reels') ? 'Reels / TikTok' : (insp.type.includes('Carrossel') ? 'Carrossel' : 'Postagem Estática');
-        document.getElementById('draftCopy').value = `Inspirado em:\n${insp.snippet}\n\n`;
-    }
-
-    // Sugestão de Texto IA
     async function expandirCopyIA() {
         const titulo = document.getElementById('draftTitle').value.trim();
         const baseCopy = document.getElementById('draftCopy').value.trim();
         const tipo = document.getElementById('draftType').value;
-        const nicho = document.getElementById('nicheInput').value.trim() || 'geral';
+        const nicho = document.getElementById('nicheInput').value.trim() || 'tecnologia/marketing';
 
         if (!titulo) { alert('Preencha um título base primeiro.'); return; }
 
         const btn = document.getElementById('btnIA');
-        btn.innerText = '...';
-        btn.disabled = true;
+        btn.innerText = 'Processando...'; btn.disabled = true;
 
-        const prompt = `Atue como um Copywriter Elite. Nicho: ${nicho}. Formato: ${tipo}. Título: "${titulo}". Base atual: "${baseCopy}". Escreva uma legenda persuasiva e completa pronta para postar, incluindo CTA e hashtags. Não use aspas no começo ou no fim.`;
+        const templatesStr = window.appTemplates.map(t => `- ID: ${t.id} | Nome: ${t.name}`).join('\n');
+
+        const promptCompleto = `Atue como um Copywriter de alta conversão e Diretor de Arte.
+        Nicho: ${nicho}. Formato: ${tipo}. Título base: "${titulo}". Contexto: "${baseCopy}".
+        
+        REGRAS DE COPY:
+        Crie uma legenda persuasiva e humana.
+        SE o formato for Carrossel ou Estático, NUNCA mencione as palavras "vídeo", "assistir" ou "no vídeo de hoje". Use "deslize para o lado" ou "leia a legenda".
+        
+        REGRAS DE DESIGN:
+        Analise o formato e o tema e escolha o melhor template visual para este post com base estritamente nesta lista:
+        ${templatesStr}
+        
+        Você DEVE retornar a resposta EXATAMENTE neste formato JSON, sem crases de formatação, sem markdown, apenas o JSON puro:
+        {
+            "copy": "Texto completo da legenda aqui...",
+            "template_id": "ID exato do template escolhido",
+            "template_nome": "Nome do template",
+            "motivo": "Breve justificativa visual da escolha"
+        }`;
 
         try {
             const res = await fetch('/api/sugestao-texto', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ prompt: promptCompleto })
             });
             const data = await res.json();
+            
             if (data.success) {
-                document.getElementById('draftCopy').value = data.text;
+                let cleanJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+                let resultado = JSON.parse(cleanJson);
+                
+                document.getElementById('draftCopy').value = resultado.copy;
+                
+                // Atualizar box de recomendação visual
+                document.getElementById('currentTemplateId').value = resultado.template_id;
+                document.getElementById('suggestedName').innerText = resultado.template_nome;
+                document.getElementById('suggestedReason').innerText = resultado.motivo;
+                
+                const tplSelecionado = window.appTemplates.find(t => t.id === resultado.template_id);
+                if(tplSelecionado) {
+                    let mockHtml = tplSelecionado.html
+                        .replace(/CHAVE_COR_FUNDO/g, '#181818')
+                        .replace(/CHAVE_COR_TEXTO/g, '#ffffff')
+                        .replace(/CHAVE_COR_DESTAQUE/g, '#2563eb')
+                        .replace(/CHAVE_TITULO/g, titulo.substring(0, 20));
+                    document.getElementById('suggestedFrame').srcdoc = mockHtml;
+                }
+                
+                document.getElementById('aiSuggestionBox').classList.add('active');
             }
         } catch (e) {
-            alert('Erro ao conectar com a IA.');
+            alert('A IA não conseguiu formatar a resposta corretamente. Tente novamente.');
+            console.error(e);
         }
 
-        btn.innerText = '✦ IA Sugerir';
+        btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Gerar Legenda e Template';
         btn.disabled = false;
     }
 
-    // Adicionar Card ao Kanban
     function adicionarAoKanban() {
         const titulo = document.getElementById('draftTitle').value.trim();
         const tipo = document.getElementById('draftType').value;
         const copy = document.getElementById('draftCopy').value.trim();
+        const tplName = document.getElementById('suggestedName').innerText;
+        const tplId = document.getElementById('currentTemplateId').value;
 
         if (!titulo) { alert('Preencha pelo menos o título.'); return; }
 
         const card = document.createElement('div');
         card.className = 'k-card';
+        
+        let integrationHtml = '';
+        if (tplId) {
+            integrationHtml = `
+                <div class="k-card-integration">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Template: ${tplName}</span>
+                </div>
+            `;
+        }
+
         card.innerHTML = `
-            <span class="k-card-type">${tipo}</span>
-            <div class="k-card-title">${titulo}</div>
-            <div class="k-card-copy">${copy || 'Sem legenda ainda...'}</div>
+            <div class="k-card-header">
+                <div class="k-card-title">${titulo}</div>
+                <span class="k-card-type">${tipo}</span>
+            </div>
+            <div class="k-card-copy">${copy || 'Sem legenda gerada.'}</div>
+            ${integrationHtml}
         `;
 
-        // Adiciona na primeira coluna (Ideias)
         document.getElementById('col-ideias').appendChild(card);
         atualizarContadores();
 
-        // Limpa o formulário
         document.getElementById('draftTitle').value = '';
         document.getElementById('draftCopy').value = '';
+        document.getElementById('aiSuggestionBox').classList.remove('active');
+        document.getElementById('currentTemplateId').value = '';
     }
 </script>
 
