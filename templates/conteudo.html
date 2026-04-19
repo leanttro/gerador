@@ -1008,36 +1008,86 @@
         const tipo = document.getElementById('draftType').value;
         const copy = document.getElementById('draftCopy').value.trim();
         const tplName = document.getElementById('suggestedName').innerText;
-        const tplId = document.getElementById('currentTemplateId').value;
+        const tplIdRaw = document.getElementById('currentTemplateId').value;
 
-        if (!titulo || !tplId) { alert('Gere ou preencha as chaves primeiro.'); return; }
+        if (!titulo || !tplIdRaw) { alert('Gere ou preencha as chaves primeiro.'); return; }
 
-        const cardId = 'card_' + Date.now();
-        const card = document.createElement('div');
-        card.className = 'k-card';
-        card.id = cardId;
-        card.setAttribute('data-chaves', JSON.stringify(currentChaves));
-        card.setAttribute('data-copy', copy);
-        card.setAttribute('data-template', tplId);
-        card.setAttribute('data-template-name', tplName);
+        if (tipo === 'Carrossel') {
+            const selects = document.querySelectorAll('.carousel-template-select');
+            const numPages = selects.length;
+            let tplIds = (tplIdRaw && tplIdRaw !== 'carrossel_multi') ? tplIdRaw.split(',').map(s => s.trim()) : [];
+            
+            for (let i = 0; i < numPages; i++) {
+                let pageNum = i + 1;
+                let selValue = selects[i] ? selects[i].value : null;
+                let pageTplId = tplIds[i] || selValue;
+                if (!pageTplId || pageTplId === 'carrossel_multi') {
+                    pageTplId = window.appTemplates[0] ? window.appTemplates[0].id : '';
+                }
+                
+                let pageChaves = {};
+                for (const [k, v] of Object.entries(currentChaves)) {
+                    if (k.startsWith(`[P${pageNum}] `)) {
+                        pageChaves[k.replace(`[P${pageNum}] `, '')] = v;
+                    }
+                }
+                
+                const cardId = 'card_' + Date.now() + '_' + i;
+                const card = document.createElement('div');
+                card.className = 'k-card';
+                card.id = cardId;
+                card.setAttribute('data-chaves', JSON.stringify(pageChaves));
+                card.setAttribute('data-copy', copy);
+                card.setAttribute('data-template', pageTplId);
+                card.setAttribute('data-template-name', `Pág ${pageNum} do Carrossel`);
 
-        card.innerHTML = `
-            <div class="card-actions">
-                <div class="action-icon" onclick="enviarParaCriacao('${cardId}')" title="Criar Arte">
-                    <svg viewBox="0 0 24 24">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                    </svg>
+                card.innerHTML = `
+                    <div class="card-actions">
+                        <div class="action-icon" onclick="enviarParaCriacao('${cardId}')" title="Criar Arte">
+                            <svg viewBox="0 0 24 24">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
+                        <div class="action-icon" onclick="abrirEdicao('${cardId}')" title="Editar Variáveis"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+                        <div class="action-icon danger" onclick="excluirCard('${cardId}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+                    </div>
+                    <div class="k-card-header"><span class="k-card-type">Carrossel (Pág ${pageNum})</span></div>
+                    <div class="k-card-title">${titulo} - Pág ${pageNum}</div>
+                    <div class="k-card-copy">${copy}</div>
+                    <div class="k-card-integration"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Pág ${pageNum} mapeada</div>
+                `;
+
+                document.getElementById('col-ideias').appendChild(card);
+            }
+        } else {
+            const cardId = 'card_' + Date.now();
+            const card = document.createElement('div');
+            card.className = 'k-card';
+            card.id = cardId;
+            card.setAttribute('data-chaves', JSON.stringify(currentChaves));
+            card.setAttribute('data-copy', copy);
+            card.setAttribute('data-template', tplIdRaw);
+            card.setAttribute('data-template-name', tplName);
+
+            card.innerHTML = `
+                <div class="card-actions">
+                    <div class="action-icon" onclick="enviarParaCriacao('${cardId}')" title="Criar Arte">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <div class="action-icon" onclick="abrirEdicao('${cardId}')" title="Editar Variáveis"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+                    <div class="action-icon danger" onclick="excluirCard('${cardId}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
                 </div>
-                <div class="action-icon" onclick="abrirEdicao('${cardId}')" title="Editar Variáveis"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
-                <div class="action-icon danger" onclick="excluirCard('${cardId}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
-            </div>
-            <div class="k-card-header"><span class="k-card-type">${tipo}</span></div>
-            <div class="k-card-title">${titulo}</div>
-            <div class="k-card-copy">${copy}</div>
-            <div class="k-card-integration"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> ${tplName} mapeado</div>
-        `;
+                <div class="k-card-header"><span class="k-card-type">${tipo}</span></div>
+                <div class="k-card-title">${titulo}</div>
+                <div class="k-card-copy">${copy}</div>
+                <div class="k-card-integration"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> ${tplName} mapeado</div>
+            `;
 
-        document.getElementById('col-ideias').appendChild(card);
+            document.getElementById('col-ideias').appendChild(card);
+        }
+
         atualizarContadores();
 
         document.getElementById('draftTitle').value = '';
