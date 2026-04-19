@@ -368,7 +368,6 @@ textarea.input-control {
 </head>
 <body data-theme="light">
 
-<!-- ════ SIDEBAR ════ -->
 <div class="sidebar">
     <div class="brand">
         <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
@@ -406,10 +405,8 @@ textarea.input-control {
     </div>
 </div>
 
-<!-- ════ MAIN ════ -->
 <div class="main">
 
-    <!-- Topbar -->
     <div class="topbar">
         <div class="topbar-title">ESTÚDIO DE CRIAÇÃO</div>
         <div class="topbar-right">
@@ -424,13 +421,10 @@ textarea.input-control {
         </div>
     </div>
 
-    <!-- Workspace -->
     <div class="workspace">
 
-        <!-- ════ PAINEL ESQUERDO ════ -->
         <div class="creation-panel">
 
-            <!-- Tabs -->
             <div class="panel-tabs">
                 <button class="ptab-btn active" onclick="switchTab('gerar')">✦ Gerar</button>
                 <button class="ptab-btn" onclick="switchTab('templates')">⬚ Templates</button>
@@ -438,13 +432,10 @@ textarea.input-control {
                 <button class="ptab-btn" onclick="switchTab('codigo')">⟨/⟩ Código</button>
             </div>
 
-            <!-- Corpo -->
             <div class="panel-body">
 
-                <!-- ── TAB: GERAR ── -->
                 <div id="tab-gerar" class="tab-panel active">
 
-                    <!-- Banner de contexto (vindo do Kanban) -->
                     <div id="contextBanner" class="context-banner hidden">
                         <div class="context-tag">📋 Post do Kanban</div>
                         <div class="context-title" id="contextTitle">—</div>
@@ -452,7 +443,6 @@ textarea.input-control {
                         <button class="context-clear" onclick="limparContexto()">✕ Limpar contexto</button>
                     </div>
 
-                    <!-- Assets -->
                     <div class="panel-section">
                         <span class="section-label">Assets (Imagens / Vídeos)</span>
                         <div class="upload-zone" id="uploadZone">
@@ -475,7 +465,6 @@ textarea.input-control {
                         <button class="btn-ghost-sm hidden" id="clearAssetsBtn" onclick="clearAllAssets()">✕ Remover todos os assets</button>
                     </div>
 
-                    <!-- Formato + Estilo -->
                     <div class="panel-section">
                         <span class="section-label">Formato e Estilo Visual</span>
                         <div class="row-2">
@@ -502,7 +491,6 @@ textarea.input-control {
                         </div>
                     </div>
 
-                    <!-- Instrução / Prompt -->
                     <div class="panel-section">
                         <span class="section-label">Instrução / Prompt</span>
                         <div class="input-group">
@@ -520,7 +508,6 @@ textarea.input-control {
 
                 </div>
 
-                <!-- ── TAB: TEMPLATES ── -->
                 <div id="tab-templates" class="tab-panel">
                     <div class="panel-section">
                         <span class="section-label">Selecione um Template Base</span>
@@ -530,7 +517,6 @@ textarea.input-control {
                     </div>
                 </div>
 
-                <!-- ── TAB: HISTÓRICO ── -->
                 <div id="tab-historico" class="tab-panel">
                     <div class="panel-section">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -543,7 +529,6 @@ textarea.input-control {
                     </div>
                 </div>
 
-                <!-- ── TAB: CÓDIGO ── -->
                 <div id="tab-codigo" class="tab-panel">
                     <div class="panel-section">
                         <span class="section-label">Código HTML Gerado</span>
@@ -560,22 +545,15 @@ textarea.input-control {
                     </div>
                 </div>
 
-            </div><!-- /panel-body -->
-
-            <!-- Botão gerar (fixo no rodapé) -->
-            <div class="generate-footer">
+            </div><div class="generate-footer">
                 <button class="btn btn-primary" id="generateBtn" onclick="generateCode()">
                     <span class="btn-shine"></span>
                     <span>✦ Gerar / Atualizar Animação</span>
                 </button>
             </div>
 
-        </div><!-- /creation-panel -->
+        </div><div class="preview-area">
 
-        <!-- ════ ÁREA DE PREVIEW ════ -->
-        <div class="preview-area">
-
-            <!-- Toolbar do preview -->
             <div class="preview-toolbar">
                 <div class="toolbar-left">
                     <span class="format-indicator" id="formatIndicator">9:16 — Reels</span>
@@ -587,7 +565,6 @@ textarea.input-control {
                     </div>
                 </div>
                 <div class="toolbar-right">
-                    <!-- Botão "Salvar no Kanban" — só aparece quando vem do conteudo -->
                     <button class="btn btn-save-kanban hidden" id="btnSalvarKanban" onclick="salvarNoKanban()">
                         💾 Salvar no Kanban
                     </button>
@@ -598,7 +575,6 @@ textarea.input-control {
                 </div>
             </div>
 
-            <!-- Container do preview -->
             <div class="preview-container" id="previewContainer">
                 <div class="empty-state" id="emptyState">
                     <div class="empty-icon">✦</div>
@@ -611,7 +587,6 @@ textarea.input-control {
                 </div>
             </div>
 
-            <!-- Status bar -->
             <div class="status-bar">
                 <div class="status-item">
                     <div class="status-dot" id="statusDot"></div>
@@ -628,14 +603,7 @@ textarea.input-control {
                 </div>
             </div>
 
-        </div><!-- /preview-area -->
-
-    </div><!-- /workspace -->
-
-</div><!-- /main -->
-
-<!-- Overlays -->
-<div class="loading-overlay" id="loadingOverlay">
+        </div></div></div><div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <div class="loading-text">Gerando animação<span class="loading-dots"></span></div>
     <div class="loading-sub" id="loadingSubText">A IA está processando o HTML...</div>
@@ -661,6 +629,7 @@ const state = {
     totalTokens:      0,
     sessionId:        getOrCreateSessionId(),
     pendingCardId:    null,   // cardId vindo do Kanban
+    kanbanData:       null,   // guarda as chaves e textos do card
     selectedTmplId:   null,
 };
 
@@ -688,26 +657,37 @@ function init() {
     updatePreviewFormat();
     updateCharCounter();
 
+    // Carrega o logo salvo no conteudo.html
+    const savedLogo = localStorage.getItem('wl_logo_url');
+    if (savedLogo && !state.assets.some(a => a.url === savedLogo)) {
+        state.assets.push({ url: savedLogo, type: 'image', name: 'Logo da Empresa' });
+        renderAssetGrid();
+        updateAssetStatus();
+    }
+
     // ── Contexto vindo do Kanban (conteudo.html) ──
     const pendingRaw = localStorage.getItem('wl_pending_creation');
     if (pendingRaw) {
         try {
             const data = JSON.parse(pendingRaw);
             state.pendingCardId = data.cardId || null;
+            state.kanbanData = data;
 
-            // Monta prompt automático com as chaves do card
-            let prompt = '';
-            if (data.templateName) prompt += `Template: ${data.templateName}\n`;
-            if (data.titulo)       prompt += `Título: ${data.titulo}\n`;
-            if (data.copy)         prompt += `Copy: ${data.copy}\n`;
-            if (data.chaves && Object.keys(data.chaves).length > 0) {
-                prompt += `\nVariáveis para substituição:\n`;
-                for (const [k, v] of Object.entries(data.chaves)) {
-                    if (v) prompt += `${k}: ${v}\n`;
+            // Monta prompt automático com as chaves do card se o input estiver vazio
+            if (!document.getElementById('promptInput').value.trim()) {
+                let prompt = '';
+                if (data.templateName) prompt += `Template: ${data.templateName}\n`;
+                if (data.titulo)       prompt += `Título: ${data.titulo}\n`;
+                if (data.copy)         prompt += `Copy: ${data.copy}\n`;
+                if (data.chaves && Object.keys(data.chaves).length > 0) {
+                    prompt += `\nVariáveis para substituição:\n`;
+                    for (const [k, v] of Object.entries(data.chaves)) {
+                        if (v) prompt += `${k}: ${v}\n`;
+                    }
                 }
+                document.getElementById('promptInput').value = prompt.trim();
+                updateCharCounter();
             }
-            document.getElementById('promptInput').value = prompt.trim();
-            updateCharCounter();
 
             // Banner de contexto
             document.getElementById('contextTitle').textContent = data.titulo || '(sem título)';
@@ -724,8 +704,6 @@ function init() {
             if (data.templateId) {
                 loadTemplateById(data.templateId);
             }
-
-            localStorage.removeItem('wl_pending_creation');
         } catch(e) { console.error('Erro ao ler contexto do Kanban:', e); }
     }
 
@@ -780,8 +758,12 @@ function switchTab(name) {
 ════════════════════════════════════════════ */
 function limparContexto() {
     state.pendingCardId = null;
+    state.kanbanData = null;
+    localStorage.removeItem('wl_pending_creation');
     document.getElementById('contextBanner').classList.add('hidden');
     document.getElementById('btnSalvarKanban').classList.add('hidden');
+    document.getElementById('promptInput').value = '';
+    updateCharCounter();
 }
 
 /* ════════════════════════════════════════════
@@ -1055,16 +1037,35 @@ function useTemplate(tmpl) {
     state.currentHTML      = tmpl.html;
     state.selectedTmplId   = tmpl.id;
     document.getElementById('codeEditor').value = tmpl.html;
-    if (tmpl.prompt) { document.getElementById('promptInput').value = tmpl.prompt; updateCharCounter(); }
+
+    let finalPrompt = tmpl.prompt || '';
+    if (state.kanbanData) {
+        finalPrompt += `\n\nContexto do Post (Substitua as variáveis no código HTML):\n`;
+        if (state.kanbanData.titulo) finalPrompt += `Título: ${state.kanbanData.titulo}\n`;
+        if (state.kanbanData.copy)   finalPrompt += `Copy: ${state.kanbanData.copy}\n`;
+        if (state.kanbanData.chaves && Object.keys(state.kanbanData.chaves).length > 0) {
+            finalPrompt += `\nVariáveis mapeadas:\n`;
+            for (const [k, v] of Object.entries(state.kanbanData.chaves)) {
+                if (v) finalPrompt += `${k}: ${v}\n`;
+            }
+        }
+    }
+
+    if (finalPrompt) {
+        document.getElementById('promptInput').value = finalPrompt.trim();
+        updateCharCounter();
+    }
+
     if (tmpl.style)  document.getElementById('styleSelect').value = tmpl.style;
     renderIframe(tmpl.html);
     showPreview();
+    
     // Destacar template selecionado
     document.querySelectorAll('.template-mini-card').forEach(c => c.classList.remove('selected'));
     const el = document.getElementById('tmpl_' + tmpl.id);
     if (el) el.classList.add('selected');
     switchTab('gerar');
-    showToast('info', 'Template carregado', `${tmpl.name} — descreva o que deseja mudar e clique em Gerar.`);
+    showToast('info', 'Template carregado', `${tmpl.name} — variáveis aplicadas no prompt.`);
 }
 
 async function loadTemplateById(id) {
@@ -1275,6 +1276,7 @@ function salvarNoKanban() {
         cardId: state.pendingCardId,
         status: 'pronto',
     }));
+    localStorage.removeItem('wl_pending_creation');
     showToast('success', 'Salvo!', 'Card marcado como pronto. Voltando para Conteúdo...');
     setTimeout(() => { window.location.href = '/conteudo'; }, 1600);
 }
