@@ -208,8 +208,8 @@ def api_inspirations():
     if not niche:
         return jsonify({"success": False, "error": "Nicho não informado."}), 400
 
-    # Construção da query para buscar ideias de posts no Instagram/TikTok
-    query = f"{niche} instagram reels carrossel ideias post"
+    # Construção da query para buscar ideias de posts orientadas ao criador/negócio
+    query = f"ideias de posts para negócio de {niche} criador de conteúdo instagram dicas simples"
     url = "https://google.serper.dev/search"
     headers = {
         "X-API-KEY": SERPER_API_KEY,
@@ -245,6 +245,43 @@ def api_inspirations():
                 "snippet": snippet[:180],
                 "link": link
             })
+
+        # Camada de IA: reformula os snippets brutos como ideias práticas para o criador/empresário
+        if inspos and groq_client:
+            raw_snippets = "\n".join([f"- {i['title']}: {i['snippet']}" for i in inspos])
+            try:
+                ai_resp = groq_client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Você é um estrategista de conteúdo para pequenos negócios. "
+                                "A partir dos resultados abaixo, extraia ideias SIMPLES e PRÁTICAS de posts "
+                                "que um empresário ou IA pode criar rapidamente: ex. 'Mostre os bastidores da montagem', "
+                                "'Poste uma comparação antes/depois do prato', 'Faça um carrossel com os ingredientes do dia'. "
+                                "Seja direto, sem enrolação. Retorne APENAS um JSON: "
+                                "{\"ideias\": [{\"tipo\": \"Reels|Carrossel|Estática\", \"titulo\": \"...\", \"descricao\": \"...\"}]}"
+                            )
+                        },
+                        {"role": "user", "content": f"Nicho: {niche}\n\nResultados:\n{raw_snippets}"}
+                    ],
+                    model=BEST_FREE_MODEL,
+                    temperature=0.5,
+                    response_format={"type": "json_object"},
+                )
+                parsed = json.loads(ai_resp.choices[0].message.content)
+                ideias = parsed.get("ideias", [])
+                inspos = [
+                    {
+                        "type": i.get("tipo", "Postagem Estática"),
+                        "title": i.get("titulo", ""),
+                        "snippet": i.get("descricao", ""),
+                        "link": ""
+                    }
+                    for i in ideias
+                ]
+            except Exception:
+                pass  # fallback: mantém os inspos originais do Serper
 
         return jsonify({"success": True, "inspirations": inspos})
     except Exception as e:
