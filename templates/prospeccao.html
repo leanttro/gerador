@@ -755,7 +755,6 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
 /* ════════════════════════════════════════════
    INTEGRAÇÃO SEGURA COM FLASK (.ENV)
 ════════════════════════════════════════════ */
-// O Jinja2 injeta as variáveis do .env lidas pelo backend (app.py) direto aqui
 const CONFIG = {
     DIRECTUS_URL: "{{ directus_url }}", 
     DIRECTUS_TOKEN: "{{ directus_token }}",
@@ -1060,7 +1059,6 @@ async function excluirSelecionados() {
 }
 
 function prepararDisparoSelecionados() {
-    // Mantém a mesma lógica mas agora o back-end tá direto (não vamos disparar daqui, mas você já tem a tela Sniper)
     showToast('info', 'Leve para a aba SNIPER no app.py', 'A aba Sniper lida com os disparos massivos em Python.');
 }
 
@@ -1338,6 +1336,18 @@ async function iniciarExtracao(src) {
                         let emp = limpar_titulo(r.title);
                         let email = ""; 
                         
+                        if(site && !email) {
+                            try {
+                                const sReq = await fetch('/api/scrape-email', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ url: site })
+                                });
+                                const sData = await sReq.json();
+                                if(sData.email) email = sData.email;
+                            } catch(e) {}
+                        }
+
                         if(!zap && !email) zap = "Sem Numero";
                         else if (zap && telefones_crm.includes(zap)) { duplicados_ocultados++; continue; }
                         
@@ -1367,6 +1377,19 @@ async function iniciarExtracao(src) {
                             let zap = extrair_telefone(textfull);
                             let email = extrair_email_regex(textfull);
                             let emp = limpar_titulo(r.title);
+                            let link = r.link || "";
+
+                            if(link && !email) {
+                                try {
+                                    const sReq = await fetch('/api/scrape-email', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ url: link })
+                                    });
+                                    const sData = await sReq.json();
+                                    if(sData.email) email = sData.email;
+                                } catch(e) {}
+                            }
                             
                             if(!zap && !email) continue; 
                             if(zap && telefones_crm.includes(zap)) { duplicados_ocultados++; continue; }
@@ -1375,7 +1398,7 @@ async function iniciarExtracao(src) {
                             acumulado.push({
                                 empresa: emp, nicho: nicho, bairro: bairro,
                                 endereco: r.snippet.substring(0,100), whatsapp: zap||"Sem Numero", email: email||"",
-                                fonte: src === 'instagram' ? 'Instagram' : 'LinkedIn', link: r.link
+                                fonte: src === 'instagram' ? 'Instagram' : 'LinkedIn', link: link
                             });
                         }
                     }
