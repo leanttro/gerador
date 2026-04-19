@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prospecção & CRM | Leanttro</title>
-<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════════
    DESIGN TOKENS
@@ -71,8 +71,8 @@ body {
     background: var(--bg-surface);
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
-    transition: background var(--transition), border-color var(--transition);
-    z-index: 10;
+    transition: background var(--transition), border-color var(--transition), transform var(--transition);
+    z-index: 1000;
 }
 .brand { padding: 24px 24px 20px; }
 .brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
@@ -84,6 +84,8 @@ body {
 .nav-link:hover { color: var(--text-main); background: var(--bg-body); }
 .nav-link.active { background: var(--primary-bg); color: var(--text-main); font-weight: 600; }
 
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(2px); }
+
 /* ════ MAIN ════ */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; position: relative; }
 
@@ -93,6 +95,9 @@ body {
     display: flex; align-items: center; justify-content: space-between; padding: 0 32px;
     flex-shrink: 0; transition: background var(--transition);
 }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.hamburger { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; padding: 4px; }
+.hamburger svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; }
 .topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .theme-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
@@ -151,14 +156,13 @@ body {
 .tabs-bar {
     display: flex; border-bottom: 1px solid var(--border);
     padding: 0 24px; margin-top: 20px; flex-shrink: 0;
-    background: var(--bg-surface);
+    background: var(--bg-surface); overflow-x: auto; white-space: nowrap;
 }
 .tab-btn {
     padding: 12px 0; margin-right: 28px; background: none; border: none;
     border-bottom: 2px solid transparent; color: var(--text-muted);
     font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
     letter-spacing: 0.4px; text-transform: uppercase; transition: all var(--transition);
-    white-space: nowrap;
 }
 .tab-btn:hover { color: var(--text-main); }
 .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
@@ -176,7 +180,7 @@ body {
 .filter-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--text-muted); stroke-width: 2; fill: none; }
 .filter-search input { width: 100%; padding: 8px 12px 8px 32px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 12px; outline: none; transition: border-color var(--transition); }
 .filter-search input:focus { border-color: var(--accent); }
-.filter-select { padding: 8px 28px 8px 10px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 12px; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
+.filter-select { padding: 8px 28px 8px 10px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 12px; outline: none; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
 .filter-divider { width: 1px; height: 24px; background: var(--border); }
 
 /* ════ BARRA DE AÇÃO EM MASSA ════ */
@@ -184,15 +188,15 @@ body {
     display: none; align-items: center; gap: 12px;
     background: var(--accent-bg); border: 1px solid rgba(37,99,235,0.2);
     border-radius: var(--radius); padding: 10px 16px; margin-bottom: 12px;
-    font-size: 12px; font-weight: 500;
+    font-size: 12px; font-weight: 500; flex-wrap: wrap;
 }
 .bulk-bar.show { display: flex; }
 .bulk-count { color: var(--accent); font-weight: 700; }
-.bulk-actions { display: flex; gap: 8px; margin-left: auto; }
+.bulk-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
 
 /* ════ TABELA CRM ════ */
-.table-wrap { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-.crm-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.table-wrap { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+.crm-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
 .crm-table thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-body); white-space: nowrap; }
 .crm-table tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); cursor: pointer; }
 .crm-table tbody tr:last-child { border-bottom: none; }
@@ -204,7 +208,7 @@ body {
 .crm-table input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
 
 /* Badges */
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap; }
 .badge-maps    { background: rgba(16,185,129,0.1); color: #059669; }
 .badge-instagram { background: rgba(236,72,153,0.1); color: #db2777; }
 .badge-linkedin  { background: rgba(37,99,235,0.1); color: var(--accent); }
@@ -235,7 +239,7 @@ body {
 .empty-table p { font-size: 13px; color: var(--text-muted); }
 
 /* Pagination */
-.pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); flex-wrap: wrap; gap: 10px; }
 .pagination-btns { display: flex; gap: 6px; }
 .pg-btn { padding: 5px 10px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); font-size: 11px; cursor: pointer; font-family: inherit; color: var(--text-muted); transition: all var(--transition); }
 .pg-btn:hover:not(:disabled) { color: var(--text-main); border-color: var(--text-muted); }
@@ -254,12 +258,11 @@ body {
 .miner-form-grid { display: grid; gap: 12px; }
 .miner-form-grid.cols-2 { grid-template-columns: 1fr 1fr; }
 .miner-form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
-.miner-form-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; } /* Added for responsiveness */
-.miner-results { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-.miner-results-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.miner-results { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+.miner-results-header { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .miner-results-title { font-size: 13px; font-weight: 600; }
-.miner-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.miner-table th { padding: 8px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-body); }
+.miner-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
+.miner-table th { padding: 8px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--bg-body); white-space: nowrap; }
 .miner-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .miner-table tr:last-child td { border-bottom: none; }
 .miner-table tr:hover td { background: var(--bg-body); }
@@ -272,16 +275,16 @@ body {
 .import-upload-icon { font-size: 32px; margin-bottom: 8px; display: block; }
 .import-upload-text { font-size: 13px; color: var(--text-muted); }
 .import-upload-text strong { color: var(--accent); }
-.col-mapping { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+.col-mapping { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; overflow-x: auto; }
 .col-map-title { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
-.col-map-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+.col-map-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 10px; min-width: 400px; }
 .col-map-arrow { color: var(--text-muted); font-size: 14px; }
 
 /* ════ PAINEL LATERAL ════ */
 .side-panel {
     position: absolute; right: 0; top: 0; bottom: 0;
     width: var(--panel-width); background: var(--bg-surface);
-    border-left: 1px solid var(--border); z-index: 100;
+    border-left: 1px solid var(--border); z-index: 2000;
     display: flex; flex-direction: column;
     transform: translateX(100%); transition: transform 0.3s ease;
     box-shadow: -4px 0 24px rgba(0,0,0,0.08);
@@ -305,7 +308,7 @@ body {
 .form-input { padding: 9px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); width: 100%; }
 .form-input:focus { border-color: var(--accent); }
 .form-input:read-only { opacity: 0.7; cursor: default; background: var(--border); }
-select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
 textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .tags-input-wrap { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); min-height: 42px; }
 .tag-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: default; }
@@ -315,7 +318,7 @@ textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .tag-chip-default { background: var(--primary-bg);  color: var(--text-muted); }
 .tag-chip button { background: none; border: none; cursor: pointer; color: inherit; padding: 0; line-height: 1; font-size: 12px; opacity: 0.7; }
 .tag-chip button:hover { opacity: 1; }
-.tags-add { display: flex; gap: 6px; margin-top: 6px; }
+.tags-add { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
 
 /* Contact detail mode */
 .detail-field { display: flex; flex-direction: column; gap: 3px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -324,7 +327,7 @@ textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .detail-value { font-size: 13px; color: var(--text-main); }
 .detail-value a { color: var(--accent); text-decoration: none; }
 .detail-value a:hover { text-decoration: underline; }
-.detail-actions { display: flex; gap: 8px; margin-top: 12px; }
+.detail-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
 /* ════ BOTÕES ════ */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border: none; border-radius: var(--radius); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition); white-space: nowrap; }
@@ -347,7 +350,7 @@ textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .input-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .input-ctrl { padding: 9px 12px; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-main); font-family: inherit; font-size: 13px; outline: none; transition: border-color var(--transition); width: 100%; }
 .input-ctrl:focus { border-color: var(--accent); }
-select.input-ctrl { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+select.input-ctrl { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
 textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; background-image: none; }
 
 /* ════ STATS CARDS ════ */
@@ -379,20 +382,45 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
 .toast.warning { border-left: 3px solid var(--warning); }
 
 /* ════ MODAL DISPARO ════ */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 500; align-items: center; justify-content: center; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 5000; align-items: center; justify-content: center; }
 .modal-overlay.show { display: flex; }
 .modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 460px; max-width: 90vw; box-shadow: var(--shadow-hover); }
 .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
 .hidden { display: none !important; }
+
+/* ════ RESPONSIVIDADE MOBILE ════ */
+@media (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
+    .sidebar.open { transform: translateX(0); }
+    .hamburger { display: block; }
+    .topbar { padding: 0 16px; }
+    .user-profile span { display: none; }
+    .stats-row { grid-template-columns: 1fr 1fr; margin: 0 16px; }
+    .disparo-section { margin: 20px 16px 0; }
+    .disparo-card { flex: 0 0 100%; min-width: 0; }
+    .tabs-bar { padding: 0 16px; margin-top: 16px; }
+    .tab-panel { padding: 16px; }
+    .miner-grid { grid-template-columns: 1fr; }
+    .miner-form-grid.cols-3, .miner-form-grid.cols-2 { grid-template-columns: 1fr; }
+    .filter-bar { flex-direction: column; align-items: stretch; }
+    .filter-search { width: 100%; }
+    .filter-divider { display: none; }
+    .bulk-actions { flex-direction: column; width: 100%; }
+    .bulk-actions .btn { width: 100%; }
+    .side-panel { width: 100%; }
+}
 </style>
 </head>
 <body data-theme="light">
 
-<div class="sidebar">
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
     <div class="brand">
-        <img src="[https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png](https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png)" alt="Leanttro" class="brand-logo">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
     </div>
     <div class="nav-menu">
@@ -430,7 +458,12 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
 <div class="main">
 
     <div class="topbar">
-        <div class="topbar-title">PROSPECÇÃO & CRM</div>
+        <div class="topbar-left">
+            <button class="hamburger" onclick="toggleSidebar()">
+                <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="topbar-title">PROSPECÇÃO & CRM</div>
+        </div>
         <div class="topbar-right">
             <button class="btn btn-primary btn-sm" onclick="abrirPainel('novo')">
                 <svg style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -449,8 +482,8 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
 
     <div class="content-area" id="contentArea">
 
-        <div style="padding: 20px 24px 0;">
-            <div class="stats-row" style="margin: 0;">
+        <div>
+            <div class="stats-row" style="margin-top:20px;">
                 <div class="stat-card">
                     <div class="stat-label">Total Contatos</div>
                     <div class="stat-value" id="statTotal">—</div>
@@ -504,18 +537,18 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
                 <div class="filter-divider"></div>
                 <select class="filter-select" id="filterOrigem" onchange="filtrarTabela()">
                     <option value="">Todas as origens</option>
-                    <option value="maps">Google Maps</option>
-                    <option value="instagram">Instagram</option>
-                    <option value="linkedin">LinkedIn</option>
-                    <option value="csv">CSV</option>
-                    <option value="manual">Manual</option>
+                    <option value="Google Maps">Google Maps</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="CSV">CSV</option>
+                    <option value="Manual">Manual</option>
                 </select>
                 <select class="filter-select" id="filterStatus" onchange="filtrarTabela()">
                     <option value="">Todos os status</option>
-                    <option value="novo">Novo</option>
-                    <option value="em_contato">Em Contato</option>
-                    <option value="convertido">Convertido</option>
-                    <option value="bloqueado">Bloqueado</option>
+                    <option value="Novo">Novo</option>
+                    <option value="Quente">Quente</option>
+                    <option value="Cliente">Cliente</option>
+                    <option value="Enviado em Massa">Enviado em Massa</option>
                 </select>
                 <div class="filter-divider"></div>
                 <button class="btn btn-outline btn-sm" onclick="exportarCSV()">⬇ Exportar CSV</button>
@@ -526,10 +559,9 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
                 <div class="bulk-actions">
                     <select class="filter-select" id="bulkStatusSel">
                         <option value="">Alterar status...</option>
-                        <option value="novo">Novo</option>
-                        <option value="em_contato">Em Contato</option>
-                        <option value="convertido">Convertido</option>
-                        <option value="bloqueado">Bloqueado</option>
+                        <option value="Novo">Novo</option>
+                        <option value="Quente">Quente</option>
+                        <option value="Cliente">Cliente</option>
                     </select>
                     <button class="btn btn-outline btn-sm" onclick="aplicarBulkStatus()">Aplicar</button>
                     <button class="btn btn-outline btn-sm" onclick="exportarSelecionados()">⬇ Exportar</button>
@@ -546,15 +578,14 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
                             <th>Nome / Empresa</th>
                             <th>WhatsApp</th>
                             <th>E-mail</th>
-                            <th>Origem</th>
-                            <th>Tags</th>
+                            <th>Origem / Ramo</th>
                             <th>Status</th>
                             <th class="col-actions"></th>
                         </tr>
                     </thead>
                     <tbody id="crmTableBody">
                         <tr class="loading-row">
-                            <td colspan="8"><div class="spinner"></div></td>
+                            <td colspan="7"><div class="spinner"></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -586,81 +617,54 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
             </div>
 
             <div class="miner-form show" id="form-maps">
-                <div class="miner-form-grid cols-4" style="margin-bottom:12px;">
+                <div class="miner-form-grid cols-3" style="margin-bottom:12px;">
                     <div class="input-group">
                         <label class="input-label">Nicho / Segmento</label>
-                        <input type="text" class="input-ctrl" id="m-maps-nicho" placeholder="Ex: Clínica Odontológica">
+                        <input type="text" class="input-ctrl" id="m-maps-nicho" placeholder="Ex: Etiquetas Personalizadas" value="Etiquetas Personalizadas">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Cidade Base</label>
-                        <input type="text" class="input-ctrl" id="m-maps-cidade" placeholder="Ex: São Paulo">
+                        <input type="text" class="input-ctrl" id="m-maps-cidade" placeholder="Ex: São Paulo" value="São Paulo">
                     </div>
                     <div class="input-group">
                         <label class="input-label">Bairros (separados por vírgula)</label>
-                        <input type="text" class="input-ctrl" id="m-maps-bairros" placeholder="Ex: Pinheiros, Itaim">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Qtd. Resultados</label>
-                        <select class="input-ctrl" id="m-maps-qtd">
-                            <option value="10">10 Resultados</option>
-                            <option value="20" selected>20 Resultados</option>
-                            <option value="50">50 Resultados</option>
-                            <option value="100">100 Resultados</option>
-                        </select>
+                        <input type="text" class="input-ctrl" id="m-maps-bairros" placeholder="Ex: Vila Marari, Jabaquara" value="Vila Marari, Jabaquara">
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="iniciarExtracao('maps')" id="btnExtrairMaps">
-                    🔍 Iniciar Extração
+                    🔍 Iniciar Extração Massiva
                 </button>
             </div>
 
             <div class="miner-form" id="form-instagram">
-                <div class="miner-form-grid cols-3" style="margin-bottom:12px;">
+                <div class="miner-form-grid cols-2" style="margin-bottom:12px;">
                     <div class="input-group">
                         <label class="input-label">Nicho / Hashtag</label>
                         <input type="text" class="input-ctrl" id="m-insta-nicho" placeholder="Ex: clínica estética SP">
                     </div>
                     <div class="input-group">
-                        <label class="input-label">Cidade (opcional)</label>
-                        <input type="text" class="input-ctrl" id="m-insta-cidade" placeholder="Ex: São Paulo">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Qtd. Resultados</label>
-                        <select class="input-ctrl" id="m-insta-qtd">
-                            <option value="10">10 Resultados</option>
-                            <option value="20" selected>20 Resultados</option>
-                            <option value="50">50 Resultados</option>
-                            <option value="100">100 Resultados</option>
-                        </select>
+                        <label class="input-label">Bairros/Regiões (separados por vírgula)</label>
+                        <input type="text" class="input-ctrl" id="m-insta-bairros" placeholder="Ex: Jabaquara, Saúde">
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="iniciarExtracao('instagram')" id="btnExtrairInsta">
-                    🔍 Iniciar Extração
+                    🔍 Iniciar Extração Massiva
                 </button>
             </div>
 
             <div class="miner-form" id="form-linkedin">
-                <div class="miner-form-grid cols-3" style="margin-bottom:12px;">
+                <div class="miner-form-grid cols-2" style="margin-bottom:12px;">
                     <div class="input-group">
                         <label class="input-label">Segmento / Cargo</label>
                         <input type="text" class="input-ctrl" id="m-li-nicho" placeholder="Ex: clínica dermatologia">
                     </div>
                     <div class="input-group">
-                        <label class="input-label">Cidade (opcional)</label>
-                        <input type="text" class="input-ctrl" id="m-li-cidade" placeholder="Ex: São Paulo">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Qtd. Resultados</label>
-                        <select class="input-ctrl" id="m-li-qtd">
-                            <option value="10">10 Resultados</option>
-                            <option value="20" selected>20 Resultados</option>
-                            <option value="50">50 Resultados</option>
-                            <option value="100">100 Resultados</option>
-                        </select>
+                        <label class="input-label">Bairros/Regiões (separados por vírgula)</label>
+                        <input type="text" class="input-ctrl" id="m-li-bairros" placeholder="Ex: Moema, Itaim">
                     </div>
                 </div>
                 <button class="btn btn-primary" onclick="iniciarExtracao('linkedin')" id="btnExtrairLi">
-                    🔍 Iniciar Extração
+                    🔍 Iniciar Extração Massiva
                 </button>
             </div>
 
@@ -684,6 +688,7 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
                             <th>Empresa / Nome</th>
                             <th>WhatsApp</th>
                             <th>E-mail</th>
+                            <th>Link / Site</th>
                             <th>Endereço / Info</th>
                             <th>Fonte</th>
                         </tr>
@@ -748,27 +753,36 @@ textarea.input-ctrl { resize: vertical; min-height: 70px; line-height: 1.5; back
 
 <script>
 /* ════════════════════════════════════════════
+   INTEGRAÇÃO SEGURA COM FLASK (.ENV)
+════════════════════════════════════════════ */
+// O Jinja2 injeta as variáveis do .env lidas pelo backend (app.py) direto aqui
+const CONFIG = {
+    DIRECTUS_URL: "{{ directus_url }}", 
+    DIRECTUS_TOKEN: "{{ directus_token }}",
+    DIRECTUS_TABLE: "{{ directus_table }}",
+    SERPER_API_KEY: "{{ serper_api_key }}"
+};
+
+/* ════════════════════════════════════════════
    ESTADO GLOBAL
 ════════════════════════════════════════════ */
-let contacts = [];          // todos os contatos do CRM
-let filteredContacts = [];  // após filtros
+let contacts = [];          
+let filteredContacts = [];  
 let selectedIds = new Set();
 let currentPage = 1;
 const PAGE_SIZE = 20;
-let currentContact = null;  // contato sendo editado/visualizado
-let panelMode = 'view';     // 'view' | 'edit' | 'novo'
-let fonte = 'maps';         // fonte do minerador selecionada
-let minerResults = [];      // resultados do minerador
-let csvData = [];           // dados do CSV importado
+let currentContact = null;  
+let panelMode = 'view';     
+let fonte = 'maps';         
+let minerResults = [];      
+let csvData = [];           
 let csvHeaders = [];
 let pendingDisparoCard = null;
 
-const CAMPOS_CRM = ['nome','empresa','whatsapp','email','origem','status','tags','obs'];
-const TAGS_OPTIONS = ['Lead','Cliente','Ativo','Inativo'];
-const STATUS_OPTIONS = ['novo','em_contato','convertido','bloqueado'];
+const STATUS_OPTIONS = ['Novo','Quente','Cliente','Enviado em Massa'];
 
 /* ════════════════════════════════════════════
-   INIT
+   INIT & MENU MOBILE
 ════════════════════════════════════════════ */
 function init() {
     const saved = localStorage.getItem('wl_theme');
@@ -776,7 +790,6 @@ function init() {
     carregarContatos();
     carregarProntos();
 
-    // Drag-over no import
     const upz = document.getElementById('importUpload');
     upz.addEventListener('dragover', e => { e.preventDefault(); upz.classList.add('drag-over'); });
     upz.addEventListener('dragleave', () => upz.classList.remove('drag-over'));
@@ -786,8 +799,13 @@ function init() {
     });
 }
 
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
 /* ════════════════════════════════════════════
-   TEMA
+   TEMA & TABS
 ════════════════════════════════════════════ */
 function toggleTheme() {
     const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -795,9 +813,6 @@ function toggleTheme() {
     localStorage.setItem('wl_theme', t);
 }
 
-/* ════════════════════════════════════════════
-   TABS
-════════════════════════════════════════════ */
 function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach((b,i) => {
         b.classList.toggle('active', ['crm','minerador','importar'][i] === name);
@@ -807,10 +822,9 @@ function switchTab(name) {
 }
 
 /* ════════════════════════════════════════════
-   PRONTOS PARA DISPARO (localStorage do Kanban)
+   PRONTOS PARA DISPARO
 ════════════════════════════════════════════ */
 function carregarProntos() {
-    // Lê cards prontos do localStorage (salvos pelo conteudo.html)
     let prontos = [];
     try {
         const raw = localStorage.getItem('wl_kanban_prontos');
@@ -818,12 +832,10 @@ function carregarProntos() {
     } catch(e) {}
 
     document.getElementById('statProntos').textContent = prontos.length;
-
     if (!prontos.length) {
         document.getElementById('disparoSection').style.display = 'none';
         return;
     }
-
     document.getElementById('disparoSection').style.display = '';
     document.getElementById('disparoBadge').textContent = prontos.length;
 
@@ -855,26 +867,47 @@ function toggleDisparo() {
 }
 
 /* ════════════════════════════════════════════
-   CARREGAR CONTATOS
+   CARREGAR CONTATOS (DIRETO DO DIRECTUS)
 ════════════════════════════════════════════ */
 async function carregarContatos() {
+    if(!CONFIG.DIRECTUS_TOKEN || CONFIG.DIRECTUS_TOKEN === "" || CONFIG.DIRECTUS_TOKEN.includes("SEU_TOKEN")) {
+        document.getElementById('crmTableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--warning);">Configure as chaves no Dokploy e altere o app.py para injetá-las!</td></tr>`;
+        return;
+    }
     try {
-        const res  = await fetch('/api/crm/contacts');
+        const url = `${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}?limit=-1`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
         const data = await res.json();
-        if (data.success) {
-            contacts = data.contacts;
+        
+        if (data.data) {
+            contacts = data.data.map(c => ({
+                id: c.id,
+                nome: c.nome || '',
+                empresa: c.empresa || '',
+                whatsapp: c.telefone || '',
+                email: c.email || '',
+                origem: c.origem || 'Manual',
+                ramo: c.ramo || '',
+                bairro: c.bairro || '',
+                url: c.url || '',
+                status: c.status || 'Novo',
+                obs: c.obs || '',
+                created_at: c.date_created || null
+            }));
             atualizarStats();
             filtrarTabela();
+        } else {
+            throw new Error("Erro de dados");
         }
     } catch(e) {
-        document.getElementById('crmTableBody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--danger);">Erro ao carregar contatos.</td></tr>`;
+        document.getElementById('crmTableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--danger);">Erro ao carregar banco de dados (Directus).</td></tr>`;
     }
 }
 
 function atualizarStats() {
     document.getElementById('statTotal').textContent = contacts.length;
-    document.getElementById('statNovos').textContent = contacts.filter(c => c.status === 'novo').length;
-    document.getElementById('statConvertidos').textContent = contacts.filter(c => c.status === 'convertido').length;
+    document.getElementById('statNovos').textContent = contacts.filter(c => c.status === 'Novo' || c.status === 'novo').length;
+    document.getElementById('statConvertidos').textContent = contacts.filter(c => c.status === 'Cliente' || c.status === 'Cliente').length;
 }
 
 /* ════════════════════════════════════════════
@@ -903,30 +936,26 @@ function renderTabela() {
     const slice = filteredContacts.slice(start, start + PAGE_SIZE);
 
     if (!slice.length) {
-        body.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:50px;color:var(--text-muted);font-size:12px;">Nenhum contato encontrado.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:50px;color:var(--text-muted);font-size:12px;">Nenhum contato encontrado.</td></tr>`;
         renderPagination(total);
         return;
     }
 
     body.innerHTML = slice.map(c => {
-        const tags    = (c.tags || []).map(t => `<span class="tag tag-${t.toLowerCase()}">${escHtml(t)}</span>`).join('');
         const origBadge = badgeOrigem(c.origem);
         const statBadge = badgeStatus(c.status);
         const checked   = selectedIds.has(c.id);
-        
-        let siteBtn = c.link ? `<a href="${escHtml(c.link)}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;font-weight:600;">🔗 Site</a>` : '<span style="color:var(--text-muted)">—</span>';
+        const labelRamo = c.ramo ? `<br><span style="font-size:10px; color:var(--text-muted);">${escHtml(c.ramo)}</span>` : '';
         
         return `<tr class="${checked ? 'selected' : ''}" onclick="linhaClick(event, '${c.id}')">
             <td class="col-check"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleCheck('${c.id}', this)" onclick="e=>e.stopPropagation()"></td>
             <td>
-                <div style="font-weight:600; font-size:13px;">${escHtml(c.nome || '—')}</div>
-                ${c.empresa ? `<div style="font-size:11px;color:var(--text-muted);">${escHtml(c.empresa)}</div>` : ''}
+                <div style="font-weight:600; font-size:13px;">${escHtml(c.empresa || c.nome || '—')}</div>
+                ${c.empresa && c.nome ? `<div style="font-size:11px;color:var(--text-muted);">${escHtml(c.nome)}</div>` : ''}
             </td>
             <td style="font-family:monospace; font-size:12px;">${escHtml(c.whatsapp || '—')}</td>
             <td style="font-size:12px; color:var(--text-muted);">${escHtml(c.email || '—')}</td>
-            <td style="font-size:11px; text-align:center;">${siteBtn}</td>
-            <td>${origBadge}</td>
-            <td>${tags || '<span style="color:var(--text-muted);font-size:11px;">—</span>'}</td>
+            <td>${origBadge}${labelRamo}</td>
             <td>${statBadge}</td>
             <td class="col-actions">
                 <div class="row-actions">
@@ -972,10 +1001,10 @@ function goPage(p) {
 }
 
 /* ════════════════════════════════════════════
-   SELEÇÃO
+   SELEÇÃO EM MASSA E API DIRECTUS
 ════════════════════════════════════════════ */
 function linhaClick(event, id) {
-    if (event.target.type === 'checkbox' || event.target.tagName === 'A' || event.target.closest('.row-actions')) return;
+    if (event.target.type === 'checkbox' || event.target.closest('.row-actions')) return;
     abrirPainel('view', id);
 }
 
@@ -1004,8 +1033,13 @@ function atualizarBulkBar() {
 async function aplicarBulkStatus() {
     const status = document.getElementById('bulkStatusSel').value;
     if (!status || !selectedIds.size) return;
+    
     for (const id of selectedIds) {
-        await fetch(`/api/crm/contacts/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status }) });
+        await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}/${id}`, { 
+            method: 'PATCH', 
+            headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }) 
+        });
     }
     showToast('success', 'Atualizado', `${selectedIds.size} contatos atualizados.`);
     selectedIds.clear();
@@ -1015,7 +1049,10 @@ async function aplicarBulkStatus() {
 async function excluirSelecionados() {
     if (!selectedIds.size || !confirm(`Excluir ${selectedIds.size} contato(s)?`)) return;
     for (const id of selectedIds) {
-        await fetch(`/api/crm/contacts/${id}`, { method: 'DELETE' });
+        await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}/${id}`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` }
+        });
     }
     showToast('success', 'Excluído', `${selectedIds.size} contato(s) removido(s).`);
     selectedIds.clear();
@@ -1023,25 +1060,16 @@ async function excluirSelecionados() {
 }
 
 function prepararDisparoSelecionados() {
-    if (!selectedIds.size) return;
-    const selecionados = contacts.filter(c => selectedIds.has(c.id));
-    pendingDisparoCard = { titulo: 'Disparo manual', selecionados };
-    document.getElementById('modalDisparoContent').innerHTML = `
-        <p style="font-size:13px; margin-bottom:12px;">Você selecionou <strong>${selecionados.length} contato(s)</strong> para disparo.</p>
-        <div class="input-group">
-            <label class="input-label">Mensagem</label>
-            <textarea class="input-ctrl" id="disparoMsg" rows="4" placeholder="Olá {nome}, tudo bem?"></textarea>
-        </div>
-        <p style="font-size:11px; color:var(--text-muted); margin-top:6px;">Use {nome} e {empresa} para personalizar.</p>`;
-    document.getElementById('modalDisparo').classList.add('show');
+    // Mantém a mesma lógica mas agora o back-end tá direto (não vamos disparar daqui, mas você já tem a tela Sniper)
+    showToast('info', 'Leve para a aba SNIPER no app.py', 'A aba Sniper lida com os disparos massivos em Python.');
 }
 
 /* ════════════════════════════════════════════
-   PAINEL LATERAL — MODOS
+   PAINEL LATERAL
 ════════════════════════════════════════════ */
 function abrirPainel(mode, id = null) {
     panelMode = mode;
-    currentContact = id ? contacts.find(c => c.id === id) : null;
+    currentContact = id ? contacts.find(c => c.id == id) : null;
 
     const panel   = document.getElementById('sidePanel');
     const title   = document.getElementById('panelTitle');
@@ -1049,7 +1077,7 @@ function abrirPainel(mode, id = null) {
     const footer  = document.getElementById('panelFooter');
 
     if (mode === 'view' && currentContact) {
-        title.textContent = currentContact.nome || 'Contato';
+        title.textContent = currentContact.empresa || currentContact.nome || 'Contato';
         body.innerHTML    = renderPanelView(currentContact);
         footer.innerHTML  = `
             <button class="btn btn-primary btn-full" onclick="abrirPainel('edit','${currentContact.id}')">✏ Editar</button>
@@ -1077,22 +1105,20 @@ function fecharPainel() {
 }
 
 function renderPanelView(c) {
-    const tags = (c.tags||[]).map(t => `<span class="tag-chip tag-chip-${t.toLowerCase()}">${escHtml(t)}</span>`).join('');
     const wppLink = c.whatsapp ? `<a href="https://api.whatsapp.com/send?phone=${c.whatsapp}" target="_blank">${escHtml(c.whatsapp)}</a>` : '—';
     const emailLink = c.email ? `<a href="mailto:${c.email}">${escHtml(c.email)}</a>` : '—';
-    const siteLink = c.link ? `<a href="${c.link}" target="_blank">${escHtml(c.link)}</a>` : '—';
+    const urlLink = c.url ? `<a href="${c.url}" target="_blank">Acessar Link</a>` : '—';
 
     return `
-        <div class="detail-field"><div class="detail-key">Nome</div><div class="detail-value">${escHtml(c.nome||'—')}</div></div>
         <div class="detail-field"><div class="detail-key">Empresa</div><div class="detail-value">${escHtml(c.empresa||'—')}</div></div>
+        <div class="detail-field"><div class="detail-key">Nome</div><div class="detail-value">${escHtml(c.nome||'—')}</div></div>
         <div class="detail-field"><div class="detail-key">WhatsApp</div><div class="detail-value">${wppLink}</div></div>
         <div class="detail-field"><div class="detail-key">E-mail</div><div class="detail-value">${emailLink}</div></div>
-        <div class="detail-field"><div class="detail-key">Site / Link</div><div class="detail-value">${siteLink}</div></div>
+        <div class="detail-field"><div class="detail-key">Site / Link</div><div class="detail-value">${urlLink}</div></div>
         <div class="detail-field"><div class="detail-key">Origem</div><div class="detail-value">${badgeOrigem(c.origem)}</div></div>
         <div class="detail-field"><div class="detail-key">Status</div><div class="detail-value">${badgeStatus(c.status)}</div></div>
-        <div class="detail-field"><div class="detail-key">Tags</div><div class="detail-value">${tags || '—'}</div></div>
-        <div class="detail-field"><div class="detail-key">Observações</div><div class="detail-value">${escHtml(c.obs||'—')}</div></div>
-        ${c.created_at ? `<div class="detail-field"><div class="detail-key">Criado em</div><div class="detail-value">${new Date(c.created_at).toLocaleString('pt-BR')}</div></div>` : ''}
+        <div class="detail-field"><div class="detail-key">Nicho / Ramo</div><div class="detail-value">${escHtml(c.ramo||'—')}</div></div>
+        <div class="detail-field"><div class="detail-key">Observações / Endereço</div><div class="detail-value">${escHtml(c.obs||'—')}</div></div>
         <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
             ${c.whatsapp ? `<a href="https://api.whatsapp.com/send?phone=${c.whatsapp}" target="_blank" class="btn btn-success btn-sm">📱 WPP</a>` : ''}
             ${c.email ? `<a href="mailto:${c.email}" class="btn btn-outline btn-sm">📧 E-mail</a>` : ''}
@@ -1100,17 +1126,14 @@ function renderPanelView(c) {
 }
 
 function renderPanelForm(c) {
-    const tags = c ? (c.tags||[]) : [];
-    const tagsHtml = tags.map(t => `<span class="tag-chip tag-chip-${t.toLowerCase()}">${escHtml(t)}<button onclick="removerTag('${t}')">×</button></span>`).join('');
-
     return `
-        <div class="form-group">
-            <label class="form-label">Nome</label>
-            <input type="text" class="form-input" id="f-nome" value="${escHtml(c?.nome||'')}">
-        </div>
         <div class="form-group">
             <label class="form-label">Empresa</label>
             <input type="text" class="form-input" id="f-empresa" value="${escHtml(c?.empresa||'')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Nome Contato</label>
+            <input type="text" class="form-input" id="f-nome" value="${escHtml(c?.nome||'')}">
         </div>
         <div class="form-group">
             <label class="form-label">WhatsApp (com DDI/DDD)</label>
@@ -1122,70 +1145,45 @@ function renderPanelForm(c) {
         </div>
         <div class="form-group">
             <label class="form-label">Site / Link</label>
-            <input type="url" class="form-input" id="f-link" value="${escHtml(c?.link||'')}">
+            <input type="text" class="form-input" id="f-url" value="${escHtml(c?.url||'')}">
         </div>
         <div class="form-group">
             <label class="form-label">Origem</label>
             <select class="form-input" id="f-origem">
-                ${['maps','instagram','linkedin','csv','manual'].map(o => `<option value="${o}" ${(c?.origem||'manual')===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')}
+                ${['Google Maps','Instagram','LinkedIn','CSV','Manual'].map(o => `<option value="${o}" ${(c?.origem||'Manual')===o?'selected':''}>${o}</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
             <label class="form-label">Status</label>
             <select class="form-input" id="f-status">
-                ${STATUS_OPTIONS.map(s => `<option value="${s}" ${(c?.status||'novo')===s?'selected':''}>${s.replace('_',' ')}</option>`).join('')}
+                ${STATUS_OPTIONS.map(s => `<option value="${s}" ${(c?.status||'Novo')===s?'selected':''}>${s}</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
-            <label class="form-label">Tags</label>
-            <div class="tags-input-wrap" id="tagsWrap">${tagsHtml}</div>
-            <div class="tags-add">
-                ${TAGS_OPTIONS.map(t => `<button class="btn btn-outline btn-sm" onclick="adicionarTag('${t}')">${t}</button>`).join('')}
-            </div>
+            <label class="form-label">Nicho / Ramo</label>
+            <input type="text" class="form-input" id="f-ramo" value="${escHtml(c?.ramo||'')}">
         </div>
         <div class="form-group">
-            <label class="form-label">Observações</label>
+            <label class="form-label">Bairro</label>
+            <input type="text" class="form-input" id="f-bairro" value="${escHtml(c?.bairro||'')}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Observações / Endereço</label>
             <textarea class="form-input" id="f-obs" rows="3">${escHtml(c?.obs||'')}</textarea>
         </div>`;
 }
 
-let tagsCurrent = [];
-function adicionarTag(t) {
-    const wrap = document.getElementById('tagsWrap');
-    if (!wrap) return;
-    const existing = [...wrap.querySelectorAll('.tag-chip')].map(el => el.textContent.replace('×','').trim());
-    if (existing.includes(t)) return;
-    const span = document.createElement('span');
-    span.className = `tag-chip tag-chip-${t.toLowerCase()}`;
-    span.innerHTML = `${t}<button onclick="removerTag('${t}')">×</button>`;
-    wrap.appendChild(span);
-}
-function removerTag(t) {
-    const wrap = document.getElementById('tagsWrap');
-    if (!wrap) return;
-    wrap.querySelectorAll('.tag-chip').forEach(el => {
-        if (el.textContent.replace('×','').trim() === t) el.remove();
-    });
-}
-function getTagsFromWrap() {
-    const wrap = document.getElementById('tagsWrap');
-    if (!wrap) return [];
-    return [...wrap.querySelectorAll('.tag-chip')].map(el => el.textContent.replace('×','').trim());
-}
-
-/* ════════════════════════════════════════════
-   SALVAR CONTATO (novo / editar)
-════════════════════════════════════════════ */
 async function salvarContato() {
     const payload = {
         nome:    document.getElementById('f-nome')?.value.trim() || '',
         empresa: document.getElementById('f-empresa')?.value.trim() || '',
-        whatsapp:document.getElementById('f-whatsapp')?.value.trim() || '',
+        telefone:document.getElementById('f-whatsapp')?.value.trim() || '',
         email:   document.getElementById('f-email')?.value.trim() || '',
-        link:    document.getElementById('f-link')?.value.trim() || '',
-        origem:  document.getElementById('f-origem')?.value || 'manual',
-        status:  document.getElementById('f-status')?.value || 'novo',
-        tags:    getTagsFromWrap(),
+        url:     document.getElementById('f-url')?.value.trim() || '',
+        origem:  document.getElementById('f-origem')?.value || 'Manual',
+        status:  document.getElementById('f-status')?.value || 'Novo',
+        ramo:    document.getElementById('f-ramo')?.value.trim() || '',
+        bairro:  document.getElementById('f-bairro')?.value.trim() || '',
         obs:     document.getElementById('f-obs')?.value.trim() || '',
     };
 
@@ -1195,34 +1193,33 @@ async function salvarContato() {
 
     try {
         let res;
+        const headers = { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}`, 'Content-Type': 'application/json' };
         if (panelMode === 'novo') {
-            res = await fetch('/api/crm/contacts', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            res = await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}`, { method: 'POST', headers, body: JSON.stringify(payload) });
         } else {
-            res = await fetch(`/api/crm/contacts/${currentContact.id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            res = await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}/${currentContact.id}`, { method: 'PATCH', headers, body: JSON.stringify(payload) });
         }
-        const data = await res.json();
-        if (data.success) {
-            showToast('success', panelMode === 'novo' ? 'Contato criado!' : 'Contato atualizado!', payload.nome || payload.empresa);
+        
+        if (res.ok) {
+            showToast('success', panelMode === 'novo' ? 'Contato criado!' : 'Contato atualizado!', payload.empresa || payload.nome);
             fecharPainel();
             carregarContatos();
         } else {
-            showToast('error', 'Erro', data.error || 'Não foi possível salvar.');
+            showToast('error', 'Erro', 'Não foi possível salvar no Directus.');
         }
     } catch(e) {
         showToast('error', 'Erro de conexão', String(e));
     }
 }
 
-/* ════════════════════════════════════════════
-   EXCLUIR CONTATO
-════════════════════════════════════════════ */
 async function excluirContato(id) {
-    const c = contacts.find(x => x.id === id);
-    if (!confirm(`Excluir "${c?.nome || 'este contato'}"?`)) return;
+    if (!confirm(`Excluir este contato do banco?`)) return;
     try {
-        const res  = await fetch(`/api/crm/contacts/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.success) {
+        const res = await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}/${id}`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` }
+        });
+        if (res.ok) {
             showToast('success', 'Excluído', 'Contato removido do CRM.');
             fecharPainel();
             carregarContatos();
@@ -1230,14 +1227,11 @@ async function excluirContato(id) {
     } catch(e) { showToast('error', 'Erro', String(e)); }
 }
 
-/* ════════════════════════════════════════════
-   EXPORTAR CSV
-════════════════════════════════════════════ */
 function exportarCSV() {
     const list = selectedIds.size > 0 ? contacts.filter(c => selectedIds.has(c.id)) : filteredContacts;
     if (!list.length) { showToast('warning','Atenção','Nenhum contato para exportar.'); return; }
-    const headers = ['nome','empresa','whatsapp','email','origem','status','tags','obs'];
-    const rows    = list.map(c => headers.map(h => h === 'tags' ? (c.tags||[]).join(';') : `"${(c[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+    const headers = ['empresa','nome','whatsapp','email','origem','ramo','status','url','obs'];
+    const rows    = list.map(c => headers.map(h => `"${(c[h]||'').toString().replace(/"/g,'""')}"`).join(','));
     const csv     = [headers.join(','), ...rows].join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }));
@@ -1250,7 +1244,7 @@ function exportarCSV() {
 function exportarSelecionados() { exportarCSV(); }
 
 /* ════════════════════════════════════════════
-   MINERADOR
+   MINERADOR DIRETO NA API SERPER E DIRECTUS
 ════════════════════════════════════════════ */
 function selecionarFonte(f) {
     fonte = f;
@@ -1260,64 +1254,159 @@ function selecionarFonte(f) {
     document.getElementById(`form-${f}`).classList.add('show');
 }
 
+function extrair_telefone(txt) {
+    const padrao = /(?:(?:\+|00)?55\s?)?(?:\(?([1-9][0-9])\)?\s?)?(?:((?:9\d|[2-9])\d{3})\-?(\d{4}))/g;
+    const match = padrao.exec(txt);
+    if(match) {
+        let ddd = match[1] || "11";
+        return `55${ddd}${match[2]}${match[3]}`.replace(/\D/g, '');
+    }
+    return null;
+}
+
+function extrair_email_regex(txt) {
+    const match = /[\w\.-]+@[\w\.-]+\.\w+/.exec(txt);
+    return match ? match[0] : null;
+}
+
+function limpar_titulo(t) {
+    if(!t) return "";
+    let clean = t;
+    if(clean.includes("•")) clean = clean.split("•")[0];
+    if(clean.includes("-")) clean = clean.split("-")[0];
+    if(clean.includes("|")) clean = clean.split("|")[0];
+    return clean.trim().substring(0, 50);
+}
+
 async function iniciarExtracao(src) {
-    let payload = { fonte: src };
+    if(!CONFIG.SERPER_API_KEY || CONFIG.SERPER_API_KEY === "" || CONFIG.SERPER_API_KEY.includes("SUA_CHAVE")) {
+        showToast('error', 'Sem Chave', 'Adicione as variáveis de ambiente no Dokploy.');
+        return;
+    }
+
+    let nicho = "", cidade = "", bairrosTxt = "";
 
     if (src === 'maps') {
-        const nicho   = document.getElementById('m-maps-nicho').value.trim();
-        const cidade  = document.getElementById('m-maps-cidade').value.trim();
-        const bairros = document.getElementById('m-maps-bairros').value.trim();
-        const qtd     = document.getElementById('m-maps-qtd').value;
-        if (!nicho) { showToast('warning','Atenção','Preencha o nicho.'); return; }
-        payload = { ...payload, nicho, cidade, bairros, quantidade: qtd };
+        nicho = document.getElementById('m-maps-nicho').value.trim();
+        cidade = document.getElementById('m-maps-cidade').value.trim();
+        bairrosTxt = document.getElementById('m-maps-bairros').value.trim();
     } else if (src === 'instagram') {
-        const nicho  = document.getElementById('m-insta-nicho').value.trim();
-        const cidade = document.getElementById('m-insta-cidade').value.trim();
-        const qtd    = document.getElementById('m-insta-qtd').value;
-        if (!nicho) { showToast('warning','Atenção','Preencha o nicho.'); return; }
-        payload = { ...payload, nicho, cidade, quantidade: qtd };
+        nicho = document.getElementById('m-insta-nicho').value.trim();
+        bairrosTxt = document.getElementById('m-insta-bairros').value.trim();
     } else {
-        const nicho  = document.getElementById('m-li-nicho').value.trim();
-        const cidade = document.getElementById('m-li-cidade').value.trim();
-        const qtd    = document.getElementById('m-li-qtd').value;
-        if (!nicho) { showToast('warning','Atenção','Preencha o segmento.'); return; }
-        payload = { ...payload, nicho, cidade, quantidade: qtd };
+        nicho = document.getElementById('m-li-nicho').value.trim();
+        bairrosTxt = document.getElementById('m-li-bairros').value.trim();
     }
+
+    if (!nicho) { showToast('warning','Atenção','Preencha o nicho.'); return; }
+
+    let listaBairros = bairrosTxt ? bairrosTxt.split(',').map(b=>b.trim()).filter(b=>b!=="") : [""];
+    if(listaBairros.length === 0) listaBairros = [""];
 
     const btnId = src === 'maps' ? 'btnExtrairMaps' : src === 'instagram' ? 'btnExtrairInsta' : 'btnExtrairLi';
     document.getElementById(btnId).disabled = true;
+    
     document.getElementById('minerProgress').classList.remove('hidden');
-    document.getElementById('minerProgressBar').style.width = '10%';
-    document.getElementById('minerProgressText').textContent = 'Buscando contatos...';
+    const pBar = document.getElementById('minerProgressBar');
+    const pText = document.getElementById('minerProgressText');
+    pBar.style.width = '5%';
     document.getElementById('minerResults').classList.add('hidden');
 
+    let acumulado = [];
+    let telefones_crm = contacts.map(c => c.whatsapp).filter(Boolean);
+    let emails_crm = contacts.map(c => c.email).filter(Boolean);
+    let duplicados_ocultados = 0;
+
     try {
-        const res = await fetch('/api/minerador', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        document.getElementById('minerProgressBar').style.width = '80%';
-        const data = await res.json();
-        document.getElementById('minerProgressBar').style.width = '100%';
+        for(let i=0; i<listaBairros.length; i++) {
+            const bairro = listaBairros[i];
+            pText.textContent = `Buscando em: ${bairro || 'Geral'} (${i+1}/${listaBairros.length})`;
+            
+            if (src === 'maps') {
+                const query = `${nicho} em ${bairro} ${cidade}`.trim();
+                const req = await fetch('https://google.serper.dev/places', {
+                    method: 'POST',
+                    headers: {'X-API-KEY': CONFIG.SERPER_API_KEY, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({q: query, gl: 'br', hl: 'pt-br'})
+                });
+                const data = await req.json();
+                
+                if(data.places) {
+                    for(let r of data.places) {
+                        let zap = extrair_telefone(r.phoneNumber || "");
+                        let site = r.website || "";
+                        let emp = limpar_titulo(r.title);
+                        let email = ""; 
+                        
+                        if(!zap && !email) zap = "Sem Numero";
+                        else if (zap && telefones_crm.includes(zap)) { duplicados_ocultados++; continue; }
+                        
+                        acumulado.push({
+                            empresa: emp, nicho: nicho, bairro: bairro,
+                            endereco: r.address || "", whatsapp: zap, email: email,
+                            fonte: 'Google Maps', link: site
+                        });
+                    }
+                }
+            } else {
+                const site_op = src === 'instagram' ? 'site:instagram.com' : 'site:linkedin.com/company';
+                const base_q = bairro ? `${site_op} "${nicho}" "${bairro}"` : `${site_op} "${nicho}"`;
+                const search_queries = [`${base_q} "whatsapp"`, `${base_q} "@gmail.com" OR "@hotmail.com"`];
+                
+                for(let sq of search_queries) {
+                    const req = await fetch('https://google.serper.dev/search', {
+                        method: 'POST',
+                        headers: {'X-API-KEY': CONFIG.SERPER_API_KEY, 'Content-Type': 'application/json'},
+                        body: JSON.stringify({q: sq, num: 20, gl: 'br', hl: 'pt-br'})
+                    });
+                    const data = await req.json();
+                    
+                    if(data.organic) {
+                        for(let r of data.organic) {
+                            let textfull = (r.title + " " + r.snippet).toLowerCase();
+                            let zap = extrair_telefone(textfull);
+                            let email = extrair_email_regex(textfull);
+                            let emp = limpar_titulo(r.title);
+                            
+                            if(!zap && !email) continue; 
+                            if(zap && telefones_crm.includes(zap)) { duplicados_ocultados++; continue; }
+                            if(email && emails_crm.includes(email)) { duplicados_ocultados++; continue; }
+                            
+                            acumulado.push({
+                                empresa: emp, nicho: nicho, bairro: bairro,
+                                endereco: r.snippet.substring(0,100), whatsapp: zap||"Sem Numero", email: email||"",
+                                fonte: src === 'instagram' ? 'Instagram' : 'LinkedIn', link: r.link
+                            });
+                        }
+                    }
+                }
+            }
+            pBar.style.width = `${((i+1)/listaBairros.length)*100}%`;
+        }
 
-        if (data.success) {
-            minerResults = data.results;
-            // Filtra duplicados já no CRM
-            const wzSet = new Set(contacts.map(c => c.whatsapp).filter(Boolean));
-            const emSet = new Set(contacts.map(c => c.email).filter(Boolean));
-            const novos = minerResults.filter(r => !wzSet.has(r.whatsapp) && !emSet.has(r.email));
-            const dups  = minerResults.length - novos.length;
-            minerResults = novos;
+        const uniq = [];
+        const seen = new Set();
+        for(let a of acumulado) {
+            let ch = a.whatsapp !== "Sem Numero" ? a.whatsapp : (a.email || a.empresa);
+            if(!seen.has(ch)) { seen.add(ch); uniq.push(a); }
+        }
+        minerResults = uniq;
 
-            if (dups > 0) showToast('info','Duplicados ocultados', `${dups} já existem no CRM.`);
+        if (duplicados_ocultados > 0) showToast('info','Base Limpa', `${duplicados_ocultados} contatos já estavam no seu CRM e foram ocultados.`);
+
+        if(minerResults.length > 0) {
             renderMinerResults();
             showToast('success', 'Extração concluída!', `${minerResults.length} contatos inéditos encontrados.`);
         } else {
-            showToast('error','Erro na extração', data.error || 'Tente novamente.');
+            showToast('warning', 'Nada Encontrado', 'Não achamos contatos inéditos para essa busca.');
         }
+
     } catch(e) {
-        showToast('error','Erro de conexão', String(e));
+        showToast('error','Erro na extração', String(e));
     } finally {
         document.getElementById(btnId).disabled = false;
         document.getElementById('minerProgress').classList.add('hidden');
-        document.getElementById('minerProgressBar').style.width = '0%';
+        pBar.style.width = '0%';
     }
 }
 
@@ -1328,13 +1417,15 @@ function renderMinerResults() {
     document.getElementById('minerResults').classList.remove('hidden');
     document.getElementById('minerCount').textContent = `${minerResults.length} contatos`;
     const body = document.getElementById('minerTableBody');
+    
     body.innerHTML = minerResults.map((r, i) => `
         <tr>
             <td><input type="checkbox" class="miner-check" data-idx="${i}" checked></td>
-            <td style="font-weight:600;">${escHtml(r.empresa||r.nome||'—')}</td>
+            <td style="font-weight:600;">${escHtml(r.empresa||'—')}</td>
             <td style="font-family:monospace;font-size:11px;">${escHtml(r.whatsapp||'—')}</td>
-            <td style="font-size:11px;">${escHtml(r.email||'—')}</td>
-            <td style="font-size:11px; color:var(--text-muted);">${escHtml(r.endereco||r.info||'—')}</td>
+            <td style="font-size:11px;">${r.email ? escHtml(r.email) : '<span style="color:var(--text-muted)">Sem e-mail</span>'}</td>
+            <td style="font-size:11px;">${r.link ? `<a href="${escHtml(r.link)}" target="_blank" style="color:var(--accent); text-decoration:none;">🔗 Acessar</a>` : '<span style="color:var(--text-muted)">Sem link</span>'}</td>
+            <td style="font-size:11px; color:var(--text-muted);">${escHtml(r.endereco||'—')}</td>
             <td>${badgeOrigem(r.fonte||fonte)}</td>
         </tr>`).join('');
 }
@@ -1350,7 +1441,7 @@ function getMinerSelecionados() {
 function exportarMinerados() {
     const list = getMinerSelecionados();
     if (!list.length) { showToast('warning','Atenção','Selecione ao menos um.'); return; }
-    const headers = ['empresa','whatsapp','email','endereco','fonte','link'];
+    const headers = ['empresa','whatsapp','email','link','endereco','fonte'];
     const rows    = list.map(r => headers.map(h => `"${(r[h]||'').toString().replace(/"/g,'""')}"`).join(','));
     const csv     = [headers.join(','), ...rows].join('\n');
     const a = document.createElement('a');
@@ -1367,25 +1458,39 @@ async function salvarSelecionadosCRM() {
     document.getElementById('btnSalvarCRM').disabled = true;
 
     let salvos = 0;
+    const headers = { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}`, 'Content-Type': 'application/json' };
+    
     for (const r of list) {
+        let obsFinal = r.endereco || '';
+        
         const payload = {
-            nome: r.nome || '', empresa: r.empresa || '',
-            whatsapp: r.whatsapp || '', email: r.email || '',
-            origem: r.fonte || fonte, status: 'novo', link: r.link || '',
-            obs: r.endereco || r.info || '', tags: ['Lead'],
+            empresa: r.empresa || '',
+            telefone: r.whatsapp === "Sem Numero" ? "" : r.whatsapp,
+            email: r.email || '',
+            origem: r.fonte || 'Google Maps',
+            status: 'Novo',
+            ramo: r.nicho || '',
+            bairro: r.bairro || '',
+            url: r.link || '',
+            obs: obsFinal
         };
-        const res = await fetch('/api/crm/contacts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const d   = await res.json();
-        if (d.success) salvos++;
+
+        try {
+            const res = await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}`, { method:'POST', headers, body: JSON.stringify(payload) });
+            if (res.ok) salvos++;
+        } catch(e){}
     }
 
-    showToast('success','Salvos no CRM!', `${salvos} de ${list.length} contatos adicionados.`);
+    showToast('success','Salvos no CRM!', `${salvos} de ${list.length} contatos migrados pro banco.`);
     document.getElementById('btnSalvarCRM').disabled = false;
+    
+    minerResults = minerResults.filter((_, idx) => !document.querySelector(`.miner-check[data-idx="${idx}"]`).checked);
+    renderMinerResults();
     carregarContatos();
 }
 
 /* ════════════════════════════════════════════
-   IMPORTAR CSV
+   IMPORTAR CSV NOVO
 ════════════════════════════════════════════ */
 function handleCSVUpload(file) {
     if (!file) return;
@@ -1407,12 +1512,12 @@ function handleCSVUpload(file) {
     reader.readAsText(file, 'utf-8');
 }
 
-const CRM_FIELDS = { 'nome':'Nome','empresa':'Empresa','whatsapp':'WhatsApp','email':'E-mail','obs':'Observações' };
+const CRM_FIELDS = { 'nome':'Nome','empresa':'Empresa','whatsapp':'WhatsApp','email':'E-mail','ramo':'Ramo', 'obs':'Observações' };
 
 function renderColMapping() {
     const rows = document.getElementById('colMapRows');
     rows.innerHTML = Object.entries(CRM_FIELDS).map(([field, label]) => {
-        const opts = csvHeaders.map(h => `<option value="${escHtml(h)}" ${h.toLowerCase().includes(field)?'selected':''}>${escHtml(h)}</option>`).join('');
+        const opts = csvHeaders.map(h => `<option value="${escHtml(h)}" ${h.toLowerCase().includes(field.substring(0,3))?'selected':''}>${escHtml(h)}</option>`).join('');
         return `<div class="col-map-grid">
             <span style="font-size:12px;font-weight:600;">${label} (CRM)</span>
             <span class="col-map-arrow">←</span>
@@ -1440,21 +1545,32 @@ async function executarImport() {
         if (sel && sel.value) mapping[field] = sel.value;
     });
 
-    if (!mapping.whatsapp && !mapping.email && !mapping.nome) {
-        showToast('warning','Atenção','Mapeie ao menos nome, WhatsApp ou e-mail.'); return;
+    if (!mapping.whatsapp && !mapping.email && !mapping.nome && !mapping.empresa) {
+        showToast('warning','Atenção','Mapeie ao menos Empresa, Nome, WhatsApp ou e-mail.'); return;
     }
 
     let salvos = 0;
+    const headers = { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}`, 'Content-Type': 'application/json' };
+
     for (const row of csvData) {
-        const payload = { status: 'novo', origem: 'csv', tags: ['Lead'] };
-        Object.entries(mapping).forEach(([field, col]) => { payload[field] = row[col] || ''; });
-        if (!payload.nome && !payload.empresa && !payload.whatsapp) continue;
-        const res = await fetch('/api/crm/contacts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-        const d   = await res.json();
-        if (d.success) salvos++;
+        const payload = { status: 'Novo', origem: 'CSV' };
+        
+        if(mapping.empresa) payload.empresa = row[mapping.empresa] || '';
+        if(mapping.nome) payload.nome = row[mapping.nome] || '';
+        if(mapping.whatsapp) payload.telefone = row[mapping.whatsapp] || '';
+        if(mapping.email) payload.email = row[mapping.email] || '';
+        if(mapping.ramo) payload.ramo = row[mapping.ramo] || '';
+        if(mapping.obs) payload.obs = row[mapping.obs] || '';
+
+        if (!payload.nome && !payload.empresa && !payload.telefone && !payload.email) continue;
+        
+        try {
+            const res = await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}`, { method:'POST', headers, body: JSON.stringify(payload) });
+            if (res.ok) salvos++;
+        } catch(e){}
     }
 
-    showToast('success','Importação concluída!', `${salvos} contatos adicionados.`);
+    showToast('success','Importação concluída!', `${salvos} contatos adicionados no Directus.`);
     cancelarImport();
     carregarContatos();
 }
@@ -1467,55 +1583,25 @@ function cancelarImport() {
 }
 
 /* ════════════════════════════════════════════
-   MODAL DISPARO
-════════════════════════════════════════════ */
-function abrirModalDisparo(card, tipo) {
-    pendingDisparoCard = card;
-    document.getElementById('modalDisparoContent').innerHTML = `
-        <p style="font-size:13px; margin-bottom:4px;">Post: <strong>${escHtml(card.titulo||'—')}</strong></p>
-        <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Selecione os contatos que receberão este disparo.</p>
-        <div class="form-group" style="margin-bottom:12px;">
-            <label class="form-label">Filtrar por tag</label>
-            <select class="form-input" id="dispaFiltroTag">
-                <option value="">Todos os contatos</option>
-                ${TAGS_OPTIONS.map(t => `<option value="${t}">${t}</option>`).join('')}
-            </select>
-        </div>
-        <p style="font-size:11px; color:var(--text-muted);">Os contatos serão filtrados na hora do disparo.</p>`;
-    document.getElementById('modalDisparo').classList.add('show');
-}
-
-function fecharModal() { document.getElementById('modalDisparo').classList.remove('show'); }
-
-function confirmarDisparo(tipo) {
-    if (!pendingDisparoCard) return;
-    const tag = document.getElementById('dispaFiltroTag')?.value || '';
-    const lista = tag ? contacts.filter(c => (c.tags||[]).includes(tag)) : contacts;
-    const info  = { card: pendingDisparoCard, tipo, lista: lista.map(c => c.id), tag };
-    localStorage.setItem('wl_pending_disparo', JSON.stringify(info));
-    showToast('info','Disparo preparado!', `${lista.length} contatos. Redirecionando...`);
-    fecharModal();
-    setTimeout(() => { window.location.href = '/disparo'; }, 1500);
-}
-
-/* ════════════════════════════════════════════
    UTILITÁRIOS — BADGES
 ════════════════════════════════════════════ */
 function badgeOrigem(o) {
-    const map = { maps:'badge-maps', instagram:'badge-instagram', linkedin:'badge-linkedin', csv:'badge-csv', manual:'badge-manual' };
-    const labels = { maps:'📍 Maps', instagram:'📸 Instagram', linkedin:'💼 LinkedIn', csv:'📄 CSV', manual:'✍ Manual' };
-    return `<span class="badge ${map[o]||'badge-manual'}">${labels[o]||o||'—'}</span>`;
+    let lowerO = String(o).toLowerCase();
+    const map = { 'google maps':'badge-maps', 'maps':'badge-maps', 'instagram':'badge-instagram', 'linkedin':'badge-linkedin', 'csv':'badge-csv', 'manual':'badge-manual' };
+    const labels = { 'google maps':'📍 Maps', 'maps':'📍 Maps', 'instagram':'📸 Instagram', 'linkedin':'💼 LinkedIn', 'csv':'📄 CSV', 'manual':'✍ Manual' };
+    return `<span class="badge ${map[lowerO]||'badge-manual'}">${labels[lowerO]||o||'—'}</span>`;
 }
 
 function badgeStatus(s) {
-    const map = { novo:'badge-novo', em_contato:'badge-em_contato', convertido:'badge-convertido', bloqueado:'badge-bloqueado' };
-    const labels = { novo:'Novo', em_contato:'Em Contato', convertido:'Convertido', bloqueado:'Bloqueado' };
-    return `<span class="badge ${map[s]||'badge-novo'}">${labels[s]||s||'—'}</span>`;
+    let lowerS = String(s).toLowerCase();
+    const map = { novo:'badge-novo', quente:'badge-em_contato', cliente:'badge-convertido', 'enviado em massa':'badge-manual' };
+    const labels = { novo:'Novo', quente:'Quente', cliente:'Cliente', 'enviado em massa':'Enviado em Massa' };
+    return `<span class="badge ${map[lowerS]||'badge-novo'}">${labels[lowerS]||s||'—'}</span>`;
 }
 
 function escHtml(s) {
     if (!s) return '';
-    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]));
 }
 
 /* ════════════════════════════════════════════
