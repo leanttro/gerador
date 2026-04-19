@@ -97,6 +97,10 @@ def index():
 def home():
     return render_template('home.html')
 
+@app.route('/conteudo')
+def conteudo():
+    return render_template('conteudo.html')
+
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
