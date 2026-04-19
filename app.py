@@ -793,10 +793,10 @@ def formulario():
 
 
 # ─────────────────────────────────────────────
-# SUGESTÃO DE TEXTO VIA IA (para o formulário)
+# SUGESTÃO DE TEXTO VIA IA (para o formulário e Kanban)
 # ─────────────────────────────────────────────
 @app.route('/api/sugestao-texto', methods=['POST'])
-@limiter.limit("30 per minute")
+@limiter.limit("60 per minute")
 def api_sugestao_texto():
     data = request.json or {}
     prompt = data.get('prompt', '').strip()
@@ -813,16 +813,17 @@ def api_sugestao_texto():
                 {
                     "role": "system",
                     "content": (
-                        "Você é um copywriter especialista em marketing digital brasileiro. "
-                        "Escreva textos curtos, diretos, persuasivos e em português do Brasil. "
-                        "Nunca use emojis em excesso. Seja natural e humano."
+                        "Você é um assistente especialista em marketing digital e diretor de arte. "
+                        "Siga rigorosamente as instruções do usuário. "
+                        "Se o usuário pedir um retorno em JSON, retorne APENAS o JSON válido e estrito, "
+                        "sem blocos de código markdown (```json) e sem nenhum texto adicional."
                     )
                 },
                 {"role": "user", "content": prompt}
             ],
             model=BEST_FREE_MODEL,
-            temperature=0.7,
-            max_tokens=600,
+            temperature=0.5,
+            max_tokens=3000,
         )
         text = response.choices[0].message.content.strip()
         return jsonify({"success": True, "text": text})
