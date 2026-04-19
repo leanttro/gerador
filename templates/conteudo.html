@@ -225,17 +225,10 @@
                     <input type="text" id="draftTitle" class="input-control" placeholder="Ex: 5 motivos para ter um CRM">
                 </div>
 
-                <div class="input-group">
-                    <label>Template (Opcional)</label>
-                    <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
-                        <option value="">✨ Deixar a IA escolher o melhor</option>
-                    </select>
-                </div>
-
                 <div class="row-2">
                     <div class="input-group">
                         <label>Formato</label>
-                        <select id="draftType" class="input-control">
+                        <select id="draftType" class="input-control" onchange="toggleFormatUI()">
                             <option>Carrossel</option>
                             <option>Reels / TikTok</option>
                             <option>Postagem Estática</option>
@@ -252,6 +245,35 @@
                 </div>
 
                 <div class="input-group">
+                    <label>Cores da Marca (Salvas)</label>
+                    <div style="display:flex; gap:8px; margin-bottom:4px; align-items:center;">
+                        <input type="color" id="brandColorFundo" title="Fundo (Ex: Preto)" value="#18181b" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                        <input type="color" id="brandColorTexto" title="Texto (Ex: Branco)" value="#ffffff" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                        <input type="color" id="brandColorDestaque" title="Destaque (Ex: Azul)" value="#2563eb" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                        <input type="color" id="brandColorSec" title="Secundária (Ex: Cinza)" value="#71717a" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
+                        <label style="display:flex; gap:6px; align-items:center; font-size:11px; margin-left:8px; cursor:pointer;">
+                            <input type="checkbox" id="useBrandColors" checked onchange="saveBrandColors(); onTemplateChange();"> Usar na IA
+                        </label>
+                    </div>
+                </div>
+
+                <div class="input-group" id="singleTemplateWrap" style="display:none;">
+                    <label>Template (Opcional)</label>
+                    <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
+                        <option value="">✨ Deixar a IA escolher o melhor</option>
+                    </select>
+                </div>
+
+                <div class="input-group" id="carouselTemplateWrap" style="background: var(--bg-body); padding:12px; border-radius:var(--radius); border: 1px solid var(--border);">
+                    <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        Páginas do Carrossel
+                        <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="addCarouselPage()">+ Página</button>
+                    </label>
+                    <div id="carouselPagesContainer" style="display:flex; flex-direction:column; gap:8px;">
+                        </div>
+                </div>
+
+                <div class="input-group mt-6">
                     <label>Logo da Empresa</label>
                     <div class="upload-btn-wrap">
                         <button class="upload-btn" onclick="document.getElementById('logoInput').click()" id="btnUploadLogo">Fazer Upload</button>
@@ -277,6 +299,10 @@
                     <div style="font-size:11px; color:var(--text-muted);" id="suggestedReason">Você pode editar os campos abaixo antes de enviar para o Kanban.</div>
                     
                     <div class="keys-grid" id="keysGrid"></div>
+                    
+                    <button class="btn btn-secondary" style="width:100%; margin-top:12px; font-size:11px;" onclick="copiarChavesPainel()">
+                        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;margin-right:6px;vertical-align:-2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copiar Chaves Mapeadas
+                    </button>
                 </div>
 
                 <input type="hidden" id="currentTemplateId" value="">
@@ -333,6 +359,9 @@
         const body = document.body;
         if (localStorage.getItem('wl_theme')) body.setAttribute('data-theme', localStorage.getItem('wl_theme'));
 
+        // Load Brand Colors
+        loadBrandColors();
+
         // Recupera o Logo do LocalStorage
         const savedLogo = localStorage.getItem('wl_logo_url');
         if (savedLogo) {
@@ -359,6 +388,9 @@
                     opt.text = t.name;
                     sel.appendChild(opt);
                 });
+                
+                // Initialize default UI state
+                toggleFormatUI();
             }
         } catch(e) { console.error(e); }
     });
@@ -370,41 +402,182 @@
         localStorage.setItem('wl_theme', newTheme);
     }
 
+    function loadBrandColors() {
+        const bg = localStorage.getItem('wl_brand_bg');
+        const text = localStorage.getItem('wl_brand_text');
+        const acc = localStorage.getItem('wl_brand_acc');
+        const sec = localStorage.getItem('wl_brand_sec');
+        const use = localStorage.getItem('wl_brand_use');
+        
+        if(bg) document.getElementById('brandColorFundo').value = bg;
+        if(text) document.getElementById('brandColorTexto').value = text;
+        if(acc) document.getElementById('brandColorDestaque').value = acc;
+        if(sec) document.getElementById('brandColorSec').value = sec;
+        if(use !== null) document.getElementById('useBrandColors').checked = (use === 'true');
+    }
+
+    function saveBrandColors() {
+        localStorage.setItem('wl_brand_bg', document.getElementById('brandColorFundo').value);
+        localStorage.setItem('wl_brand_text', document.getElementById('brandColorTexto').value);
+        localStorage.setItem('wl_brand_acc', document.getElementById('brandColorDestaque').value);
+        localStorage.setItem('wl_brand_sec', document.getElementById('brandColorSec').value);
+        localStorage.setItem('wl_brand_use', document.getElementById('useBrandColors').checked);
+    }
+
     function atualizarContadores() {
         document.querySelectorAll('.kanban-col').forEach(col => {
             col.querySelector('.col-count').innerText = col.querySelectorAll('.k-card').length;
         });
     }
 
-    function onTemplateChange() {
-        const tplId = document.getElementById('draftTemplate').value;
-        if (!tplId) {
-            document.getElementById('aiSuggestionBox').classList.remove('active');
-            currentChaves = {};
-            return;
+    function toggleFormatUI() {
+        const type = document.getElementById('draftType').value;
+        const singleWrap = document.getElementById('singleTemplateWrap');
+        const carouselWrap = document.getElementById('carouselTemplateWrap');
+        const carouselContainer = document.getElementById('carouselPagesContainer');
+
+        if(type === 'Carrossel') {
+            singleWrap.style.display = 'none';
+            carouselWrap.style.display = 'block';
+            if(carouselContainer.children.length === 0) {
+                addCarouselPage();
+                addCarouselPage();
+            }
+        } else {
+            singleWrap.style.display = 'block';
+            carouselWrap.style.display = 'none';
         }
+        onTemplateChange();
+    }
 
-        const tpl = window.appTemplates.find(x => x.id === tplId);
-        if (tpl) {
-            const m = tpl.html.match(/CHAVE_[A-Z_]+/g);
-            const chavesUnicas = m ? [...new Set(m)] : [];
+    function addCarouselPage() {
+        const container = document.getElementById('carouselPagesContainer');
+        const pageCount = container.children.length + 1;
+        const pageDiv = document.createElement('div');
+        pageDiv.style.display = 'flex';
+        pageDiv.style.gap = '8px';
+        pageDiv.style.alignItems = 'center';
+        
+        const select = document.createElement('select');
+        select.className = 'input-control carousel-template-select';
+        select.style.flex = '1';
+        select.style.padding = '8px';
+        select.style.fontSize = '12px';
+        select.onchange = onTemplateChange;
+        
+        select.innerHTML = '<option value="">✨ IA Escolhe o Template (Pág ' + pageCount + ')</option>';
+        window.appTemplates.forEach(t => {
+            select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        });
+        
+        const label = document.createElement('span');
+        label.style.fontSize = '11px';
+        label.style.fontWeight = '700';
+        label.style.color = 'var(--text-muted)';
+        label.style.width = '35px';
+        label.innerText = 'Pág ' + pageCount;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-secondary';
+        removeBtn.style.padding = '6px';
+        removeBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        removeBtn.onclick = function() {
+            if(container.children.length > 1) {
+                pageDiv.remove();
+                Array.from(container.children).forEach((child, idx) => {
+                    child.querySelector('span').innerText = 'Pág ' + (idx + 1);
+                });
+                onTemplateChange();
+            } else {
+                alert('O carrossel precisa de pelo menos 1 página.');
+            }
+        };
+        
+        pageDiv.appendChild(label);
+        pageDiv.appendChild(select);
+        pageDiv.appendChild(removeBtn);
+        container.appendChild(pageDiv);
+        onTemplateChange();
+    }
 
-            currentChaves = {};
-            chavesUnicas.forEach(k => {
-                if (k.includes('COR_FUNDO')) currentChaves[k] = '#18181b';
-                else if (k.includes('COR_TEXTO')) currentChaves[k] = '#ffffff';
-                else if (k.includes('COR_DESTAQUE')) currentChaves[k] = '#2563eb';
-                else if (k.includes('COR_SECUNDARIA')) currentChaves[k] = '#71717a';
-                else if (k.includes('LOGO')) currentChaves[k] = document.getElementById('logoUrl').value || '';
-                else currentChaves[k] = '';
+    function onTemplateChange() {
+        const type = document.getElementById('draftType').value;
+        currentChaves = {};
+        
+        const isUseBrand = document.getElementById('useBrandColors').checked;
+        const bBg = document.getElementById('brandColorFundo').value;
+        const bText = document.getElementById('brandColorTexto').value;
+        const bAcc = document.getElementById('brandColorDestaque').value;
+        const bSec = document.getElementById('brandColorSec').value;
+
+        if (type === 'Carrossel') {
+            const selects = document.querySelectorAll('.carousel-template-select');
+            let hasSelection = false;
+            let names = [];
+            
+            selects.forEach((sel, index) => {
+                const tplId = sel.value;
+                if(tplId) {
+                    hasSelection = true;
+                    const tpl = window.appTemplates.find(x => x.id === tplId);
+                    if(tpl) {
+                        names.push(tpl.name);
+                        const m = tpl.html.match(/CHAVE_[A-Z_]+/g);
+                        const chavesUnicas = m ? [...new Set(m)] : [];
+                        chavesUnicas.forEach(k => {
+                            let defaultVal = '';
+                            if (k.includes('COR_FUNDO')) defaultVal = isUseBrand ? bBg : '#18181b';
+                            else if (k.includes('COR_TEXTO')) defaultVal = isUseBrand ? bText : '#ffffff';
+                            else if (k.includes('COR_DESTAQUE')) defaultVal = isUseBrand ? bAcc : '#2563eb';
+                            else if (k.includes('COR_SECUNDARIA')) defaultVal = isUseBrand ? bSec : '#71717a';
+                            else if (k.includes('LOGO')) defaultVal = document.getElementById('logoUrl').value || '';
+                            
+                            currentChaves[`[P${index+1}] ${k}`] = defaultVal;
+                        });
+                    }
+                } else {
+                    names.push('IA Decide');
+                }
             });
+            
+            if(hasSelection) {
+                document.getElementById('currentTemplateId').value = 'carrossel_multi';
+                document.getElementById('suggestedName').innerText = names.join(' + ');
+                document.getElementById('suggestedReason').innerText = "Variáveis mapeadas para as páginas do carrossel. Você pode preencher manualmente ou usar a IA.";
+                renderizarChavesBox();
+                document.getElementById('aiSuggestionBox').classList.add('active');
+            } else {
+                document.getElementById('aiSuggestionBox').classList.remove('active');
+            }
+            
+        } else {
+            const tplId = document.getElementById('draftTemplate').value;
+            if (!tplId) {
+                document.getElementById('aiSuggestionBox').classList.remove('active');
+                return;
+            }
 
-            document.getElementById('currentTemplateId').value = tpl.id;
-            document.getElementById('suggestedName').innerText = tpl.name;
-            document.getElementById('suggestedReason').innerText = "Você pode preencher as variáveis manualmente ou usar a IA para gerar os textos e cores.";
+            const tpl = window.appTemplates.find(x => x.id === tplId);
+            if (tpl) {
+                const m = tpl.html.match(/CHAVE_[A-Z_]+/g);
+                const chavesUnicas = m ? [...new Set(m)] : [];
 
-            renderizarChavesBox();
-            document.getElementById('aiSuggestionBox').classList.add('active');
+                chavesUnicas.forEach(k => {
+                    if (k.includes('COR_FUNDO')) currentChaves[k] = isUseBrand ? bBg : '#18181b';
+                    else if (k.includes('COR_TEXTO')) currentChaves[k] = isUseBrand ? bText : '#ffffff';
+                    else if (k.includes('COR_DESTAQUE')) currentChaves[k] = isUseBrand ? bAcc : '#2563eb';
+                    else if (k.includes('COR_SECUNDARIA')) currentChaves[k] = isUseBrand ? bSec : '#71717a';
+                    else if (k.includes('LOGO')) currentChaves[k] = document.getElementById('logoUrl').value || '';
+                    else currentChaves[k] = '';
+                });
+
+                document.getElementById('currentTemplateId').value = tpl.id;
+                document.getElementById('suggestedName').innerText = tpl.name;
+                document.getElementById('suggestedReason').innerText = "Você pode preencher as variáveis manualmente ou usar a IA para gerar os textos e cores.";
+
+                renderizarChavesBox();
+                document.getElementById('aiSuggestionBox').classList.add('active');
+            }
         }
     }
 
@@ -451,6 +624,7 @@
                     item.onclick = () => {
                         document.getElementById('draftTitle').value = insp.title;
                         document.getElementById('draftType').value = 'Carrossel';
+                        toggleFormatUI();
                         document.getElementById('draftCopy').value = `Instrução baseada na estratégia: ${insp.snippet}`;
                     };
                     listDiv.appendChild(item);
@@ -494,6 +668,7 @@
                     item.onclick = () => {
                         document.getElementById('draftTitle').value = insp.title;
                         document.getElementById('draftType').value = insp.type.includes('Reels') ? 'Reels / TikTok' : (insp.type.includes('Carrossel') ? 'Carrossel' : 'Postagem Estática');
+                        toggleFormatUI();
                         document.getElementById('draftCopy').value = `Inspirado em: ${insp.snippet}`;
                     };
                     listDiv.appendChild(item);
@@ -524,6 +699,7 @@
                 btn.innerText = 'Logo Salva ✓';
                 
                 localStorage.setItem('wl_logo_url', data.url);
+                onTemplateChange(); // refresh logo url in keys
             } else {
                 alert(data.error);
                 btn.innerText = 'Fazer Upload';
@@ -540,7 +716,12 @@
         const tipo = document.getElementById('draftType').value;
         const tema = document.getElementById('draftTheme').value;
         const logo = document.getElementById('logoUrl').value;
-        const tplId = document.getElementById('draftTemplate').value;
+        
+        const isUseBrand = document.getElementById('useBrandColors').checked;
+        const bBg = document.getElementById('brandColorFundo').value;
+        const bText = document.getElementById('brandColorTexto').value;
+        const bAcc = document.getElementById('brandColorDestaque').value;
+        const bSec = document.getElementById('brandColorSec').value;
 
         if (!titulo) { alert('Preencha o título base primeiro.'); return; }
 
@@ -548,43 +729,71 @@
         btn.innerText = 'Processando...'; btn.disabled = true;
 
         let templatesResumo = "";
-        if (tplId) {
-            const t = window.appTemplates.find(x => x.id === tplId);
-            const m = t.html.match(/CHAVE_[A-Z_]+/g);
-            const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
-            templatesResumo = `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
-        } else {
+        let exigenciaCarrossel = "";
+        
+        if (tipo === 'Carrossel') {
+            const selects = document.querySelectorAll('.carousel-template-select');
+            let pagesStr = [];
+            selects.forEach((sel, i) => {
+                if(sel.value) {
+                    const t = window.appTemplates.find(x => x.id === sel.value);
+                    const m = t.html.match(/CHAVE_[A-Z_]+/g);
+                    const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
+                    pagesStr.push(`Página ${i+1}: ID ${t.id} (${t.name}) - Chaves: ${chaves}`);
+                } else {
+                    pagesStr.push(`Página ${i+1}: ESCOLHA O MELHOR TEMPLATE VISUALMENTE DENTRE OS DISPONÍVEIS`);
+                }
+            });
+            exigenciaCarrossel = "ESTE É UM CARROSSEL. Estrutura exigida:\n" + pagesStr.join('\n') + 
+                                 "\n\nATENÇÃO: Mapeie as chaves para CADA página prefixando com [P1], [P2], etc. (Ex: '[P1] CHAVE_TITULO': '...', '[P2] CHAVE_TITULO': '...').";
+            
             templatesResumo = window.appTemplates.map(t => {
                 const m = t.html.match(/CHAVE_[A-Z_]+/g);
-                const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
-                return `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
+                return `- ID: ${t.id} | Nome: ${t.name} | Variáveis: ${m ? [...new Set(m)].join(', ') : 'Nenhuma'}`;
             }).join('\n');
+            
+        } else {
+            const tplId = document.getElementById('draftTemplate').value;
+            if (tplId) {
+                const t = window.appTemplates.find(x => x.id === tplId);
+                const m = t.html.match(/CHAVE_[A-Z_]+/g);
+                const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
+                templatesResumo = `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
+                exigenciaCarrossel = 'ATENÇÃO: O usuário EXIGIU o uso deste template específico. Você DEVE usar o ID acima e seu nome exato.';
+            } else {
+                templatesResumo = window.appTemplates.map(t => {
+                    const m = t.html.match(/CHAVE_[A-Z_]+/g);
+                    return `- ID: ${t.id} | Nome: ${t.name} | Variáveis: ${m ? [...new Set(m)].join(', ') : 'Nenhuma'}`;
+                }).join('\n');
+                exigenciaCarrossel = 'Escolha o melhor template visualmente.';
+            }
         }
 
-        const promptCompleto = `Atue como Diretor de Arte e Copywriter da Leanttro Tecnologia.
+        const promptCompleto = `Atue como Diretor de Arte e Copywriter Senior da Leanttro Tecnologia.
         Formato: ${tipo}. Título base: "${titulo}". Contexto de copy: "${copyPre}". Tema Visual: ${tema}. Logo URL: ${logo || 'Sem logo'}.
         
-        REGRAS:
-        1. Escolha o template com base nesta lista e suas variáveis:
+        REGRAS ABSOLUTAS:
+        1. CONTEÚDO REAL E DENSO: CRIE o conteúdo de fato! NÃO repita apenas o título nas chaves do template. Se o post é sobre dicas, liste dicas ricas e detalhadas. Se for um carrossel, crie uma narrativa (Problema > Desenvolvimento > Solução > Chamada para Ação).
+        
+        2. TEMPLATES DA BIBLIOTECA:
         ${templatesResumo}
-        ${tplId ? 'ATENÇÃO: O usuário EXIGIU o uso deste template específico. Você DEVE usar o ID acima e seu nome exato.' : 'Escolha o melhor template visualmente.'}
         
-        2. Escreva uma legenda altamente conversiva para redes sociais.
+        Diretriz de Escolha:
+        ${exigenciaCarrossel}
         
-        3. Preencha TODAS as variáveis necessárias do template selecionado com textos persuasivos curtos.
-        
-        4. CORES: Gere uma paleta de cores HEX real (CHAVE_COR_...) focada 100% no Tema Visual (${tema}). Crie cores premium, de alto contraste e profissionais. NÃO tente adivinhar cores lendo o link do logo (isso causa erros graves e alucinações de cores feias). Apenas insira a exata URL fornecida na variável CHAVE_LOGO.
+        3. CORES E IDENTIDADE:
+        ${isUseBrand ? `O usuário EXIGIU usar as cores da marca: Fundo: ${bBg}, Texto: ${bText}, Destaque: ${bAcc}, Secundária: ${bSec}. UTILIZE EXATAMENTE ESTES HEX CODES se as variáveis de cor (CHAVE_COR_FUNDO, etc.) existirem no template.` : `Gere uma paleta de cores HEX real (CHAVE_COR_FUNDO, etc.) focada no Tema Visual (${tema}).`}
+        Apenas insira a URL do logo na variável CHAVE_LOGO.
 
         Retorne APENAS um JSON estrito sem formatação markdown, exatamente assim:
         {
-            "copy": "Texto completo da legenda...",
-            "template_id": "ID exato do template",
-            "template_nome": "Nome do template",
-            "motivo": "Breve justificativa visual",
+            "copy": "Texto persuasivo e humano da legenda para o Instagram...",
+            "template_id": "ID do template (se carrossel, separe com vírgulas: id1,id2)",
+            "template_nome": "Nome do template (se carrossel: Capa + Dica + Dica...)",
+            "motivo": "Justificativa visual",
             "chaves": {
-                "CHAVE_COR_FUNDO": "#...",
-                "CHAVE_TITULO": "...",
-                ...
+                "CHAVE_XXX": "Valor longo e real criado por você..."
+                // Se carrossel, inclua o prefixo exato: "[P1] CHAVE_...", "[P2] CHAVE_..."
             }
         }`;
 
@@ -673,7 +882,17 @@
         document.getElementById('draftCopy').value = '';
         document.getElementById('aiSuggestionBox').classList.remove('active');
         document.getElementById('currentTemplateId').value = '';
-        document.getElementById('draftTemplate').value = '';
+        
+        // Reset selections
+        const type = document.getElementById('draftType').value;
+        if(type === 'Carrossel') {
+            document.getElementById('carouselPagesContainer').innerHTML = '';
+            addCarouselPage();
+            addCarouselPage();
+        } else {
+            document.getElementById('draftTemplate').value = '';
+        }
+        
         currentChaves = {};
     }
 
@@ -738,6 +957,20 @@
         fecharModal();
     }
 
+    function copiarChavesPainel() {
+        let textToCopy = '';
+        for (const [k, v] of Object.entries(currentChaves)) {
+            textToCopy += `${k} → ${v}\n`;
+        }
+        if(!textToCopy) return;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Chaves do painel copiadas para a área de transferência!');
+        }).catch(err => {
+            console.error('Erro ao copiar', err);
+            alert('Erro ao copiar chaves.');
+        });
+    }
+
     function copiarChavesModal() {
         if(!currentEditCard) return;
         const chaves = JSON.parse(currentEditCard.getAttribute('data-chaves') || '{}');
@@ -746,7 +979,7 @@
             textToCopy += `${k} → ${v}\n`;
         }
         navigator.clipboard.writeText(textToCopy).then(() => {
-            alert('Chaves copiadas para a área de transferência!');
+            alert('Chaves do card copiadas para a área de transferência!');
         }).catch(err => {
             console.error('Erro ao copiar', err);
             alert('Erro ao copiar chaves.');
