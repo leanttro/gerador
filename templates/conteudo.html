@@ -167,7 +167,7 @@
     .modal-box { background: var(--bg-surface); width: 100%; max-width: 500px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-hover); display: flex; flex-direction: column; max-height: 90vh;}
     .modal-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
     .modal-body { padding: 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;}
-    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 
 </style>
 </head>
@@ -224,6 +224,13 @@
                 <div class="input-group">
                     <label>Título / Instrução Base</label>
                     <input type="text" id="draftTitle" class="input-control" placeholder="Ex: 5 motivos para ter um CRM">
+                </div>
+
+                <div class="input-group">
+                    <label>Template (Opcional)</label>
+                    <select id="draftTemplate" class="input-control">
+                        <option value="">✨ Deixar a IA escolher o melhor</option>
+                    </select>
                 </div>
 
                 <div class="row-2">
@@ -306,9 +313,14 @@
             <button class="theme-toggle" onclick="fecharModal()" style="border:none"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="modal-body" id="modalCampos"></div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" style="width:auto" onclick="fecharModal()">Cancelar</button>
-            <button class="btn btn-primary" style="width:auto" onclick="salvarEdicao()">Salvar Alterações</button>
+        <div class="modal-footer" style="justify-content: space-between;">
+            <button class="btn btn-secondary" style="width:auto" onclick="copiarChavesModal()">
+                <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;margin-right:6px;vertical-align:-2px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copiar Chaves
+            </button>
+            <div style="display:flex; gap:12px;">
+                <button class="btn btn-secondary" style="width:auto" onclick="fecharModal()">Cancelar</button>
+                <button class="btn btn-primary" style="width:auto" onclick="salvarEdicao()">Salvar Alterações</button>
+            </div>
         </div>
     </div>
 </div>
@@ -329,7 +341,16 @@
         try {
             const res = await fetch('/api/templates');
             const data = await res.json();
-            if (data.success) window.appTemplates = data.templates;
+            if (data.success) {
+                window.appTemplates = data.templates;
+                const sel = document.getElementById('draftTemplate');
+                data.templates.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.text = t.name;
+                    sel.appendChild(opt);
+                });
+            }
         } catch(e) { console.error(e); }
     });
 
@@ -419,33 +440,45 @@
         const tipo = document.getElementById('draftType').value;
         const tema = document.getElementById('draftTheme').value;
         const logo = document.getElementById('logoUrl').value;
+        const tplId = document.getElementById('draftTemplate').value;
 
         if (!titulo) { alert('Preencha o título base primeiro.'); return; }
 
         const btn = document.getElementById('btnIA');
         btn.innerText = 'Processando...'; btn.disabled = true;
 
-        const templatesResumo = window.appTemplates.map(t => {
+        let templatesResumo = "";
+        if (tplId) {
+            const t = window.appTemplates.find(x => x.id === tplId);
             const m = t.html.match(/CHAVE_[A-Z_]+/g);
             const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
-            return `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
-        }).join('\n');
+            templatesResumo = `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
+        } else {
+            templatesResumo = window.appTemplates.map(t => {
+                const m = t.html.match(/CHAVE_[A-Z_]+/g);
+                const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
+                return `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
+            }).join('\n');
+        }
 
         const promptCompleto = `Atue como Diretor de Arte e Copywriter da Leanttro Tecnologia.
         Formato: ${tipo}. Título base: "${titulo}". Contexto de copy: "${copyPre}". Tema Visual: ${tema}. Logo: ${logo || 'Sem logo'}.
         
         REGRAS:
-        1. Escolha o melhor template com base nesta lista e suas variáveis:
+        1. Escolha o template com base nesta lista e suas variáveis:
         ${templatesResumo}
+        ${tplId ? 'ATENÇÃO: O usuário EXIGIU o uso deste template específico. Você DEVE usar o ID acima e seu nome exato.' : 'Escolha o melhor template visualmente.'}
         
         2. Escreva uma legenda altamente conversiva para redes sociais.
         
-        3. Preencha TODAS as variáveis necessárias do template escolhido com textos persuasivos curtos e cores HEX perfeitas combinando com o Tema Visual (${tema}). Mapeie a URL do Logo para CHAVE_LOGO.
+        3. Preencha TODAS as variáveis necessárias do template selecionado com textos persuasivos curtos.
+        
+        4. CORES: As cores (CHAVE_COR_...) DEVEM harmonizar com o Tema Visual (${tema}). SE houver um Logo fornecido na URL acima, EXTRAIA as cores predominantes dele mentalmente (ex: se for dourado, use dourado; se for azul, use azul) para compor a paleta HEX, ignorando o tema genérico. Retorne cores HEX reais, ex: #0D0D0D. Mapeie a URL do Logo para CHAVE_LOGO.
 
         Retorne APENAS um JSON estrito sem formatação markdown, exatamente assim:
         {
             "copy": "Texto completo da legenda...",
-            "template_id": "ID exato do template escolhido",
+            "template_id": "ID exato do template",
             "template_nome": "Nome do template",
             "motivo": "Breve justificativa visual",
             "chaves": {
@@ -594,6 +627,21 @@
         currentEditCard.querySelector('.k-card-copy').innerText = copyEl.value;
 
         fecharModal();
+    }
+
+    function copiarChavesModal() {
+        if(!currentEditCard) return;
+        const chaves = JSON.parse(currentEditCard.getAttribute('data-chaves') || '{}');
+        let textToCopy = '';
+        for (const [k, v] of Object.entries(chaves)) {
+            textToCopy += `${k} → ${v}\n`;
+        }
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Chaves copiadas para a área de transferência!');
+        }).catch(err => {
+            console.error('Erro ao copiar', err);
+            alert('Erro ao copiar chaves.');
+        });
     }
 </script>
 
