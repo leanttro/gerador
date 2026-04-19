@@ -132,11 +132,7 @@
     .ai-suggestion-box.active { display: block; }
     .ai-sugg-header { font-size: 11px; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; color: var(--text-main); }
     
-    .keys-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; max-height: 200px; overflow-y: auto; padding-right: 4px;}
-    .key-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-    .key-name { font-weight: 600; color: var(--text-muted); }
-    .key-val { color: var(--text-main); max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .color-swatch { width: 12px; height: 12px; display: inline-block; border-radius: 2px; border: 1px solid var(--border); vertical-align: middle; margin-right: 4px; }
+    .keys-grid { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; max-height: 350px; overflow-y: auto; padding-right: 4px;}
 
     .kanban-area { flex: 1; background: var(--bg-kanban); padding: 24px; overflow-x: auto; display: flex; gap: 20px; }
     .kanban-col { width: 320px; min-width: 320px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); display: flex; flex-direction: column; max-height: 100%; }
@@ -203,17 +199,20 @@
             <div class="panel-section">
                 <div class="panel-title">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    Busca de Tendências (Serper)
+                    Busca de Tendências (IA & Serper)
                 </div>
                 <div class="input-group">
                     <label>Nicho de Mercado</label>
                     <input type="text" id="nicheInput" class="input-control" placeholder="Ex: tecnologia, moda, estética">
                 </div>
-                <button class="btn btn-secondary" onclick="buscarInspiracoes()" id="btnBusca">Buscar Ideias Virais</button>
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <button class="btn btn-secondary" onclick="buscarInspiracoes()" id="btnBusca" style="flex:1; padding:8px; font-size:12px;">🔍 Serper (Web)</button>
+                    <button class="btn btn-secondary" onclick="gerarIdeiasIA()" id="btnIdeiasIA" style="flex:1; padding:8px; font-size:12px; background:var(--primary-bg); border-color:var(--accent); color:var(--accent);">✦ IA Estratégica</button>
+                </div>
                 
                 <div class="inspirations-list" id="inspList">
                     <div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px;">
-                        Digite o nicho acima para ver o que está em alta no momento.
+                        Digite o nicho acima e escolha o método de busca para gerar ideias.
                     </div>
                 </div>
             </div>
@@ -228,7 +227,7 @@
 
                 <div class="input-group">
                     <label>Template (Opcional)</label>
-                    <select id="draftTemplate" class="input-control">
+                    <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
                         <option value="">✨ Deixar a IA escolher o melhor</option>
                     </select>
                 </div>
@@ -275,7 +274,7 @@
                 <div class="ai-suggestion-box" id="aiSuggestionBox">
                     <div class="ai-sugg-header">✦ Variáveis do Template Mapeadas</div>
                     <div style="font-size:12px; font-weight:600; color:var(--text-main); margin-bottom:4px;" id="suggestedName">Nenhum template</div>
-                    <div style="font-size:11px; color:var(--text-muted);" id="suggestedReason">-</div>
+                    <div style="font-size:11px; color:var(--text-muted);" id="suggestedReason">Você pode editar os campos abaixo antes de enviar para o Kanban.</div>
                     
                     <div class="keys-grid" id="keysGrid"></div>
                 </div>
@@ -334,6 +333,16 @@
         const body = document.body;
         if (localStorage.getItem('wl_theme')) body.setAttribute('data-theme', localStorage.getItem('wl_theme'));
 
+        // Recupera o Logo do LocalStorage
+        const savedLogo = localStorage.getItem('wl_logo_url');
+        if (savedLogo) {
+            document.getElementById('logoUrl').value = savedLogo;
+            const prev = document.getElementById('logoPreview');
+            prev.src = savedLogo;
+            prev.style.display = 'block';
+            document.getElementById('btnUploadLogo').innerText = 'Logo Salva ✓';
+        }
+
         document.querySelectorAll('.col-body').forEach(col => {
             new Sortable(col, { group: 'kanban', animation: 150, ghostClass: 'sortable-ghost', onEnd: atualizarContadores });
         });
@@ -365,6 +374,95 @@
         document.querySelectorAll('.kanban-col').forEach(col => {
             col.querySelector('.col-count').innerText = col.querySelectorAll('.k-card').length;
         });
+    }
+
+    function onTemplateChange() {
+        const tplId = document.getElementById('draftTemplate').value;
+        if (!tplId) {
+            document.getElementById('aiSuggestionBox').classList.remove('active');
+            currentChaves = {};
+            return;
+        }
+
+        const tpl = window.appTemplates.find(x => x.id === tplId);
+        if (tpl) {
+            const m = tpl.html.match(/CHAVE_[A-Z_]+/g);
+            const chavesUnicas = m ? [...new Set(m)] : [];
+
+            currentChaves = {};
+            chavesUnicas.forEach(k => {
+                if (k.includes('COR_FUNDO')) currentChaves[k] = '#18181b';
+                else if (k.includes('COR_TEXTO')) currentChaves[k] = '#ffffff';
+                else if (k.includes('COR_DESTAQUE')) currentChaves[k] = '#2563eb';
+                else if (k.includes('COR_SECUNDARIA')) currentChaves[k] = '#71717a';
+                else if (k.includes('LOGO')) currentChaves[k] = document.getElementById('logoUrl').value || '';
+                else currentChaves[k] = '';
+            });
+
+            document.getElementById('currentTemplateId').value = tpl.id;
+            document.getElementById('suggestedName').innerText = tpl.name;
+            document.getElementById('suggestedReason').innerText = "Você pode preencher as variáveis manualmente ou usar a IA para gerar os textos e cores.";
+
+            renderizarChavesBox();
+            document.getElementById('aiSuggestionBox').classList.add('active');
+        }
+    }
+
+    async function gerarIdeiasIA() {
+        const niche = document.getElementById('nicheInput').value.trim();
+        if (!niche) { alert('Digite um nicho primeiro!'); return; }
+        
+        const listDiv = document.getElementById('inspList');
+        const btn = document.getElementById('btnIdeiasIA');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = 'Gerando...'; btn.disabled = true;
+
+        const promptCompleto = `Atue como um estrategista de conteúdo expert. O nicho é "${niche}". Sugira exatamente 5 ideias de postagens baseadas nos seguintes pilares:
+        1. Estudos de Caso e Prova Social (Mostre resultados reais).
+        2. Conteúdo Educativo Profundo (Guias/tutoriais).
+        3. Conteúdo de Bastidores/Processo (Transparência).
+        4. Análise de Cenário/Tendências (Visão estratégica).
+        5. Posicionamento Contra-intuitivo (Vá contra o senso comum).
+
+        Retorne APENAS um JSON estrito sem formatação markdown, com uma lista de 5 objetos contendo as chaves: "type" (o pilar acima), "title" (headline chamativa) e "snippet" (resumo do conteúdo).
+        Exemplo de retorno: [{"type": "Estudos de Caso e Prova Social", "title": "Como aumentamos as vendas em 200%", "snippet": "Vamos mostrar o passo a passo..."}]`;
+
+        try {
+            const res = await fetch('/api/sugestao-texto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: promptCompleto })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                let cleanJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+                let ideias = JSON.parse(cleanJson);
+                
+                listDiv.innerHTML = '';
+                ideias.forEach(insp => {
+                    const item = document.createElement('div');
+                    item.className = 'insp-card';
+                    item.innerHTML = `
+                        <div class="insp-type">${insp.type}</div>
+                        <div class="insp-title">${insp.title}</div>
+                        <div class="insp-snippet">${insp.snippet}</div>
+                    `;
+                    item.onclick = () => {
+                        document.getElementById('draftTitle').value = insp.title;
+                        document.getElementById('draftType').value = 'Carrossel';
+                        document.getElementById('draftCopy').value = `Instrução baseada na estratégia: ${insp.snippet}`;
+                    };
+                    listDiv.appendChild(item);
+                });
+            } else {
+                listDiv.innerHTML = '<div style="font-size:12px;color:var(--danger);text-align:center;padding:20px;">Falha ao gerar ideias. Tente novamente.</div>';
+            }
+        } catch (e) {
+            listDiv.innerHTML = '<div style="color:var(--danger);font-size:12px;text-align:center;">Erro ao buscar dados com IA.</div>';
+            console.error(e);
+        }
+        btn.innerHTML = originalHtml; btn.disabled = false;
     }
 
     async function buscarInspiracoes() {
@@ -406,7 +504,7 @@
         } catch (e) {
             listDiv.innerHTML = '<div style="color:var(--danger);font-size:12px;text-align:center;">Erro ao buscar dados.</div>';
         }
-        btn.innerText = 'Buscar Ideias Virais'; btn.disabled = false;
+        btn.innerText = '🔍 Serper (Web)'; btn.disabled = false;
     }
 
     async function uploadLogo(input) {
@@ -423,7 +521,9 @@
                 const prev = document.getElementById('logoPreview');
                 prev.src = data.url;
                 prev.style.display = 'block';
-                btn.innerText = 'Logo Pronta ✓';
+                btn.innerText = 'Logo Salva ✓';
+                
+                localStorage.setItem('wl_logo_url', data.url);
             } else {
                 alert(data.error);
                 btn.innerText = 'Fazer Upload';
@@ -522,11 +622,18 @@
         const grid = document.getElementById('keysGrid');
         grid.innerHTML = '';
         for (const [k, v] of Object.entries(currentChaves)) {
-            let valHtml = v;
-            if (String(v).startsWith('#') && v.length <= 9) {
-                valHtml = `<span class="color-swatch" style="background:${v}"></span>${v}`;
-            }
-            grid.innerHTML += `<div class="key-row"><span class="key-name">${k}</span><span class="key-val" title="${v}">${valHtml}</span></div>`;
+            const isColor = k.includes('COR');
+            let val = v || '';
+            let html = `
+                <div class="input-group" style="margin-bottom:8px;">
+                    <label style="font-size:10px; margin-bottom:4px; color:var(--text-muted); font-weight:700;">${k}</label>
+                    <div style="display:flex; gap:8px;">
+                        ${isColor ? `<input type="color" id="panelColor_${k}" value="${val.startsWith('#') && val.length <= 9 ? val.slice(0,7) : '#000000'}" style="width:36px; height:36px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="document.getElementById('panel_${k}').value=this.value; currentChaves['${k}']=this.value;">` : ''}
+                        <input type="text" id="panel_${k}" class="input-control" value="${val}" style="padding:8px 10px;" onchange="currentChaves['${k}']=this.value; ${isColor ? `try{document.getElementById('panelColor_${k}').value=this.value.slice(0,7);}catch(e){}` : ''}">
+                    </div>
+                </div>
+            `;
+            grid.innerHTML += html;
         }
     }
 
@@ -537,7 +644,7 @@
         const tplName = document.getElementById('suggestedName').innerText;
         const tplId = document.getElementById('currentTemplateId').value;
 
-        if (!titulo || !tplId) { alert('Gere as chaves primeiro.'); return; }
+        if (!titulo || !tplId) { alert('Gere ou preencha as chaves primeiro.'); return; }
 
         const cardId = 'card_' + Date.now();
         const card = document.createElement('div');
@@ -566,6 +673,7 @@
         document.getElementById('draftCopy').value = '';
         document.getElementById('aiSuggestionBox').classList.remove('active');
         document.getElementById('currentTemplateId').value = '';
+        document.getElementById('draftTemplate').value = '';
         currentChaves = {};
     }
 
@@ -591,12 +699,13 @@
         
         for (const [k, v] of Object.entries(chaves)) {
             const isColor = k.includes('COR');
+            let val = v || '';
             html += `
                 <div class="input-group" style="margin-bottom:8px;">
                     <label style="font-size:10px; margin-bottom:2px;">${k}</label>
                     <div style="display:flex; gap:8px;">
-                        ${isColor ? `<input type="color" id="editColor_${k}" value="${v}" style="width:36px; height:36px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="document.getElementById('edit_${k}').value=this.value">` : ''}
-                        <input type="text" id="edit_${k}" class="input-control" value="${v}" style="padding:6px 10px;">
+                        ${isColor ? `<input type="color" id="editColor_${k}" value="${val.startsWith('#') && val.length <= 9 ? val.slice(0,7) : '#000000'}" style="width:36px; height:36px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="document.getElementById('edit_${k}').value=this.value">` : ''}
+                        <input type="text" id="edit_${k}" class="input-control" value="${val}" style="padding:6px 10px;">
                     </div>
                 </div>
             `;
