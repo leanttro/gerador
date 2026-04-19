@@ -1154,7 +1154,31 @@ def api_minerador():
 
     return jsonify({"success": True, "results": results, "total": len(results)})
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+@app.route('/api/scrape-email', methods=['POST'])
+def api_scrape_email():
+    data = request.json or {}
+    url = data.get('url', '').strip()
+    if not url: 
+        return jsonify({"email": ""})
+    
+    if not url.startswith('http'): 
+        url = 'http://' + url
+        
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        res = requests.get(url, headers=headers, timeout=5, verify=False)
+        emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', res.text)
+        validos = [e for e in set(emails) if not e.endswith(('png','jpg','jpeg','gif','webp', 'css', 'js')) and 'sentry' not in e and 'wix' not in e]
+        
+        if validos:
+            return jsonify({"email": validos[0].lower()})
+    except:
+        pass
+        
+    return jsonify({"email": ""})
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
