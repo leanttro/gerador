@@ -440,11 +440,12 @@
         const cardDoneRaw = localStorage.getItem('wl_card_done');
         if (cardDoneRaw) {
             try {
-                const { cardId, status } = JSON.parse(cardDoneRaw);
+                const { cardId, status, thumb } = JSON.parse(cardDoneRaw);
                 const card = document.getElementById(cardId);
                 if (card && status === 'pronto') {
                     const colPronto = document.getElementById('col-pronto');
                     if (colPronto) colPronto.appendChild(card);
+                    
                     const existing = card.querySelector('.badge-pronto');
                     if (!existing) {
                         const badge = document.createElement('span');
@@ -453,6 +454,15 @@
                         badge.textContent = '✓ Arte criada';
                         card.appendChild(badge);
                     }
+                    
+                    if (thumb && !card.querySelector('.card-render-thumb')) {
+                        const img = document.createElement('img');
+                        img.className = 'card-render-thumb';
+                        img.src = thumb;
+                        img.style.cssText = 'width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid var(--border);';
+                        card.insertBefore(img, card.querySelector('.k-card-title'));
+                    }
+                    
                     atualizarContadores();
                 }
             } catch(e) {}
@@ -745,7 +755,7 @@
             const data = await res.json();
             
             if (data.success) {
-                let cleanJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+                let cleanJson = data.text.replace(/```json/gi, '').replace(/```/g, '').trim();
                 let ideias = JSON.parse(cleanJson);
                 
                 listDiv.innerHTML = '';
@@ -871,17 +881,21 @@
             const selects = document.querySelectorAll('.carousel-template-select');
             let pagesStr = [];
             selects.forEach((sel, i) => {
+                let role = "Conteúdo (Dicas/Passo a passo)";
+                if (i === 0) role = "Capa (Título chamativo que prenda a atenção)";
+                else if (i === selects.length - 1) role = "CTA (Chamada para ação final)";
+
                 if(sel.value) {
                     const t = window.appTemplates.find(x => x.id === sel.value);
                     const m = t.html.match(/CHAVE_[A-Z_]+/g);
                     const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
-                    pagesStr.push(`Página ${i+1}: ID ${t.id} (${t.name}) - Chaves: ${chaves}`);
+                    pagesStr.push(`Página ${i+1} [${role}]: ID ${t.id} (${t.name}) - Chaves: ${chaves}`);
                 } else {
-                    pagesStr.push(`Página ${i+1}: ESCOLHA O MELHOR TEMPLATE VISUALMENTE DENTRE OS DISPONÍVEIS`);
+                    pagesStr.push(`Página ${i+1} [${role}]: ESCOLHA O MELHOR TEMPLATE VISUALMENTE DENTRE OS DISPONÍVEIS`);
                 }
             });
             exigenciaCarrossel = "ESTE É UM CARROSSEL. Estrutura exigida:\n" + pagesStr.join('\n') + 
-                                 "\n\nATENÇÃO: Mapeie as chaves para CADA página prefixando com [P1], [P2], etc. (Ex: '[P1] CHAVE_TITULO': '...', '[P2] CHAVE_TITULO': '...').";
+                                 "\n\nATENÇÃO: Mapeie as chaves para CADA página prefixando com [P1], [P2], etc. (Ex: '[P1] CHAVE_TITULO': '...', '[P2] CHAVE_TITULO': '...'). Crie o conteúdo focando na função específica de cada página (Capa, Conteúdo, CTA).";
             
             templatesResumo = window.appTemplates.map(t => {
                 const m = t.html.match(/CHAVE_[A-Z_]+/g);
@@ -922,9 +936,10 @@
         Apenas insira a URL do logo na variável CHAVE_LOGO.
 
         ATENÇÃO CRÍTICA PARA O JSON: 
-        - Retorne APENAS um JSON estrito, sem formatação markdown.
-        - NUNCA use quebras de linha reais (Enter) dentro das strings do JSON. Se precisar de parágrafos no texto, escreva literalmente os caracteres "\\n".
-        - Escape corretamente todas as aspas duplas internas usando \\".
+        - Retorne APENAS um JSON estrito, sem formatação markdown (NÃO inclua \`\`\`json).
+        - NUNCA use quebras de linha reais (Enter) dentro das strings do JSON. Se precisar de parágrafos no texto, escreva literalmente os caracteres "\\n" (com duas barras invertidas).
+        - NÃO use aspas duplas não escapadas dentro dos textos. Prefira aspas simples.
+        - Feche corretamente todas as chaves e colchetes do JSON.
 
         Formato exigido:
         {
@@ -946,13 +961,15 @@
             const data = await res.json();
             
             if (data.success) {
-                let cleanJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+                let cleanJson = data.text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                cleanJson = cleanJson.replace(/,\s*([\]}])/g, '$1');
+
                 let resultado = JSON.parse(cleanJson);
                 
-                document.getElementById('draftCopy').value = resultado.copy;
-                document.getElementById('currentTemplateId').value = resultado.template_id;
-                document.getElementById('suggestedName').innerText = resultado.template_nome;
-                document.getElementById('suggestedReason').innerText = resultado.motivo;
+                document.getElementById('draftCopy').value = resultado.copy || '';
+                document.getElementById('currentTemplateId').value = resultado.template_id || '';
+                document.getElementById('suggestedName').innerText = resultado.template_nome || 'Template Selecionado';
+                document.getElementById('suggestedReason').innerText = resultado.motivo || '';
                 
                 currentChaves = resultado.chaves || {};
                 renderizarChavesBox();
@@ -960,7 +977,7 @@
             }
         } catch (e) {
             alert('Falha ao processar o JSON da IA. Tente novamente.');
-            console.error(e);
+            console.error('Erro no Parse do JSON:', e);
         }
 
         btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Gerar Copy + Chaves Visuais';
