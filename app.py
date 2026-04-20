@@ -53,7 +53,7 @@ version_history: dict[str, list[dict]] = {}
 # ─────────────────────────────────────────────
 # CONFIGURAÇÃO DO BAILEYS (WhatsApp)
 # ─────────────────────────────────────────────
-BAILEYS_URL = os.environ.get("BAILEYS_URL")
+BAILEYS_URL = os.environ.get("BAILEYS_URL", "http://213.199.56.207:3000")
 
 # ─────────────────────────────────────────────
 # UTILITÁRIOS
@@ -121,7 +121,11 @@ def prospeccao():
 
 @app.route('/whatsapp')
 def whatsapp():
-    return render_template('whatsapp.html')
+    return render_template('whatsapp.html',
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+    )
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
@@ -1191,8 +1195,6 @@ def api_scrape_email():
 # ─────────────────────────────────────────────
 @app.route('/api/wpp/status', methods=['GET'])
 def wpp_status():
-    if not BAILEYS_URL:
-        return jsonify({"success": True, "connected": False, "number": "", "error": "BAILEYS_URL ausente no .env"})
     try:
         r = requests.get(f"{BAILEYS_URL}/status", timeout=5)
         data = r.json()
@@ -1202,8 +1204,7 @@ def wpp_status():
             "number":    data.get("number", "")
         })
     except Exception as e:
-        # Fallback caso a rota /status não exista no index.js mas a API esteja de pé
-        return jsonify({"success": True, "connected": True, "number": "API Configurada", "error": str(e)})
+        return jsonify({"success": True, "connected": False, "number": "", "error": str(e)})
 
 
 # ─────────────────────────────────────────────
@@ -1212,9 +1213,6 @@ def wpp_status():
 @app.route('/api/wpp/send', methods=['POST'])
 @limiter.limit("120 per minute")
 def wpp_send():
-    if not BAILEYS_URL:
-        return jsonify({"success": False, "error": "BAILEYS_URL não configurada no .env"}), 400
-
     data      = request.json or {}
     number    = data.get("number", "").strip()
     message   = data.get("message", "").strip()
