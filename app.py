@@ -1677,7 +1677,140 @@ def email_generate_copy():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+# ─────────────────────────────────────────────
+# MÓDULO 06 — CALENDÁRIO DE OBJETIVOS
+# Cole este bloco no seu app.py
+# ─────────────────────────────────────────────
 
+import requests as _req  # já deve estar importado
+
+DIRECTUS_URL   = os.environ.get("DIRECTUS_URL", "https://directus2.leanttro.com")
+DIRECTUS_TOKEN = os.environ.get("DIRECTUS_TOKEN", "")
+DIRECTUS_TABLE = os.environ.get("DIRECTUS_TABLE", "")  # workspace_id do cliente
+
+
+# ── ROTA DA PÁGINA ───────────────────────────
+@app.route('/calendario')
+def calendario():
+    return render_template('calendario.html',
+        directus_url=DIRECTUS_URL,
+        directus_token=DIRECTUS_TOKEN,
+        directus_table=DIRECTUS_TABLE,
+    )
+
+
+# ── PROGRESSO AUTOMÁTICO ─────────────────────
+# Calcula valor_atual de cada tipo lendo os dados reais do sistema
+@app.route('/api/goals/progresso', methods=['GET'])
+def goals_progresso():
+    tipo   = request.args.get('tipo', '').strip()
+    mes    = request.args.get('mes', '').strip()   # formato: 2026-04
+
+    if not tipo or not mes:
+        return jsonify({"success": False, "error": "Parâmetros 'tipo' e 'mes' são obrigatórios."}), 400
+
+    try:
+        ano_str, mes_str = mes.split('-')
+        ano = int(ano_str)
+        num_mes = int(mes_str)
+    except Exception:
+        return jsonify({"success": False, "error": "Formato de mês inválido. Use YYYY-MM."}), 400
+
+    headers = {
+        "Authorization": f"Bearer {DIRECTUS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    valor = 0
+
+    try:
+        # ── POSTS: conta content_cards com status 'pronto' ou 'publicado' no mês ──
+        if tipo == 'posts':
+            data_inicio = f"{ano}-{mes_str:>02}-01"
+            data_fim    = f"{ano}-{mes_str:>02}-31"
+            url = (
+                f"{DIRECTUS_URL}/items/content_cards"
+                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+                f"&filter[status_kanban][_in]=pronto,publicado"
+                f"&filter[data_publicacao][_between]={data_inicio},{data_fim}"
+                f"&aggregate[count]=id"
+            )
+            res  = _req.get(url, headers=headers, timeout=10)
+            data = res.json()
+            valor = data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0
+
+        # ── DISPAROS: soma enviados das campanhas do mês ──
+        elif tipo == 'disparos':
+            # Tenta pelo histórico de email local primeiro
+            history = load_email_history() if callable(globals().get('load_email_history')) else []
+            email_enviados = sum(
+                1 for h in history
+                if h.get('status', '').startswith('enviado') and
+                   h.get('ts', '').startswith(mes)
+            )
+
+            # Tenta também pelas campaigns do Directus
+            url = (
+                f"{DIRECTUS_URL}/items/campaigns"
+                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+                f"&aggregate[sum]=enviados"
+            )
+            try:
+                res  = _req.get(url, headers=headers, timeout=10)
+                data = res.json()
+                directus_enviados = int(data.get('data', [{}])[0].get('sum', {}).get('enviados', 0) or 0)
+            except Exception:
+                directus_enviados = 0
+
+            valor = email_enviados + directus_enviados
+
+        # ── LEADS: conta contacts com status 'novo' ou 'em_contato' ──
+        elif tipo == 'leads':
+            # Pega a tabela CRM do Directus (nome dinâmico: crm_<workspace_id>)
+            crm_table = f"crm_{DIRECTUS_TABLE.replace('-', '_')}"
+            url = (
+                f"{DIRECTUS_URL}/items/{crm_table}"
+                f"?aggregate[count]=id"
+            )
+            try:
+                res  = _req.get(url, headers=headers, timeout=10)
+                data = res.json()
+                valor = int(data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0)
+            except Exception:
+                valor = 0
+
+        # ── FATURAMENTO e ACESSOS_SITE: não calculamos automaticamente ──
+        # O usuário atualiza manualmente pela interface
+        else:
+            valor = 0
+
+    except Exception as e:
+        print(f"[goals/progresso] Erro ao calcular '{tipo}': {e}")
+        valor = 0
+
+    return jsonify({"success": True, "tipo": tipo, "mes": mes, "valor": valor})
+
+
+# ── RELATÓRIO PDF (stub — integrar com lib PDF depois) ──
+@app.route('/api/goals/relatorio', methods=['GET'])
+def goals_relatorio():
+    """
+    Gera relatório mensal em PDF.
+    Por ora retorna erro 501 para indicar que está em desenvolvimento.
+    Para implementar: usar WeasyPrint ou ReportLab para gerar o PDF.
+    """
+    mes = request.args.get('mes', '')
+    # TODO: implementar geração de PDF com WeasyPrint
+    # Exemplo básico com WeasyPrint:
+    # from weasyprint import HTML
+    # html_content = render_template('relatorio_pdf.html', metas=metas, mes=mes)
+    # pdf_bytes = HTML(string=html_content).write_pdf()
+    # return Response(pdf_bytes, mimetype='application/pdf',
+    #     headers={'Content-Disposition': f'attachment; filename=relatorio_{mes}.pdf'})
+    return jsonify({
+        "success": False,
+        "error": "Geração de PDF em desenvolvimento. Instale WeasyPrint para habilitar."
+    }), 501
 # ─────────────────────────────────────────────
 # INICIALIZAÇÃO
 # ─────────────────────────────────────────────
