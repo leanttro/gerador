@@ -356,6 +356,127 @@ def api_inspirations():
 
 
 # ─────────────────────────────────────────────
+# HELPERS DE IA COM FALLBACK AUTOMÁTICO
+# Ordem: OpenRouter → Groq → Gemini
+# ─────────────────────────────────────────────
+
+def _openrouter_call(messages, model="google/gemini-2.0-flash-001",
+                     temperature=0.45, max_tokens=8192, json_mode=False):
+    """Chama OpenRouter. Lança exceção em caso de falha."""
+    if not OPENROUTER_API_KEY:
+        raise Exception("OPENROUTER_API_KEY ausente")
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"}
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+    res = requests.post(url, headers=headers, json=payload, timeout=60).json()
+    if 'error' in res:
+        err = res['error']
+        msg = err.get('message', str(err)) if isinstance(err, dict) else str(err)
+        raise Exception(f"OpenRouter: {msg}")
+    text = res['choices'][0]['message']['content']
+    tokens = res.get('usage', {}).get('total_tokens', 0)
+    return text, tokens
+
+
+def _groq_call(messages, temperature=0.45, max_tokens=8000, json_mode=False):
+    """Chama Groq. Lança exceção em caso de falha."""
+    if not groq_client:
+        raise Exception("GROQ_API_KEY ausente")
+    kwargs = dict(
+        messages=messages,
+        model=BEST_FREE_MODEL,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        top_p=0.92,
+    )
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = groq_client.chat.completions.create(**kwargs)
+    text = response.choices[0].message.content
+    tokens = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
+    return text, tokens
+
+
+def _gemini_call(system_prompt, user_content,
+                 temperature=0.45, max_tokens=8192, json_mode=False):
+    """Chama Gemini diretamente. Lança exceção em caso de falha."""
+    if not GEMINI_API_KEY:
+        raise Exception("GEMINI_API_KEY ausente")
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    )
+    gen_config = {"temperature": temperature, "maxOutputTokens": max_tokens}
+    if json_mode:
+        gen_config["responseMimeType"] = "application/json"
+    payload = {
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"parts": [{"text": user_content}]}],
+        "generationConfig": gen_config,
+    }
+    res = requests.post(url, json=payload, timeout=60).json()
+    if 'error' in res:
+        raise Exception(f"Gemini: {res['error']['message']}")
+    text = res['candidates'][0]['content']['parts'][0]['text']
+    return text, 0
+
+
+def _ai_with_fallback(system_prompt, user_content,
+                      temperature=0.45, max_tokens=8192,
+                      json_mode=False, preferred_engine='openrouter'):
+    """
+    Tenta provedores em cascata: preferred_engine → os demais.
+    Ordem padrão: openrouter → groq → gemini.
+    Retorna (text, tokens, engine_usado).
+    """
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user",   "content": user_content},
+    ]
+    all_providers = ['openrouter', 'groq', 'gemini']
+    if preferred_engine in all_providers:
+        order = [preferred_engine] + [p for p in all_providers if p != preferred_engine]
+    else:
+        order = all_providers
+
+    errors = []
+    for provider in order:
+        try:
+            print(f"[ai_fallback] Tentando provider: {provider}")
+            if provider == 'openrouter':
+                text, tokens = _openrouter_call(
+                    messages, temperature=temperature,
+                    max_tokens=max_tokens, json_mode=json_mode)
+            elif provider == 'groq':
+                text, tokens = _groq_call(
+                    messages, temperature=temperature,
+                    max_tokens=max_tokens, json_mode=json_mode)
+            elif provider == 'gemini':
+                text, tokens = _gemini_call(
+                    system_prompt, user_content,
+                    temperature=temperature,
+                    max_tokens=max_tokens, json_mode=json_mode)
+            else:
+                continue
+            print(f"[ai_fallback] Sucesso com: {provider}")
+            return text, tokens, provider
+        except Exception as e:
+            errors.append(f"{provider}: {str(e)}")
+            print(f"[ai_fallback] {provider} falhou → {e}. Tentando próximo...")
+            continue
+
+    raise Exception("Todos os provedores falharam → " + " | ".join(errors))
+
+
+# ─────────────────────────────────────────────
 # GERAÇÃO DE HTML VIA IA (UNIFICADA)
 # ─────────────────────────────────────────────
 @app.route('/api/generate', methods=['POST'])
@@ -415,64 +536,17 @@ Regras de processamento
         try:
             generated_json_str = ""
             tokens_used = 0
+            engine_used = ai_engine
 
-            if ai_engine == 'gemini':
-                if not GEMINI_API_KEY:
-                    return jsonify({"success": False, "error": "Chave Gemini ausente"}), 400
-
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-                payload = {
-                    "systemInstruction": {"parts": [{"text": system_prompt_replace}]},
-                    "contents": [{"parts": [{"text": user_content_replace}]}],
-                    "generationConfig": {"temperature": 0.1, "responseMimeType": "application/json"}
-                }
-                res = requests.post(url, json=payload).json()
-                try:
-                    if 'error' in res:
-                        raise Exception(f"Gemini Error: {res['error']['message']}")
-                    generated_json_str = res['candidates'][0]['content']['parts'][0]['text']
-                except (KeyError, IndexError):
-                    raise Exception(f"Erro na resposta do Gemini: {res}")
-
-            elif ai_engine == 'openrouter':
-                if not OPENROUTER_API_KEY:
-                    return jsonify({"success": False, "error": "Chave OpenRouter ausente"}), 400
-
-                url = "https://openrouter.ai/api/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
-                payload = {
-                    "model": "google/gemini-2.0-flash-001",
-                    "response_format": {"type": "json_object"},
-                    "messages": [
-                        {"role": "system", "content": system_prompt_replace},
-                        {"role": "user", "content": user_content_replace}
-                    ],
-                    "temperature": 0.1
-                }
-                res = requests.post(url, headers=headers, json=payload).json()
-                try:
-                    if 'error' in res:
-                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
-                    generated_json_str = res['choices'][0]['message']['content']
-                    tokens_used = res.get('usage', {}).get('total_tokens', 0)
-                except (KeyError, IndexError):
-                    raise Exception(f"Erro na resposta do OpenRouter: {res}")
-
-            else:  # groq
-                if not groq_client:
-                    return jsonify({"success": False, "error": "Chave Groq ausente"}), 400
-
-                response = groq_client.chat.completions.create(
-                    messages=[
-                        {"role": "system", "content": system_prompt_replace},
-                        {"role": "user", "content": user_content_replace}
-                    ],
-                    model=BEST_FREE_MODEL,
-                    temperature=0.1,
-                    response_format={"type": "json_object"},
-                )
-                generated_json_str = response.choices[0].message.content
-                tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
+            # ── Fallback automático: tenta preferred → openrouter → groq → gemini ──
+            generated_json_str, tokens_used, engine_used = _ai_with_fallback(
+                system_prompt_replace,
+                user_content_replace,
+                temperature=0.1,
+                max_tokens=4096,
+                json_mode=True,
+                preferred_engine=ai_engine,
+            )
 
             # Limpeza rigorosa para evitar falha de parse JSON
             generated_json_str = generated_json_str.strip()
@@ -522,7 +596,7 @@ Regras de processamento
                 "version_id":    version_entry["id"],
                 "version_count": len(version_history[session_id]),
                 "tokens_used":   tokens_used,
-                "model":         ai_engine,
+                "model":         engine_used,
                 "mode":          "replace"
             })
 
@@ -628,64 +702,17 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
         try:
             generated_html = ""
             tokens_used = 0
+            engine_used = ai_engine
 
-            if ai_engine == 'gemini':
-                if not GEMINI_API_KEY:
-                    return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
-                
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
-                payload = {
-                    "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
-                    "contents": [{"parts": [{"text": user_content_generate}]}],
-                    "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8192}
-                }
-                res = requests.post(url, json=payload).json()
-                try:
-                    if 'error' in res:
-                        raise Exception(f"Gemini Error: {res['error']['message']}")
-                    generated_html = res['candidates'][0]['content']['parts'][0]['text']
-                except (KeyError, IndexError):
-                    return jsonify({"success": False, "error": f"Erro resposta Gemini: {res}"}), 500
-
-            elif ai_engine == 'openrouter':
-                if not OPENROUTER_API_KEY:
-                    return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
-                
-                url = "https://openrouter.ai/api/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
-                payload = {
-                    "model": "google/gemini-2.0-flash-001",
-                    "messages": [
-                        {"role": "system", "content": system_prompt_generate},
-                        {"role": "user", "content": user_content_generate}
-                    ],
-                    "temperature": 0.45
-                }
-                res = requests.post(url, headers=headers, json=payload).json()
-                try:
-                    if 'error' in res:
-                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
-                    generated_html = res['choices'][0]['message']['content']
-                    tokens_used = res.get('usage', {}).get('total_tokens', 0)
-                except (KeyError, IndexError):
-                    return jsonify({"success": False, "error": f"Erro resposta OpenRouter: {res}"}), 500
-
-            else:
-                if not groq_client:
-                    return jsonify({"success": False, "error": "GROQ_API_KEY ausente no servidor"}), 500
-                    
-                response = groq_client.chat.completions.create(
-                    messages=[
-                        {"role": "system", "content": system_prompt_generate},
-                        {"role": "user", "content": user_content_generate}
-                    ],
-                    model=BEST_FREE_MODEL,
-                    temperature=0.45,
-                    max_tokens=8000,
-                    top_p=0.92,
-                )
-                generated_html = response.choices[0].message.content
-                tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
+            # ── Fallback automático: tenta preferred → openrouter → groq → gemini ──
+            generated_html, tokens_used, engine_used = _ai_with_fallback(
+                system_prompt_generate,
+                user_content_generate,
+                temperature=0.45,
+                max_tokens=8192,
+                json_mode=False,
+                preferred_engine=ai_engine,
+            )
 
             generated_html = generated_html.strip()
             if generated_html.startswith("```html"):
@@ -728,7 +755,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 "version_id":    version_entry["id"],
                 "version_count": len(version_history[session_id]),
                 "tokens_used":   tokens_used,
-                "model":         ai_engine,
+                "model":         engine_used,
                 "mode":          "generate"
             })
 
