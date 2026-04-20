@@ -275,6 +275,7 @@ def api_inspirations():
     if not niche:
         return jsonify({"success": False, "error": "Nicho não informado."}), 400
 
+    # Construção da query para buscar ideias de posts orientadas ao criador/negócio
     query = f"ideias de posts para negócio de {niche} criador de conteúdo instagram dicas simples"
     url = "https://google.serper.dev/search"
     headers = {
@@ -296,6 +297,7 @@ def api_inspirations():
             title = item.get("title", "")
             snippet = item.get("snippet", "")
             link = item.get("link", "")
+            # Classificação simples pelo título/snippet
             lower_text = (title + " " + snippet).lower()
             if "reels" in lower_text or " reel " in lower_text:
                 post_type = "Reels"
@@ -311,6 +313,7 @@ def api_inspirations():
                 "link": link
             })
 
+        # Camada de IA: reformula os snippets brutos como ideias práticas para o criador/empresário
         if inspos and groq_client:
             raw_snippets = "\n".join([f"- {i['title']}: {i['snippet']}" for i in inspos])
             try:
@@ -345,7 +348,7 @@ def api_inspirations():
                     for i in ideias
                 ]
             except Exception:
-                pass 
+                pass  # fallback: mantém os inspos originais do Serper
 
         return jsonify({"success": True, "inspirations": inspos})
     except Exception as e:
@@ -354,10 +357,12 @@ def api_inspirations():
 
 # ─────────────────────────────────────────────
 # HELPERS DE IA COM FALLBACK AUTOMÁTICO
+# Ordem: OpenRouter → Groq → Gemini
 # ─────────────────────────────────────────────
 
 def _openrouter_call(messages, model="google/gemini-2.0-flash-001",
                      temperature=0.45, max_tokens=8192, json_mode=False):
+    """Chama OpenRouter. Lança exceção em caso de falha."""
     if not OPENROUTER_API_KEY:
         raise Exception("OPENROUTER_API_KEY ausente")
     url = "https://openrouter.ai/api/v1/chat/completions"
@@ -382,6 +387,7 @@ def _openrouter_call(messages, model="google/gemini-2.0-flash-001",
 
 
 def _groq_call(messages, temperature=0.45, max_tokens=8000, json_mode=False):
+    """Chama Groq. Lança exceção em caso de falha."""
     if not groq_client:
         raise Exception("GROQ_API_KEY ausente")
     kwargs = dict(
@@ -401,6 +407,7 @@ def _groq_call(messages, temperature=0.45, max_tokens=8000, json_mode=False):
 
 def _gemini_call(system_prompt, user_content,
                  temperature=0.45, max_tokens=8192, json_mode=False):
+    """Chama Gemini diretamente. Lança exceção em caso de falha."""
     if not GEMINI_API_KEY:
         raise Exception("GEMINI_API_KEY ausente")
     url = (
@@ -425,6 +432,11 @@ def _gemini_call(system_prompt, user_content,
 def _ai_with_fallback(system_prompt, user_content,
                       temperature=0.45, max_tokens=8192,
                       json_mode=False, preferred_engine='openrouter'):
+    """
+    Tenta provedores em cascata: preferred_engine → os demais.
+    Ordem padrão: openrouter → groq → gemini.
+    Retorna (text, tokens, engine_usado).
+    """
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user",   "content": user_content},
@@ -477,7 +489,7 @@ def api_generate():
     style_preset     = data.get('style_preset', 'dark')
     format_ratio     = data.get('format_ratio', '9:16')
     ai_engine        = data.get('ai_engine', 'groq')
-    generation_mode  = data.get('generation_mode', 'generate')   
+    generation_mode  = data.get('generation_mode', 'generate')   # 'generate' ou 'replace'
 
     if not prompt:
         return jsonify({"success": False, "error": "Prompt não pode estar vazio"}), 400
@@ -485,10 +497,14 @@ def api_generate():
     if len(prompt) > 3000:
         return jsonify({"success": False, "error": "Prompt muito longo. Máximo: 3000 caracteres"}), 400
 
+    # ─────────────────────────────────────────────────────────────────
+    # MODO REPLACE (substituição exata de variáveis CHAVE_)
+    # ─────────────────────────────────────────────────────────────────
     if generation_mode == "replace":
         if not previous_code:
             return jsonify({"success": False, "error": "Modo 'replace' exige um template base (previous_code)."}), 400
 
+        # Mapeamento de estilos para guia de cores (usado pela IA para gerar JSON)
         style_guides = {
             'dark':      'Cores HEX para paleta escura premium. Pretos profundos, cinzas e acentos neon.',
             'neon':      'Cores HEX para paleta neon vibrante. Roxo, rosa, azul elétrico em fundo preto absoluto.',
@@ -522,6 +538,7 @@ Regras de processamento
             tokens_used = 0
             engine_used = ai_engine
 
+            # ── Fallback automático: tenta preferred → openrouter → groq → gemini ──
             generated_json_str, tokens_used, engine_used = _ai_with_fallback(
                 system_prompt_replace,
                 user_content_replace,
@@ -531,6 +548,7 @@ Regras de processamento
                 preferred_engine=ai_engine,
             )
 
+            # Limpeza rigorosa para evitar falha de parse JSON
             generated_json_str = generated_json_str.strip()
             if generated_json_str.startswith("```json"):
                 generated_json_str = generated_json_str[7:]
@@ -549,9 +567,11 @@ Regras de processamento
             for chave, valor in substituicoes.items():
                 html_final = html_final.replace(str(chave), str(valor))
 
+            # Garante substituição de CHAVE_PROPORCAO com o formato selecionado
             if 'CHAVE_PROPORCAO' in html_final:
                 html_final = html_final.replace('CHAVE_PROPORCAO', format_ratio)
 
+            # Salvar no histórico
             session_id = get_session_id(request)
             if session_id not in version_history:
                 version_history[session_id] = []
@@ -590,6 +610,9 @@ Regras de processamento
                 msg = f"Erro no replace: {error_msg}"
             return jsonify({"success": False, "error": msg}), 500
 
+    # ─────────────────────────────────────────────────────────────────
+    # MODO GENERATE (criação livre, igual ao original)
+    # ─────────────────────────────────────────────────────────────────
     else:
         style_guides = {
             'dark':      'Paleta escura premium (pretos profundos, cinzas, acentos neon sutis), estilo Motor Dark Studio',
@@ -681,6 +704,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
             tokens_used = 0
             engine_used = ai_engine
 
+            # ── Fallback automático: tenta preferred → openrouter → groq → gemini ──
             generated_html, tokens_used, engine_used = _ai_with_fallback(
                 system_prompt_generate,
                 user_content_generate,
@@ -897,6 +921,7 @@ def api_sugestao_texto():
 
 # ─────────────────────────────────────────────
 # RECEBER PEDIDO DO FORMULÁRIO
+# Salva o pedido em JSON local (sem banco de dados)
 # ─────────────────────────────────────────────
 PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
 os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
@@ -924,6 +949,7 @@ def api_form_pedido():
         "status":       "pendente",
     }
 
+    # Salva em arquivo JSON na pasta pedidos/
     pedido_path = os.path.join(PEDIDOS_FOLDER, f"pedido_{pedido_id}.json")
     try:
         with open(pedido_path, 'w', encoding='utf-8') as f:
@@ -1093,7 +1119,7 @@ def _serper_places(query, num=20):
         return []
     try:
         res = requests.post(
-            "[https://google.serper.dev/places](https://google.serper.dev/places)",
+            "https://google.serper.dev/places",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1108,7 +1134,7 @@ def _serper_search(query, num=20):
         return []
     try:
         res = requests.post(
-            "[https://google.serper.dev/search](https://google.serper.dev/search)",
+            "https://google.serper.dev/search",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1176,8 +1202,8 @@ def api_minerador():
 
     elif fonte == "linkedin":
         queries = [
-            f'site:[linkedin.com/company](https://linkedin.com/company) "{nicho}" "{cidade}"',
-            f'site:[linkedin.com/in](https://linkedin.com/in) "{nicho}" "{cidade}"',
+            f'site:linkedin.com/company "{nicho}" "{cidade}"',
+            f'site:linkedin.com/in "{nicho}" "{cidade}"',
         ]
         seen = set()
         for q in queries:
@@ -1265,6 +1291,7 @@ def wpp_send():
     if not message:
         return jsonify({"success": False, "error": "Mensagem não pode estar vazia."}), 400
 
+    # Normaliza o número: garante formato 55DDDNUMERO
     number_clean = re.sub(r'\D', '', number)
     if not number_clean.startswith('55') and len(number_clean) >= 10:
         number_clean = '55' + number_clean
@@ -1335,7 +1362,7 @@ def wpp_generate_copy():
 
 
 # ─────────────────────────────────────────────
-# E-MAIL — ROTA DE PÁGINA E RASTREAMENTO
+# E-MAIL — ROTA DE PÁGINA
 # ─────────────────────────────────────────────
 @app.route('/email')
 def email_page():
@@ -1346,9 +1373,13 @@ def email_page():
     )
 
 
+# ─────────────────────────────────────────────
+# E-MAIL — ARQUIVOS DE DADOS
+# ─────────────────────────────────────────────
 SMTP_CONFIG_FILE   = os.path.join(BASE_DIR, 'smtp_config.json')
 EMAIL_HISTORY_FILE = os.path.join(BASE_DIR, 'email_history.json')
 
+# Jobs de disparo em memória: { job_id: { status, progress, log, total, sent, errors } }
 email_jobs: dict = {}
 
 
@@ -1384,6 +1415,7 @@ def load_email_history() -> list:
 
 def save_email_history(history: list) -> bool:
     try:
+        # Mantém apenas os últimos 500 registros
         history = history[-500:]
         with open(EMAIL_HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
@@ -1393,43 +1425,15 @@ def save_email_history(history: list) -> bool:
         return False
 
 
-# Rota Rastreamento Abertura (Pixel)
-@app.route('/api/email/track/open/<history_id>.gif')
-def email_track_open(history_id):
-    history = load_email_history()
-    for h in history:
-        if h.get('id') == history_id:
-            h['opened'] = True
-            h['opened_at'] = int(time.time())
-            break
-    save_email_history(history)
-    pixel = b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
-    return Response(pixel, mimetype='image/gif')
-
-
-# Rota Rastreamento Clique (Redirecionamento)
-@app.route('/api/email/track/click/<history_id>')
-def email_track_click(history_id):
-    url = request.args.get('url')
-    if not url:
-        return "URL inválida", 400
-    history = load_email_history()
-    for h in history:
-        if h.get('id') == history_id:
-            h['clicked'] = True
-            h['clicked_at'] = int(time.time())
-            break
-    save_email_history(history)
-    return redirect(url)
-
-
 def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
                        anexo_bytes=None, anexo_nome=None, anexo_mime=None) -> tuple:
+    """Envia um e-mail via SMTP. Retorna (True, 'OK') ou (False, 'mensagem de erro')."""
     try:
         to      = str(to).strip()
         subject = str(subject).strip()
         body    = str(body).replace('\n', '<br>')
 
+        # Detecta imagem inline via {{imagem}}
         usar_inline = (
             anexo_bytes is not None
             and anexo_mime is not None
@@ -1475,21 +1479,12 @@ def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
 
 def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
                            smtp_cfg: dict, delay_min: int, delay_max: int,
-                           anexo_bytes=None, anexo_nome=None, anexo_mime=None,
-                           agendamento_ts: int=0, base_url: str=""):
+                           anexo_bytes=None, anexo_nome=None, anexo_mime=None):
+    """Thread worker para disparo de e-mails em lote."""
     job       = email_jobs[job_id]
     history   = load_email_history()
     total     = len(contacts)
     job['total']  = total
-
-    if agendamento_ts > 0:
-        job['status'] = 'agendado'
-        while time.time() < agendamento_ts:
-            if job.get('cancel'):
-                job['status'] = 'cancelled'
-                return
-            time.sleep(5)
-
     job['status'] = 'running'
 
     for i, contact in enumerate(contacts):
@@ -1508,16 +1503,6 @@ def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
         assunto_final = assunto.replace('{nome}', nome).replace('{empresa}', empresa)
         corpo_final   = corpo.replace('{nome}', nome).replace('{empresa}', empresa)
 
-        hist_id = str(uuid.uuid4())[:8]
-
-        if base_url:
-            def replace_href(match):
-                original_url = match.group(1)
-                enc = urllib.parse.quote(original_url)
-                return f'href="{base_url}/api/email/track/click/{hist_id}?url={enc}"'
-            corpo_final = re.sub(r'href="(http[s]?://[^"]+)"', replace_href, corpo_final)
-            corpo_final += f'<img src="{base_url}/api/email/track/open/{hist_id}.gif" width="1" height="1" style="display:none;" />'
-
         ok, msg = _enviar_email_smtp(smtp_cfg, email, assunto_final, corpo_final,
                                      anexo_bytes, anexo_nome, anexo_mime)
 
@@ -1525,9 +1510,9 @@ def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
         if ok:
             job['sent']   += 1
             job['log'].append({'type': 'success', 'text': f'✓ {email}'})
-            history.append({'id': hist_id, 'ts': ts, 'to': email,
-                            'nome': nome, 'assunto': assunto_final, 'status': 'enviado',
-                            'opened': False, 'clicked': False})
+            history.append({'id': str(uuid.uuid4())[:8], 'ts': ts, 'to': email,
+                            'nome': nome, 'assunto': assunto_final, 'status': 'enviado'})
+            # Atualiza status do contato no CRM
             try:
                 contacts_all = load_contacts()
                 for c in contacts_all:
@@ -1540,13 +1525,13 @@ def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
         else:
             job['errors'] += 1
             job['log'].append({'type': 'error', 'text': f'✗ {email}: {msg}'})
-            history.append({'id': hist_id, 'ts': ts, 'to': email,
-                            'nome': nome, 'assunto': assunto_final, 'status': f'erro: {msg[:60]}',
-                            'opened': False, 'clicked': False})
+            history.append({'id': str(uuid.uuid4())[:8], 'ts': ts, 'to': email,
+                            'nome': nome, 'assunto': assunto_final, 'status': f'erro: {msg[:60]}'})
 
         job['progress'] = round(((i + 1) / total) * 100)
         save_email_history(history)
 
+        # Delay entre envios (exceto no último)
         if i < total - 1 and not job.get('cancel'):
             delay = random.randint(delay_min, delay_max)
             job['log'].append({'type': 'info', 'text': f'Aguardando {delay}s...'})
@@ -1569,6 +1554,7 @@ def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
 @app.route('/api/email/smtp-config', methods=['GET'])
 def email_get_smtp():
     cfg = load_smtp_config()
+    # Não retorna a senha por segurança; retorna apenas host/port/user
     safe = {k: v for k, v in cfg.items() if k != 'pass'}
     safe['has_pass'] = bool(cfg.get('pass'))
     return jsonify({"success": True, "config": safe})
@@ -1613,15 +1599,13 @@ def email_test_smtp():
 @app.route('/api/email/send-batch', methods=['POST'])
 @limiter.limit("10 per minute")
 def email_send_batch():
+    # Pega dados do form (multipart por causa do anexo)
     assunto     = (request.form.get('assunto') or '').strip()
     corpo       = (request.form.get('corpo') or '').strip()
+    # AGORA RECEBEMOS OS DADOS COMPLETOS DO CONTATO (NÃO SÓ O ID)
     targets_json = request.form.get('targets')
     delay_min   = int(request.form.get('delay_min') or 30)
     delay_max   = int(request.form.get('delay_max') or 90)
-    agendamento = request.form.get('agendamento')
-
-    agendamento_ts = int(agendamento) if agendamento else 0
-    base_url = request.host_url.rstrip('/')
 
     if not assunto:
         return jsonify({"success": False, "error": "Assunto é obrigatório."}), 400
@@ -1632,7 +1616,7 @@ def email_send_batch():
 
     smtp_cfg = load_smtp_config()
     if not smtp_cfg.get('host') or not smtp_cfg.get('user') or not smtp_cfg.get('pass'):
-        return jsonify({"success": False, "error": "Configure o SMTP antes de disparar."}), 400
+        return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
 
     try:
         contacts = json.loads(targets_json)
@@ -1642,6 +1626,7 @@ def email_send_batch():
     if not contacts:
         return jsonify({"success": False, "error": "Nenhum contato válido selecionado."}), 400
 
+    # Lida com anexo opcional
     anexo_bytes = None
     anexo_nome  = None
     anexo_mime  = None
@@ -1654,7 +1639,7 @@ def email_send_batch():
 
     job_id = str(uuid.uuid4())[:12]
     email_jobs[job_id] = {
-        'status':   'agendado' if agendamento_ts > 0 else 'starting',
+        'status':   'starting',
         'progress': 0,
         'total':    len(contacts),
         'sent':     0,
@@ -1667,7 +1652,7 @@ def email_send_batch():
     t = threading.Thread(
         target=_disparo_email_worker,
         args=(job_id, contacts, assunto, corpo, smtp_cfg, delay_min, delay_max,
-              anexo_bytes, anexo_nome, anexo_mime, agendamento_ts, base_url),
+              anexo_bytes, anexo_nome, anexo_mime),
         daemon=True
     )
     t.start()
@@ -1679,6 +1664,7 @@ def email_job_status(job_id):
     job = email_jobs.get(job_id)
     if not job:
         return jsonify({"success": False, "error": "Job não encontrado."}), 404
+    # Retorna apenas os últimos 50 logs para não sobrecarregar
     return jsonify({
         "success":  True,
         "status":   job['status'],
@@ -1754,7 +1740,7 @@ def email_generate_copy():
 
 
 # ─────────────────────────────────────────────
-# CALENDÁRIO E METRICAS RESTANTES
+# CALENDÁRIO
 # ─────────────────────────────────────────────
 @app.route('/calendario')
 def calendario():
@@ -1765,6 +1751,9 @@ def calendario():
     )
 
 
+# ─────────────────────────────────────────────
+# GOALS / PROGRESSO
+# ─────────────────────────────────────────────
 @app.route('/api/goals/progresso', methods=['GET'])
 def goals_progresso():
     tipo   = request.args.get('tipo', '').strip()
@@ -1853,9 +1842,12 @@ def goals_relatorio():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# ─────────────────────────────────────────────
+# MÉTRICAS — GOOGLE OAUTH2 + GSC + GA4
+# ─────────────────────────────────────────────
 SCOPES_ALL = [
-    '[https://www.googleapis.com/auth/webmasters.readonly](https://www.googleapis.com/auth/webmasters.readonly)',
-    '[https://www.googleapis.com/auth/analytics.readonly](https://www.googleapis.com/auth/analytics.readonly)'
+    'https://www.googleapis.com/auth/webmasters.readonly',
+    'https://www.googleapis.com/auth/analytics.readonly'
 ]
 TOKENS_FILE = os.path.join(BASE_DIR, 'data', 'metricas_tokens.json')
 
@@ -1884,7 +1876,7 @@ def _get_creds(workspace_id: str):
     creds = Credentials(
         token         = tok.get('token'),
         refresh_token = tok.get('refresh_token'),
-        token_uri     = '[https://oauth2.googleapis.com/token](https://oauth2.googleapis.com/token)',
+        token_uri     = 'https://oauth2.googleapis.com/token',
         client_id     = GOOGLE_CLIENT_ID,
         client_secret = GOOGLE_CLIENT_SECRET,
         scopes        = SCOPES_ALL,
@@ -1936,8 +1928,8 @@ def metricas_oauth_start():
             "web": {
                 "client_id"    : GOOGLE_CLIENT_ID,
                 "client_secret": GOOGLE_CLIENT_SECRET,
-                "auth_uri"     : "[https://accounts.google.com/o/oauth2/auth](https://accounts.google.com/o/oauth2/auth)",
-                "token_uri"    : "[https://oauth2.googleapis.com/token](https://oauth2.googleapis.com/token)",
+                "auth_uri"     : "https://accounts.google.com/o/oauth2/auth",
+                "token_uri"    : "https://oauth2.googleapis.com/token",
                 "redirect_uris": [GOOGLE_REDIRECT_URI],
             }
         },
@@ -1950,6 +1942,7 @@ def metricas_oauth_start():
         prompt='consent',
     )
     session['oauth_state'] = state
+    # NOVA LINHA: Salva o código de verificação para usar na volta
     session['code_verifier'] = getattr(flow, 'code_verifier', None) 
     
     return redirect(auth_url)
@@ -1958,7 +1951,7 @@ def metricas_oauth_start():
 @app.route('/api/metricas/oauth/callback')
 def metricas_oauth_callback():
     state = session.get('oauth_state', '')
-    code_verifier = session.get('code_verifier')
+    code_verifier = session.get('code_verifier') # <--- RECUPERA AQUI
 
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         return "Erro de configuração OAuth.", 400
@@ -1968,8 +1961,8 @@ def metricas_oauth_callback():
             "web": {
                 "client_id"    : GOOGLE_CLIENT_ID,
                 "client_secret": GOOGLE_CLIENT_SECRET,
-                "auth_uri"     : "[https://accounts.google.com/o/oauth2/auth](https://accounts.google.com/o/oauth2/auth)",
-                "token_uri"    : "[https://oauth2.googleapis.com/token](https://oauth2.googleapis.com/token)",
+                "auth_uri"     : "https://accounts.google.com/o/oauth2/auth",
+                "token_uri"    : "https://oauth2.googleapis.com/token",
                 "redirect_uris": [GOOGLE_REDIRECT_URI],
             }
         },
@@ -1979,12 +1972,15 @@ def metricas_oauth_callback():
     )
 
     try:
+        # Corrige o http para https que fizemos antes
         auth_response = request.url.replace('http://', 'https://')
         
+        # Cria os argumentos para enviar ao Google
         fetch_kwargs = {'authorization_response': auth_response}
         if code_verifier:
             fetch_kwargs['code_verifier'] = code_verifier
             
+        # Pega o token final enviando o verifier junto
         flow.fetch_token(**fetch_kwargs)
         creds = flow.credentials
 
@@ -2270,5 +2266,5 @@ def metricas_ia_analise():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
-    print(f"🚀 Leanttro Marketing OS — rodando na porta {port}")
+    print(f"🚀 Motor Dark Studio — rodando na porta {port}")
     app.run(host='0.0.0.0', port=port, debug=debug)
