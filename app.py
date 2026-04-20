@@ -2,10 +2,18 @@ import os
 import time
 import uuid
 import json
+import random
+import threading
+import smtplib
 import requests
 import urllib.parse
 import re
-from flask import Flask, request, jsonify, render_template, send_from_directory, session
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
+from email import encoders
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
@@ -592,7 +600,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not GEMINI_API_KEY:
                     return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
                 
-                url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){GEMINI_API_KEY}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
                 payload = {
                     "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
                     "contents": [{"parts": [{"text": user_content_generate}]}],
@@ -610,7 +618,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not OPENROUTER_API_KEY:
                     return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
                 
-                url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
+                url = "https://openrouter.ai/api/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
                     "model": "google/gemini-2.0-flash-001",
@@ -1018,7 +1026,6 @@ def crm_export():
             c.get("created_at","")
         ])
     output.seek(0)
-    from flask import Response
     return Response(
         "\ufeff" + output.getvalue(),
         mimetype="text/csv",
@@ -1052,7 +1059,7 @@ def _serper_places(query, num=20):
         return []
     try:
         res = requests.post(
-            "[https://google.serper.dev/places](https://google.serper.dev/places)",
+            "https://google.serper.dev/places",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1067,7 +1074,7 @@ def _serper_search(query, num=20):
         return []
     try:
         res = requests.post(
-            "[https://google.serper.dev/search](https://google.serper.dev/search)",
+            "https://google.serper.dev/search",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1135,8 +1142,8 @@ def api_minerador():
 
     elif fonte == "linkedin":
         queries = [
-            f'site:[linkedin.com/company](https://linkedin.com/company) "{nicho}" "{cidade}"',
-            f'site:[linkedin.com/in](https://linkedin.com/in) "{nicho}" "{cidade}"',
+            f'site:linkedin.com/company "{nicho}" "{cidade}"',
+            f'site:linkedin.com/in "{nicho}" "{cidade}"',
         ]
         seen = set()
         for q in queries:
@@ -1290,6 +1297,377 @@ def wpp_generate_copy():
         )
         copy = response.choices[0].message.content.strip()
         return jsonify({"success": True, "copy": copy})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# E-MAIL — ROTA DE PÁGINA
+# ─────────────────────────────────────────────
+@app.route('/email')
+def email_page():
+    return render_template('email.html')
+
+
+# ─────────────────────────────────────────────
+# E-MAIL — ARQUIVOS DE DADOS
+# ─────────────────────────────────────────────
+SMTP_CONFIG_FILE   = os.path.join(BASE_DIR, 'smtp_config.json')
+EMAIL_HISTORY_FILE = os.path.join(BASE_DIR, 'email_history.json')
+
+# Jobs de disparo em memória: { job_id: { status, progress, log, total, sent, errors } }
+email_jobs: dict = {}
+
+
+def load_smtp_config() -> dict:
+    try:
+        if os.path.exists(SMTP_CONFIG_FILE):
+            with open(SMTP_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[Email] Erro ao carregar smtp_config.json: {e}")
+    return {}
+
+
+def save_smtp_config(cfg: dict) -> bool:
+    try:
+        with open(SMTP_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cfg, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"[Email] Erro ao salvar smtp_config.json: {e}")
+        return False
+
+
+def load_email_history() -> list:
+    try:
+        if os.path.exists(EMAIL_HISTORY_FILE):
+            with open(EMAIL_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[Email] Erro ao carregar email_history.json: {e}")
+    return []
+
+
+def save_email_history(history: list) -> bool:
+    try:
+        # Mantém apenas os últimos 500 registros
+        history = history[-500:]
+        with open(EMAIL_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"[Email] Erro ao salvar email_history.json: {e}")
+        return False
+
+
+def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
+                       anexo_bytes=None, anexo_nome=None, anexo_mime=None) -> tuple:
+    """Envia um e-mail via SMTP. Retorna (True, 'OK') ou (False, 'mensagem de erro')."""
+    try:
+        to      = str(to).strip()
+        subject = str(subject).strip()
+        body    = str(body).replace('\n', '<br>')
+
+        # Detecta imagem inline via {{imagem}}
+        usar_inline = (
+            anexo_bytes is not None
+            and anexo_mime is not None
+            and "image" in anexo_mime
+            and "{{imagem}}" in body.lower()
+        )
+
+        if usar_inline:
+            msg = MIMEMultipart('related')
+            msg['From']    = smtp_cfg['user']
+            msg['To']      = to
+            msg['Subject'] = subject
+            alt = MIMEMultipart('alternative')
+            msg.attach(alt)
+            body_upd = body.replace("{{imagem}}", '<br><img src="cid:imagem_corpo" style="max-width:100%;height:auto;"><br>')
+            alt.attach(MIMEText(body_upd, 'html', 'utf-8'))
+            img = MIMEImage(anexo_bytes)
+            img.add_header('Content-ID', '<imagem_corpo>')
+            img.add_header('Content-Disposition', 'inline', filename=anexo_nome or 'imagem.jpg')
+            msg.attach(img)
+        else:
+            msg = MIMEMultipart()
+            msg['From']    = smtp_cfg['user']
+            msg['To']      = to
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'html', 'utf-8'))
+            if anexo_bytes is not None and not usar_inline:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(anexo_bytes)
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', f'attachment; filename="{anexo_nome or "anexo"}"')
+                msg.attach(part)
+
+        server = smtplib.SMTP(smtp_cfg['host'], int(smtp_cfg['port']))
+        server.starttls()
+        server.login(smtp_cfg['user'], smtp_cfg['pass'])
+        server.sendmail(smtp_cfg['user'], to, msg.as_string())
+        server.quit()
+        return True, "OK"
+    except Exception as e:
+        return False, str(e)
+
+
+def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
+                           smtp_cfg: dict, delay_min: int, delay_max: int,
+                           anexo_bytes=None, anexo_nome=None, anexo_mime=None):
+    """Thread worker para disparo de e-mails em lote."""
+    job       = email_jobs[job_id]
+    history   = load_email_history()
+    total     = len(contacts)
+    job['total']  = total
+    job['status'] = 'running'
+
+    for i, contact in enumerate(contacts):
+        if job.get('cancel'):
+            job['status'] = 'cancelled'
+            break
+
+        nome    = str(contact.get('nome', '') or contact.get('empresa', '') or 'Prezado(a)')
+        empresa = str(contact.get('empresa', '') or '')
+        email   = str(contact.get('email', '')).strip()
+
+        if not email or '@' not in email:
+            job['log'].append({'type': 'warning', 'text': f'Sem e-mail válido: {nome}'})
+            continue
+
+        assunto_final = assunto.replace('{nome}', nome).replace('{empresa}', empresa)
+        corpo_final   = corpo.replace('{nome}', nome).replace('{empresa}', empresa)
+
+        ok, msg = _enviar_email_smtp(smtp_cfg, email, assunto_final, corpo_final,
+                                     anexo_bytes, anexo_nome, anexo_mime)
+
+        ts = int(time.time())
+        if ok:
+            job['sent']   += 1
+            job['log'].append({'type': 'success', 'text': f'✓ {email}'})
+            history.append({'id': str(uuid.uuid4())[:8], 'ts': ts, 'to': email,
+                            'nome': nome, 'assunto': assunto_final, 'status': 'enviado'})
+            # Atualiza status do contato no CRM
+            try:
+                contacts_all = load_contacts()
+                for c in contacts_all:
+                    if c.get('id') == contact.get('id'):
+                        c['status'] = 'em_contato'
+                        break
+                save_contacts(contacts_all)
+            except Exception:
+                pass
+        else:
+            job['errors'] += 1
+            job['log'].append({'type': 'error', 'text': f'✗ {email}: {msg}'})
+            history.append({'id': str(uuid.uuid4())[:8], 'ts': ts, 'to': email,
+                            'nome': nome, 'assunto': assunto_final, 'status': f'erro: {msg[:60]}'})
+
+        job['progress'] = round(((i + 1) / total) * 100)
+        save_email_history(history)
+
+        # Delay entre envios (exceto no último)
+        if i < total - 1 and not job.get('cancel'):
+            delay = random.randint(delay_min, delay_max)
+            job['log'].append({'type': 'info', 'text': f'Aguardando {delay}s...'})
+            for _ in range(delay):
+                if job.get('cancel'):
+                    break
+                time.sleep(1)
+
+    if job['status'] == 'running':
+        job['status']   = 'done'
+        job['progress'] = 100
+        job['log'].append({'type': 'success',
+                           'text': f'Disparo concluído — {job["sent"]} enviados, {job["errors"]} erros.'})
+
+
+# ─────────────────────────────────────────────
+# E-MAIL — ROTAS DA API
+# ─────────────────────────────────────────────
+
+@app.route('/api/email/smtp-config', methods=['GET'])
+def email_get_smtp():
+    cfg = load_smtp_config()
+    # Não retorna a senha por segurança; retorna apenas host/port/user
+    safe = {k: v for k, v in cfg.items() if k != 'pass'}
+    safe['has_pass'] = bool(cfg.get('pass'))
+    return jsonify({"success": True, "config": safe})
+
+
+@app.route('/api/email/smtp-config', methods=['POST'])
+@limiter.limit("20 per minute")
+def email_save_smtp():
+    data = request.json or {}
+    cfg  = load_smtp_config()
+    cfg['host'] = data.get('host', cfg.get('host', 'smtp.gmail.com')).strip()
+    cfg['port'] = int(data.get('port', cfg.get('port', 587)))
+    cfg['user'] = data.get('user', cfg.get('user', '')).strip()
+    if data.get('pass'):
+        cfg['pass'] = data['pass']
+    ok = save_smtp_config(cfg)
+    return jsonify({"success": ok, "message": "Configuração salva." if ok else "Erro ao salvar."})
+
+
+@app.route('/api/email/test-smtp', methods=['POST'])
+@limiter.limit("5 per minute")
+def email_test_smtp():
+    data = request.json or {}
+    cfg  = {
+        'host': data.get('host', '').strip(),
+        'port': int(data.get('port', 587)),
+        'user': data.get('user', '').strip(),
+        'pass': data.get('pass', '').strip(),
+    }
+    if not cfg['host'] or not cfg['user'] or not cfg['pass']:
+        return jsonify({"success": False, "error": "Preencha host, usuário e senha."}), 400
+    try:
+        server = smtplib.SMTP(cfg['host'], cfg['port'], timeout=10)
+        server.starttls()
+        server.login(cfg['user'], cfg['pass'])
+        server.quit()
+        return jsonify({"success": True, "message": f"Conexão com {cfg['host']} bem-sucedida!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
+@app.route('/api/email/send-batch', methods=['POST'])
+@limiter.limit("10 per minute")
+def email_send_batch():
+    # Pega dados do form (multipart por causa do anexo)
+    assunto     = (request.form.get('assunto') or '').strip()
+    corpo       = (request.form.get('corpo') or '').strip()
+    contact_ids = json.loads(request.form.get('contact_ids') or '[]')
+    delay_min   = int(request.form.get('delay_min') or 30)
+    delay_max   = int(request.form.get('delay_max') or 90)
+
+    if not assunto:
+        return jsonify({"success": False, "error": "Assunto é obrigatório."}), 400
+    if not corpo:
+        return jsonify({"success": False, "error": "Corpo do e-mail é obrigatório."}), 400
+    if not contact_ids:
+        return jsonify({"success": False, "error": "Selecione ao menos um contato."}), 400
+
+    smtp_cfg = load_smtp_config()
+    if not smtp_cfg.get('host') or not smtp_cfg.get('user') or not smtp_cfg.get('pass'):
+        return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
+
+    # Filtro de contatos com e-mail
+    all_contacts = load_contacts()
+    contacts = [c for c in all_contacts if c.get('id') in contact_ids and c.get('email') and '@' in c.get('email', '')]
+    if not contacts:
+        return jsonify({"success": False, "error": "Nenhum contato selecionado tem e-mail válido."}), 400
+
+    # Lida com anexo opcional
+    anexo_bytes = None
+    anexo_nome  = None
+    anexo_mime  = None
+    if 'anexo' in request.files:
+        f = request.files['anexo']
+        if f and f.filename:
+            anexo_bytes = f.read()
+            anexo_nome  = secure_filename(f.filename)
+            anexo_mime  = f.content_type or 'application/octet-stream'
+
+    job_id = str(uuid.uuid4())[:12]
+    email_jobs[job_id] = {
+        'status':   'starting',
+        'progress': 0,
+        'total':    len(contacts),
+        'sent':     0,
+        'errors':   0,
+        'log':      [],
+        'cancel':   False,
+        'created':  int(time.time()),
+    }
+
+    t = threading.Thread(
+        target=_disparo_email_worker,
+        args=(job_id, contacts, assunto, corpo, smtp_cfg, delay_min, delay_max,
+              anexo_bytes, anexo_nome, anexo_mime),
+        daemon=True
+    )
+    t.start()
+
+    return jsonify({"success": True, "job_id": job_id, "total": len(contacts)})
+
+
+@app.route('/api/email/job-status/<job_id>', methods=['GET'])
+def email_job_status(job_id):
+    job = email_jobs.get(job_id)
+    if not job:
+        return jsonify({"success": False, "error": "Job não encontrado."}), 404
+    # Retorna apenas os últimos 50 logs para não sobrecarregar
+    return jsonify({
+        "success":  True,
+        "status":   job['status'],
+        "progress": job['progress'],
+        "total":    job['total'],
+        "sent":     job['sent'],
+        "errors":   job['errors'],
+        "log":      job['log'][-50:],
+    })
+
+
+@app.route('/api/email/job-cancel/<job_id>', methods=['POST'])
+def email_job_cancel(job_id):
+    job = email_jobs.get(job_id)
+    if not job:
+        return jsonify({"success": False, "error": "Job não encontrado."}), 404
+    job['cancel'] = True
+    return jsonify({"success": True, "message": "Cancelamento solicitado."})
+
+
+@app.route('/api/email/history', methods=['GET'])
+def email_history():
+    history = load_email_history()
+    return jsonify({"success": True, "history": list(reversed(history)), "total": len(history)})
+
+
+@app.route('/api/email/history', methods=['DELETE'])
+def email_clear_history():
+    save_email_history([])
+    return jsonify({"success": True, "message": "Histórico limpo."})
+
+
+@app.route('/api/email/generate-copy', methods=['POST'])
+@limiter.limit("20 per minute")
+def email_generate_copy():
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada."}), 400
+
+    data      = request.json or {}
+    nicho     = data.get('nicho', 'negócios B2B').strip()
+    empresa   = data.get('empresa', '').strip()
+    descricao = data.get('descricao', '').strip()
+
+    contexto = ''
+    if empresa:   contexto += f' Minha empresa é {empresa}.'
+    if descricao: contexto += f' O que vendemos: {descricao}.'
+
+    prompt = (
+        f"Você é um copywriter especialista em e-mail marketing B2B. "
+        f"Crie um e-mail de prospecção fria para o nicho: {nicho}.{contexto} "
+        f"Retorne um JSON com os campos 'assunto' (máx 60 chars, direto e curioso) "
+        f"e 'corpo' (HTML simples, máx 3 parágrafos curtos, tom pessoal e direto, "
+        f"use {{nome}} para personalizar). Sem markdown, apenas JSON puro."
+    )
+
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "Retorne APENAS JSON válido, sem markdown, sem explicações."},
+                {"role": "user", "content": prompt}
+            ],
+            model=BEST_FREE_MODEL,
+            temperature=0.7,
+            max_tokens=600,
+            response_format={"type": "json_object"},
+        )
+        raw  = response.choices[0].message.content.strip()
+        data = json.loads(raw)
+        return jsonify({"success": True, "assunto": data.get('assunto', ''), "corpo": data.get('corpo', '')})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
