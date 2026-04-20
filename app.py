@@ -35,9 +35,6 @@ try:
 except ImportError:
     weasyprint = None
 
-# ─────────────────────────────────────────────
-# CONFIGURAÇÕES BASE
-# ─────────────────────────────────────────────
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 HTML_TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'html_templates')
@@ -55,9 +52,6 @@ limiter = Limiter(
     default_limits=["1000 per day", "200 per hour"]
 )
 
-# ─────────────────────────────────────────────
-# CHAVES DE API
-# ─────────────────────────────────────────────
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
@@ -71,16 +65,10 @@ if GROQ_API_KEY:
 else:
     groq_client = None
 
-# Histórico de versões em memória (por session_id)
 version_history: dict[str, list[dict]] = {}
 
-# ─────────────────────────────────────────────
-# CONFIGURAÇÃO DO BAILEYS (WhatsApp)
-# ─────────────────────────────────────────────
 BAILEYS_URL = os.environ.get("BAILEYS_URL", "http://213.199.56.207:3000")
-# ─────────────────────────────────────────────
-# VARIÁVEIS DIRECTUS E GOOGLE (extras)
-# ─────────────────────────────────────────────
+
 DIRECTUS_URL = os.environ.get("DIRECTUS_URL", "")
 DIRECTUS_TOKEN = os.environ.get("DIRECTUS_TOKEN", "")
 DIRECTUS_TABLE = os.environ.get("DIRECTUS_TABLE", "")
@@ -95,25 +83,18 @@ def get_directus_headers():
         "Content-Type": "application/json"
     }
 
-
-# ─────────────────────────────────────────────
-# UTILITÁRIOS
-# ─────────────────────────────────────────────
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 if not os.path.exists(HTML_TEMPLATES_FOLDER):
     os.makedirs(HTML_TEMPLATES_FOLDER)
 
-
 def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 def get_media_type(filename: str) -> str:
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     return 'video' if ext in {'mp4', 'webm'} else 'image'
-
 
 def cleanup_old_uploads(max_age_hours: int = 24):
     try:
@@ -127,14 +108,9 @@ def cleanup_old_uploads(max_age_hours: int = 24):
     except Exception as e:
         print(f"[cleanup] Erro: {e}")
 
-
 def get_session_id(req) -> str:
     return req.headers.get('X-Session-ID', 'default')
 
-
-# ─────────────────────────────────────────────
-# ROTAS PRINCIPAIS
-# ─────────────────────────────────────────────
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -172,15 +148,10 @@ def whatsapp():
 def serve_media(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-
 @app.route('/html_templates/<path:filename>')
 def serve_html_templates(filename):
     return send_from_directory(HTML_TEMPLATES_FOLDER, filename)
 
-
-# ─────────────────────────────────────────────
-# UPLOAD DE ASSETS
-# ─────────────────────────────────────────────
 @app.route('/api/upload', methods=['POST'])
 @limiter.limit("60 per minute")
 def api_upload():
@@ -228,10 +199,6 @@ def api_upload():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# BUSCA NO PIXABAY
-# ─────────────────────────────────────────────
 @app.route('/api/pixabay', methods=['POST'])
 @limiter.limit("30 per minute")
 def api_pixabay():
@@ -260,10 +227,6 @@ def api_pixabay():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# NOVA ROTA: INSPIRAÇÕES VIA SERPER
-# ─────────────────────────────────────────────
 @app.route('/api/inspirations', methods=['POST'])
 @limiter.limit("20 per minute")
 def api_inspirations():
@@ -351,11 +314,6 @@ def api_inspirations():
     except Exception as e:
         return jsonify({"success": False, "error": f"Erro na busca: {str(e)}"}), 500
 
-
-# ─────────────────────────────────────────────
-# HELPERS DE IA COM FALLBACK AUTOMÁTICO
-# ─────────────────────────────────────────────
-
 def _openrouter_call(messages, model="google/gemini-2.0-flash-001",
                      temperature=0.45, max_tokens=8192, json_mode=False):
     if not OPENROUTER_API_KEY:
@@ -380,7 +338,6 @@ def _openrouter_call(messages, model="google/gemini-2.0-flash-001",
     tokens = res.get('usage', {}).get('total_tokens', 0)
     return text, tokens
 
-
 def _groq_call(messages, temperature=0.45, max_tokens=8000, json_mode=False):
     if not groq_client:
         raise Exception("GROQ_API_KEY ausente")
@@ -397,7 +354,6 @@ def _groq_call(messages, temperature=0.45, max_tokens=8000, json_mode=False):
     text = response.choices[0].message.content
     tokens = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
     return text, tokens
-
 
 def _gemini_call(system_prompt, user_content,
                  temperature=0.45, max_tokens=8192, json_mode=False):
@@ -420,7 +376,6 @@ def _gemini_call(system_prompt, user_content,
         raise Exception(f"Gemini: {res['error']['message']}")
     text = res['candidates'][0]['content']['parts'][0]['text']
     return text, 0
-
 
 def _ai_with_fallback(system_prompt, user_content,
                       temperature=0.45, max_tokens=8192,
@@ -463,10 +418,6 @@ def _ai_with_fallback(system_prompt, user_content,
 
     raise Exception("Todos os provedores falharam → " + " | ".join(errors))
 
-
-# ─────────────────────────────────────────────
-# GERAÇÃO DE HTML VIA IA (UNIFICADA)
-# ─────────────────────────────────────────────
 @app.route('/api/generate', methods=['POST'])
 @limiter.limit("25 per minute")
 def api_generate():
@@ -745,10 +696,6 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 msg = f"Erro na geração: {error_msg}"
             return jsonify({"success": False, "error": msg}), 500
 
-
-# ─────────────────────────────────────────────
-# HISTÓRICO DE VERSÕES
-# ─────────────────────────────────────────────
 @app.route('/api/history', methods=['GET'])
 def api_history():
     session_id = get_session_id(request)
@@ -766,7 +713,6 @@ def api_history():
     ]
     return jsonify({"success": True, "history": list(reversed(summary)), "count": len(summary)})
 
-
 @app.route('/api/history/<version_id>', methods=['GET'])
 def api_get_version(version_id):
     session_id = get_session_id(request)
@@ -776,17 +722,12 @@ def api_get_version(version_id):
         return jsonify({"success": False, "error": "Versão não encontrada"}), 404
     return jsonify({"success": True, "version": version})
 
-
 @app.route('/api/history', methods=['DELETE'])
 def api_clear_history():
     session_id = get_session_id(request)
     version_history[session_id] = []
     return jsonify({"success": True, "message": "Histórico limpo com sucesso"})
 
-
-# ─────────────────────────────────────────────
-# TEMPLATES REAIS (LENDO DA PASTA html_templates)
-# ─────────────────────────────────────────────
 @app.route('/api/templates', methods=['GET'])
 def api_templates():
     templates = []
@@ -825,10 +766,6 @@ def api_templates():
 
     return jsonify({"success": True, "templates": templates})
 
-
-# ─────────────────────────────────────────────
-# STATUS DA API
-# ─────────────────────────────────────────────
 @app.route('/api/status', methods=['GET'])
 def api_status():
     total_versions = sum(len(v) for v in version_history.values())
@@ -846,18 +783,10 @@ def api_status():
         "uploads_count":  uploads_count,
     })
 
-
-# ─────────────────────────────────────────────
-# FORMULÁRIO DO CLIENTE
-# ─────────────────────────────────────────────
 @app.route('/formulario')
 def formulario():
     return render_template('formulario.html')
 
-
-# ─────────────────────────────────────────────
-# SUGESTÃO DE TEXTO VIA IA (para o formulário e Kanban)
-# ─────────────────────────────────────────────
 @app.route('/api/sugestao-texto', methods=['POST'])
 @limiter.limit("60 per minute")
 def api_sugestao_texto():
@@ -894,10 +823,6 @@ def api_sugestao_texto():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# RECEBER PEDIDO DO FORMULÁRIO
-# ─────────────────────────────────────────────
 PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
 os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
 
@@ -939,10 +864,6 @@ def api_form_pedido():
         "message":   "Pedido recebido com sucesso!"
     })
 
-
-# ─────────────────────────────────────────────
-# LISTAR PEDIDOS (para você ver no painel)
-# ─────────────────────────────────────────────
 @app.route('/api/pedidos', methods=['GET'])
 def api_pedidos():
     pedidos = []
@@ -957,10 +878,6 @@ def api_pedidos():
 
     return jsonify({"success": True, "pedidos": pedidos, "total": len(pedidos)})
 
-
-# ─────────────────────────────────────────────
-# CRM — ARMAZENAMENTO LOCAL (JSON)
-# ─────────────────────────────────────────────
 CONTACTS_FILE = os.path.join(BASE_DIR, 'contacts.json')
 
 def load_contacts():
@@ -1066,9 +983,6 @@ def crm_export():
         headers={"Content-Disposition": f"attachment; filename=crm_export_{int(time.time())}.csv"}
     )
 
-# ─────────────────────────────────────────────
-# MINERADOR — GOOGLE MAPS, INSTAGRAM, LINKEDIN
-# ─────────────────────────────────────────────
 def _limpar_telefone(txt):
     nums = re.sub(r'\D', '', str(txt))
     if len(nums) >= 10:
@@ -1230,10 +1144,6 @@ def api_scrape_email():
         
     return jsonify({"email": ""})
 
-
-# ─────────────────────────────────────────────
-# WHATSAPP — STATUS DO CHIP (Baileys)
-# ─────────────────────────────────────────────
 @app.route('/api/wpp/status', methods=['GET'])
 def wpp_status():
     try:
@@ -1247,10 +1157,6 @@ def wpp_status():
     except Exception as e:
         return jsonify({"success": True, "connected": False, "number": "", "error": str(e)})
 
-
-# ─────────────────────────────────────────────
-# WHATSAPP — ENVIAR MENSAGEM (via Baileys)
-# ─────────────────────────────────────────────
 @app.route('/api/wpp/send', methods=['POST'])
 @limiter.limit("120 per minute")
 def wpp_send():
@@ -1293,10 +1199,6 @@ def wpp_send():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# WHATSAPP — GERAR COPY COM IA (Groq)
-# ─────────────────────────────────────────────
 @app.route('/api/wpp/generate-copy', methods=['POST'])
 @limiter.limit("20 per minute")
 def wpp_generate_copy():
@@ -1333,10 +1235,6 @@ def wpp_generate_copy():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# E-MAIL — ROTA DE PÁGINA E RASTREAMENTO
-# ─────────────────────────────────────────────
 @app.route('/email')
 def email_page():
     return render_template('email.html',
@@ -1345,12 +1243,10 @@ def email_page():
         directus_table=os.environ.get("DIRECTUS_TABLE", "")
     )
 
-
 SMTP_CONFIG_FILE   = os.path.join(BASE_DIR, 'smtp_config.json')
 EMAIL_HISTORY_FILE = os.path.join(BASE_DIR, 'email_history.json')
 
 email_jobs: dict = {}
-
 
 def load_smtp_config() -> dict:
     try:
@@ -1361,7 +1257,6 @@ def load_smtp_config() -> dict:
         print(f"[Email] Erro ao carregar smtp_config.json: {e}")
     return {}
 
-
 def save_smtp_config(cfg: dict) -> bool:
     try:
         with open(SMTP_CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -1371,7 +1266,6 @@ def save_smtp_config(cfg: dict) -> bool:
         print(f"[Email] Erro ao salvar smtp_config.json: {e}")
         return False
 
-
 def load_email_history() -> list:
     try:
         if os.path.exists(EMAIL_HISTORY_FILE):
@@ -1380,7 +1274,6 @@ def load_email_history() -> list:
     except Exception as e:
         print(f"[Email] Erro ao carregar email_history.json: {e}")
     return []
-
 
 def save_email_history(history: list) -> bool:
     try:
@@ -1392,8 +1285,6 @@ def save_email_history(history: list) -> bool:
         print(f"[Email] Erro ao salvar email_history.json: {e}")
         return False
 
-
-# Rota Rastreamento Abertura (Pixel)
 @app.route('/api/email/track/open/<history_id>.gif')
 def email_track_open(history_id):
     history = load_email_history()
@@ -1406,8 +1297,6 @@ def email_track_open(history_id):
     pixel = b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00\x21\xf9\x04\x01\x00\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
     return Response(pixel, mimetype='image/gif')
 
-
-# Rota Rastreamento Clique (Redirecionamento)
 @app.route('/api/email/track/click/<history_id>')
 def email_track_click(history_id):
     url = request.args.get('url')
@@ -1421,7 +1310,6 @@ def email_track_click(history_id):
             break
     save_email_history(history)
     return redirect(url)
-
 
 def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
                        anexo_bytes=None, anexo_nome=None, anexo_mime=None) -> tuple:
@@ -1471,7 +1359,6 @@ def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
         return True, "OK"
     except Exception as e:
         return False, str(e)
-
 
 def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
                            smtp_cfg: dict, delay_min: int, delay_max: int,
@@ -1561,18 +1448,12 @@ def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
         job['log'].append({'type': 'success',
                            'text': f'Disparo concluído — {job["sent"]} enviados, {job["errors"]} erros.'})
 
-
-# ─────────────────────────────────────────────
-# E-MAIL — ROTAS DA API
-# ─────────────────────────────────────────────
-
 @app.route('/api/email/smtp-config', methods=['GET'])
 def email_get_smtp():
     cfg = load_smtp_config()
     safe = {k: v for k, v in cfg.items() if k != 'pass'}
     safe['has_pass'] = bool(cfg.get('pass'))
     return jsonify({"success": True, "config": safe})
-
 
 @app.route('/api/email/smtp-config', methods=['POST'])
 @limiter.limit("20 per minute")
@@ -1586,7 +1467,6 @@ def email_save_smtp():
         cfg['pass'] = data['pass']
     ok = save_smtp_config(cfg)
     return jsonify({"success": ok, "message": "Configuração salva." if ok else "Erro ao salvar."})
-
 
 @app.route('/api/email/test-smtp', methods=['POST'])
 @limiter.limit("5 per minute")
@@ -1608,7 +1488,6 @@ def email_test_smtp():
         return jsonify({"success": True, "message": f"Conexão com {cfg['host']} bem-sucedida!"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
-
 
 @app.route('/api/email/send-batch', methods=['POST'])
 @limiter.limit("10 per minute")
@@ -1689,7 +1568,6 @@ def email_job_status(job_id):
         "log":      job['log'][-50:],
     })
 
-
 @app.route('/api/email/job-cancel/<job_id>', methods=['POST'])
 def email_job_cancel(job_id):
     job = email_jobs.get(job_id)
@@ -1698,18 +1576,15 @@ def email_job_cancel(job_id):
     job['cancel'] = True
     return jsonify({"success": True, "message": "Cancelamento solicitado."})
 
-
 @app.route('/api/email/history', methods=['GET'])
 def email_history():
     history = load_email_history()
     return jsonify({"success": True, "history": list(reversed(history)), "total": len(history)})
 
-
 @app.route('/api/email/history', methods=['DELETE'])
 def email_clear_history():
     save_email_history([])
     return jsonify({"success": True, "message": "Histórico limpo."})
-
 
 @app.route('/api/email/generate-copy', methods=['POST'])
 @limiter.limit("20 per minute")
@@ -1751,11 +1626,6 @@ def email_generate_copy():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-
-# ─────────────────────────────────────────────
-# CALENDÁRIO E METRICAS RESTANTES
-# ─────────────────────────────────────────────
 @app.route('/calendario')
 def calendario():
     return render_template('calendario.html',
@@ -1763,7 +1633,6 @@ def calendario():
         directus_token=DIRECTUS_TOKEN,
         directus_table=DIRECTUS_TABLE,
     )
-
 
 @app.route('/api/goals/progresso', methods=['GET'])
 def goals_progresso():
@@ -1839,7 +1708,6 @@ def goals_progresso():
 
     return jsonify({"success": True, "tipo": tipo, "mes": mes, "valor": valor})
 
-
 @app.route('/api/goals/relatorio', methods=['GET'])
 def goals_relatorio():
     mes = request.args.get('mes', datetime.datetime.now().strftime('%Y-%m'))
@@ -1852,13 +1720,11 @@ def goals_relatorio():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 SCOPES_ALL = [
     '[https://www.googleapis.com/auth/webmasters.readonly](https://www.googleapis.com/auth/webmasters.readonly)',
     '[https://www.googleapis.com/auth/analytics.readonly](https://www.googleapis.com/auth/analytics.readonly)'
 ]
 TOKENS_FILE = os.path.join(BASE_DIR, 'data', 'metricas_tokens.json')
-
 
 def _load_tokens():
     try:
@@ -1869,12 +1735,10 @@ def _load_tokens():
         pass
     return {}
 
-
 def _save_tokens(data: dict):
     os.makedirs(os.path.dirname(TOKENS_FILE), exist_ok=True)
     with open(TOKENS_FILE, 'w') as f:
         json.dump(data, f)
-
 
 def _get_creds(workspace_id: str):
     tokens = _load_tokens()
@@ -1901,7 +1765,6 @@ def _get_creds(workspace_id: str):
             return None
     return creds
 
-
 @app.route('/metricas')
 def metricas():
     return render_template('metricas.html',
@@ -1909,7 +1772,6 @@ def metricas():
         directus_token = DIRECTUS_TOKEN,
         directus_table = DIRECTUS_TABLE,
     )
-
 
 @app.route('/api/metricas/status', methods=['GET'])
 def metricas_status():
@@ -1924,7 +1786,6 @@ def metricas_status():
         "gsc_site"      : tok.get('gsc_site', ''),
         "ga4_property"  : GA4_PROPERTY_ID,
     })
-
 
 @app.route('/api/metricas/oauth/start')
 def metricas_oauth_start():
@@ -1953,7 +1814,6 @@ def metricas_oauth_start():
     session['code_verifier'] = getattr(flow, 'code_verifier', None) 
     
     return redirect(auth_url)
-
 
 @app.route('/api/metricas/oauth/callback')
 def metricas_oauth_callback():
@@ -2010,7 +1870,6 @@ def metricas_oauth_callback():
 
     except Exception as e:
         return f"Erro no callback OAuth: {e}", 400
-
 
 @app.route('/api/metricas/gsc', methods=['GET'])
 def metricas_gsc():
@@ -2104,7 +1963,6 @@ def metricas_gsc():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @app.route('/api/metricas/ga4', methods=['GET'])
 def metricas_ga4():
@@ -2200,7 +2058,6 @@ def metricas_ga4():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
 @app.route('/api/metricas/sync', methods=['POST'])
 @limiter.limit("10 per minute")
 def metricas_sync():
@@ -2209,7 +2066,6 @@ def metricas_sync():
     if not creds or not creds.valid:
         return jsonify({"success": False, "error": "Nenhuma conexão ativa. Conecte o Google primeiro."}), 401
     return jsonify({"success": True, "message": "Dados atualizados com sucesso."})
-
 
 @app.route('/api/metricas/ia-analise', methods=['POST'])
 @limiter.limit("10 per minute")
@@ -2263,10 +2119,6 @@ def metricas_ia_analise():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# INICIALIZAÇÃO
-# ─────────────────────────────────────────────
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
