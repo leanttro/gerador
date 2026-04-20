@@ -571,10 +571,14 @@ body {
 
                 <div class="form-block">
                     <label class="form-label">Arte Finalizada (Kanban)</label>
-                    <select class="form-select" id="arteKanbanSelect">
+                    <select class="form-select" id="arteKanbanSelect" onchange="onArteKanbanChange()">
                         <option value="">Não usar arte (apenas texto/anexo)</option>
                     </select>
-                    <div class="form-hint">O HTML da arte será convertido em imagem no servidor e enviado inline.</div>
+                    <div id="arteKanbanPreview" style="display:none; margin-top:10px; padding:10px; background:var(--bg-body); border:1px solid var(--border); border-radius:var(--radius);">
+                        <img id="arteKanbanThumb" src="" alt="Preview da Arte" style="width:100%; max-height:160px; object-fit:contain; border-radius:4px; border:1px solid var(--border);">
+                        <div id="arteKanbanInfo" style="font-size:11px; color:var(--text-muted); margin-top:6px;"></div>
+                    </div>
+                    <div class="form-hint">O HTML da arte será convertido em imagem no servidor e enviado inline. Use <strong>{{imagem}}</strong> no corpo para posicioná-la.</div>
                 </div>
 
                 <div class="form-block">
@@ -781,8 +785,34 @@ function loadKanbanArts() {
             }
             localStorage.removeItem('wl_active_dispatch');
             showToast('info', 'Arte carregada', 'O conteúdo do Kanban foi importado.');
+            onArteKanbanChange();
         }
     } catch(e) {}
+}
+
+function onArteKanbanChange() {
+    const sel = document.getElementById('arteKanbanSelect');
+    const preview = document.getElementById('arteKanbanPreview');
+    const thumb = document.getElementById('arteKanbanThumb');
+    const info = document.getElementById('arteKanbanInfo');
+    const arteId = sel.value;
+
+    if (!arteId) {
+        preview.style.display = 'none';
+        thumb.src = '';
+        return;
+    }
+
+    const card = kanbanArts.find(p => p.id === arteId);
+    if (!card) { preview.style.display = 'none'; return; }
+
+    if (card.thumb) {
+        thumb.src = card.thumb;
+        info.textContent = card.titulo + (card.tipo ? ' · ' + card.tipo : '') + (card.copy ? ' — ' + card.copy.slice(0, 60) + (card.copy.length > 60 ? '…' : '') : '');
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
 }
 
 function toggleTheme() {
@@ -971,20 +1001,32 @@ function removeAnexo() {
 async function generateCopy() {
     const btn   = document.querySelector('.ai-btn');
     const nicho = document.getElementById('nichoInput').value.trim();
+    const arteId = document.getElementById('arteKanbanSelect').value;
+    const card = arteId ? kanbanArts.find(p => p.id === arteId) : null;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Gerando...';
 
     try {
+        const payload = { nicho: nicho || 'negócios B2B' };
+        if (card) {
+            payload.arte_titulo = card.titulo || '';
+            payload.arte_tipo   = card.tipo   || '';
+            payload.arte_copy   = card.copy   || '';
+        }
         const r = await fetch('/api/email/generate-copy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nicho: nicho || 'negócios B2B' })
+            body: JSON.stringify(payload)
         });
         const d = await r.json();
         if (d.success) {
             document.getElementById('assuntoInput').value = d.assunto || '';
-            document.getElementById('corpoInput').value   = d.corpo   || '';
-            showToast('success', 'Copy gerado!', 'Assunto e corpo preenchidos pela IA.');
+            let corpo = d.corpo || '';
+            if (card && card.thumb && !corpo.includes('{{imagem}}')) {
+                corpo = '{{imagem}}\n\n' + corpo;
+            }
+            document.getElementById('corpoInput').value = corpo;
+            showToast('success', 'Copy gerado!', 'Assunto e corpo preenchidos pela IA.' + (card ? ' Arte do Kanban considerada.' : ''));
         } else {
             showToast('error', 'Erro na IA', d.error || 'Tente novamente.');
         }
@@ -998,13 +1040,26 @@ async function generateCopy() {
 
 async function iniciarDisparo() {
     const assunto = document.getElementById('assuntoInput').value.trim();
-    const corpo   = document.getElementById('corpoInput').value.trim();
+    let   corpo   = document.getElementById('corpoInput').value.trim();
     const arteId  = document.getElementById('arteKanbanSelect').value;
     const agendamento = document.getElementById('agendamentoInput').value;
 
     if (!assunto) { showToast('warning', 'Atenção', 'Preencha o assunto.'); return; }
     if (!corpo)   { showToast('warning', 'Atenção', 'Preencha o corpo do e-mail.'); return; }
     if (!selectedIds.size) { showToast('warning', 'Atenção', 'Selecione ao menos um contato.'); return; }
+
+    // Injeta a thumbnail da arte selecionada no lugar de {{imagem}}
+    if (arteId) {
+        const card = kanbanArts.find(p => p.id === arteId);
+        if (card && card.thumb) {
+            const imgTag = `<br><img src="${card.thumb}" style="max-width:100%;height:auto;border-radius:6px;" alt="${card.titulo || 'Arte'}"><br>`;
+            if (corpo.includes('{{imagem}}')) {
+                corpo = corpo.replace(/\{\{imagem\}\}/gi, imgTag);
+            } else {
+                corpo = imgTag + corpo;
+            }
+        }
+    }
 
     const delayMin = parseInt(document.getElementById('delayMin').value) || 30;
     const delayMax = currentMode === 'lote50' ? 288 : (parseInt(document.getElementById('delayMax').value) || 90);
