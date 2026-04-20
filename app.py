@@ -1463,7 +1463,6 @@ def goals_relatorio():
         return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename=relatorio_leanttro_{mes}.pdf'})
     except Exception as e: return jsonify({"success": False, "error": str(e)}), 500
 
-
 SCOPES_ALL = ['[https://www.googleapis.com/auth/webmasters.readonly](https://www.googleapis.com/auth/webmasters.readonly)', '[https://www.googleapis.com/auth/analytics.readonly](https://www.googleapis.com/auth/analytics.readonly)']
 
 TOKENS_FILE = os.path.join(BASE_DIR, 'data', 'metricas_tokens.json')
