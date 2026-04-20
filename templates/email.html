@@ -836,22 +836,15 @@ function switchTab(name) {
     if (name === 'config')    loadSmtpConfig();
 }
 
-async function fetchSmtpFromDirectus() {
-    const url = `${CONFIG.DIRECTUS_URL}/items/Config_SMTP?limit=1`;
-    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
-    const d = await res.json();
-    if (d.data && d.data.length > 0) return d.data[0];
-    return null;
-}
-
 async function checkSmtpStatus() {
     try {
-        const cfg = await fetchSmtpFromDirectus();
+        const r = await fetch('/api/email/smtp-config');
+        const d = await r.json();
         const dot = document.getElementById('smtpDot');
         const lbl = document.getElementById('smtpLabel');
-        if (cfg && cfg.SMTP_Host && cfg.SMTP_User && cfg.SMTP_Pass) {
+        if (d.config && d.config.host && d.config.user && d.config.has_pass) {
             dot.className = 'smtp-dot ok';
-            lbl.textContent = `Configurado — ${cfg.SMTP_User}`;
+            lbl.textContent = `Configurado — ${d.config.user}`;
         } else {
             dot.className = 'smtp-dot err';
             lbl.textContent = 'SMTP não configurado — vá em Configurações';
@@ -1084,17 +1077,6 @@ async function iniciarDisparo() {
         email: c.email
     }));
 
-    // injeta SMTP do Directus no payload
-    try {
-        const smtpCfg = await fetchSmtpFromDirectus();
-        if (smtpCfg) {
-            fd.append('smtp_host', smtpCfg.SMTP_Host || '');
-            fd.append('smtp_port', smtpCfg.SMTP_Port || 587);
-            fd.append('smtp_user', smtpCfg.SMTP_User || '');
-            fd.append('smtp_pass', smtpCfg.SMTP_Pass || '');
-        }
-    } catch(e) {}
-
     fd.append('assunto',   assunto);
     fd.append('corpo',     corpo);
     fd.append('targets',   JSON.stringify(targets));
@@ -1257,61 +1239,52 @@ async function clearHistory() {
 
 async function loadSmtpConfig() {
     try {
-        const cfg = await fetchSmtpFromDirectus();
-        if (cfg) {
-            document.getElementById('smtpHost').value = cfg.SMTP_Host || 'smtp.gmail.com';
-            document.getElementById('smtpPort').value = cfg.SMTP_Port || 587;
-            document.getElementById('smtpUser').value = cfg.SMTP_User || '';
+        const r = await fetch('/api/email/smtp-config');
+        const d = await r.json();
+        if (d.config) {
+            document.getElementById('smtpHost').value = d.config.host || 'smtp.gmail.com';
+            document.getElementById('smtpPort').value = d.config.port || 587;
+            document.getElementById('smtpUser').value = d.config.user || '';
         }
     } catch(e) {}
 }
 
 async function saveSmtp() {
     const cfg = {
-        SMTP_Host: document.getElementById('smtpHost').value.trim(),
-        SMTP_Port: parseInt(document.getElementById('smtpPort').value) || 587,
-        SMTP_User: document.getElementById('smtpUser').value.trim(),
-        SMTP_Pass: document.getElementById('smtpPass').value,
+        host: document.getElementById('smtpHost').value.trim(),
+        port: parseInt(document.getElementById('smtpPort').value) || 587,
+        user: document.getElementById('smtpUser').value.trim(),
+        pass: document.getElementById('smtpPass').value,
     };
-    if (!cfg.SMTP_Host || !cfg.SMTP_User) { showToast('warning', 'Atenção', 'Preencha host e usuário.'); return; }
+    if (!cfg.host || !cfg.user) { showToast('warning', 'Atenção', 'Preencha host e usuário.'); return; }
 
     try {
-        // busca o id do registro existente
-        const existing = await fetchSmtpFromDirectus();
-        let r;
-        if (existing && existing.id) {
-            r = await fetch(`${CONFIG.DIRECTUS_URL}/items/Config_SMTP/${existing.id}`, {
-                method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` }, body: JSON.stringify(cfg)
-            });
-        } else {
-            r = await fetch(`${CONFIG.DIRECTUS_URL}/items/Config_SMTP`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` }, body: JSON.stringify(cfg)
-            });
-        }
-        if (r.ok) {
-            showToast('success', 'Salvo!', 'Configuração SMTP salva no Directus.');
+        const r = await fetch('/api/email/smtp-config', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg)
+        });
+        const d = await r.json();
+        if (d.success) {
+            showToast('success', 'Salvo!', 'Configuração SMTP salva.');
             checkSmtpStatus();
         } else {
-            const err = await r.json();
-            showToast('error', 'Erro', err.errors?.[0]?.message || 'Não foi possível salvar.');
+            showToast('error', 'Erro', d.message || 'Não foi possível salvar.');
         }
     } catch(e) { showToast('error', 'Erro de conexão', String(e)); }
 }
 
 async function testSmtp() {
+    const cfg = {
+        host: document.getElementById('smtpHost').value.trim(),
+        port: parseInt(document.getElementById('smtpPort').value) || 587,
+        user: document.getElementById('smtpUser').value.trim(),
+        pass: document.getElementById('smtpPass').value,
+    };
     const resultEl = document.getElementById('testResult');
     resultEl.className = 'test-result';
     resultEl.textContent = 'Testando conexão...';
     resultEl.style.display = 'block';
 
     try {
-        const directusCfg = await fetchSmtpFromDirectus();
-        const cfg = {
-            host: directusCfg?.SMTP_Host || document.getElementById('smtpHost').value.trim(),
-            port: parseInt(directusCfg?.SMTP_Port || document.getElementById('smtpPort').value) || 587,
-            user: directusCfg?.SMTP_User || document.getElementById('smtpUser').value.trim(),
-            pass: directusCfg?.SMTP_Pass || document.getElementById('smtpPass').value,
-        };
         const r = await fetch('/api/email/test-smtp', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg)
         });
