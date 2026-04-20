@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>E-mail Marketing | Leanttro</title>
-<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
     --bg-body:      #f4f4f5;
@@ -396,7 +396,7 @@ body {
 
 <div class="sidebar">
     <div class="brand">
-        <img src="[https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png](https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png)" alt="Leanttro" class="brand-logo">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
     </div>
     <div class="nav-menu">
@@ -682,7 +682,7 @@ body {
 
                 <div class="config-card">
                     <div class="config-card-title">📧 Servidor SMTP</div>
-                    <div class="config-card-sub">Para Gmail: use smtp.gmail.com porta 587 com uma <a href="[https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)" target="_blank" style="color:var(--accent);">Senha de App</a>.</div>
+                    <div class="config-card-sub">Para Gmail: use smtp.gmail.com porta 587 com uma <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent);">Senha de App</a>.</div>
 
                     <div class="form-grid-2" style="margin-bottom:12px;">
                         <div>
@@ -813,6 +813,11 @@ function onArteKanbanChange() {
     } else {
         preview.style.display = 'none';
     }
+
+    const corpoEl = document.getElementById('corpoInput');
+    if (arteId && !corpoEl.value.includes('{{imagem}}')) {
+        corpoEl.value = (corpoEl.value ? corpoEl.value + '\n\n' : '') + '{{imagem}}';
+    }
 }
 
 function toggleTheme() {
@@ -831,15 +836,22 @@ function switchTab(name) {
     if (name === 'config')    loadSmtpConfig();
 }
 
+async function fetchSmtpFromDirectus() {
+    const url = `${CONFIG.DIRECTUS_URL}/items/Config_SMTP?limit=1`;
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
+    const d = await res.json();
+    if (d.data && d.data.length > 0) return d.data[0];
+    return null;
+}
+
 async function checkSmtpStatus() {
     try {
-        const r = await fetch('/api/email/smtp-config');
-        const d = await r.json();
+        const cfg = await fetchSmtpFromDirectus();
         const dot = document.getElementById('smtpDot');
         const lbl = document.getElementById('smtpLabel');
-        if (d.config && d.config.host && d.config.user && d.config.has_pass) {
+        if (cfg && cfg.SMTP_Host && cfg.SMTP_User && cfg.SMTP_Pass) {
             dot.className = 'smtp-dot ok';
-            lbl.textContent = `Configurado — ${d.config.user}`;
+            lbl.textContent = `Configurado — ${cfg.SMTP_User}`;
         } else {
             dot.className = 'smtp-dot err';
             lbl.textContent = 'SMTP não configurado — vá em Configurações';
@@ -1072,6 +1084,17 @@ async function iniciarDisparo() {
         email: c.email
     }));
 
+    // injeta SMTP do Directus no payload
+    try {
+        const smtpCfg = await fetchSmtpFromDirectus();
+        if (smtpCfg) {
+            fd.append('smtp_host', smtpCfg.SMTP_Host || '');
+            fd.append('smtp_port', smtpCfg.SMTP_Port || 587);
+            fd.append('smtp_user', smtpCfg.SMTP_User || '');
+            fd.append('smtp_pass', smtpCfg.SMTP_Pass || '');
+        }
+    } catch(e) {}
+
     fd.append('assunto',   assunto);
     fd.append('corpo',     corpo);
     fd.append('targets',   JSON.stringify(targets));
@@ -1234,52 +1257,61 @@ async function clearHistory() {
 
 async function loadSmtpConfig() {
     try {
-        const r = await fetch('/api/email/smtp-config');
-        const d = await r.json();
-        if (d.config) {
-            document.getElementById('smtpHost').value = d.config.host || 'smtp.gmail.com';
-            document.getElementById('smtpPort').value = d.config.port || 587;
-            document.getElementById('smtpUser').value = d.config.user || '';
+        const cfg = await fetchSmtpFromDirectus();
+        if (cfg) {
+            document.getElementById('smtpHost').value = cfg.SMTP_Host || 'smtp.gmail.com';
+            document.getElementById('smtpPort').value = cfg.SMTP_Port || 587;
+            document.getElementById('smtpUser').value = cfg.SMTP_User || '';
         }
     } catch(e) {}
 }
 
 async function saveSmtp() {
     const cfg = {
-        host: document.getElementById('smtpHost').value.trim(),
-        port: parseInt(document.getElementById('smtpPort').value) || 587,
-        user: document.getElementById('smtpUser').value.trim(),
-        pass: document.getElementById('smtpPass').value,
+        SMTP_Host: document.getElementById('smtpHost').value.trim(),
+        SMTP_Port: parseInt(document.getElementById('smtpPort').value) || 587,
+        SMTP_User: document.getElementById('smtpUser').value.trim(),
+        SMTP_Pass: document.getElementById('smtpPass').value,
     };
-    if (!cfg.host || !cfg.user) { showToast('warning', 'Atenção', 'Preencha host e usuário.'); return; }
+    if (!cfg.SMTP_Host || !cfg.SMTP_User) { showToast('warning', 'Atenção', 'Preencha host e usuário.'); return; }
 
     try {
-        const r = await fetch('/api/email/smtp-config', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg)
-        });
-        const d = await r.json();
-        if (d.success) {
-            showToast('success', 'Salvo!', 'Configuração SMTP salva.');
+        // busca o id do registro existente
+        const existing = await fetchSmtpFromDirectus();
+        let r;
+        if (existing && existing.id) {
+            r = await fetch(`${CONFIG.DIRECTUS_URL}/items/Config_SMTP/${existing.id}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` }, body: JSON.stringify(cfg)
+            });
+        } else {
+            r = await fetch(`${CONFIG.DIRECTUS_URL}/items/Config_SMTP`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` }, body: JSON.stringify(cfg)
+            });
+        }
+        if (r.ok) {
+            showToast('success', 'Salvo!', 'Configuração SMTP salva no Directus.');
             checkSmtpStatus();
         } else {
-            showToast('error', 'Erro', d.message || 'Não foi possível salvar.');
+            const err = await r.json();
+            showToast('error', 'Erro', err.errors?.[0]?.message || 'Não foi possível salvar.');
         }
     } catch(e) { showToast('error', 'Erro de conexão', String(e)); }
 }
 
 async function testSmtp() {
-    const cfg = {
-        host: document.getElementById('smtpHost').value.trim(),
-        port: parseInt(document.getElementById('smtpPort').value) || 587,
-        user: document.getElementById('smtpUser').value.trim(),
-        pass: document.getElementById('smtpPass').value,
-    };
     const resultEl = document.getElementById('testResult');
     resultEl.className = 'test-result';
     resultEl.textContent = 'Testando conexão...';
     resultEl.style.display = 'block';
 
     try {
+        const directusCfg = await fetchSmtpFromDirectus();
+        const cfg = {
+            host: directusCfg?.SMTP_Host || document.getElementById('smtpHost').value.trim(),
+            port: parseInt(directusCfg?.SMTP_Port || document.getElementById('smtpPort').value) || 587,
+            user: directusCfg?.SMTP_User || document.getElementById('smtpUser').value.trim(),
+            pass: directusCfg?.SMTP_Pass || document.getElementById('smtpPass').value,
+        };
         const r = await fetch('/api/email/test-smtp', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg)
         });
