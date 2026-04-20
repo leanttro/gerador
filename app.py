@@ -401,9 +401,14 @@ Regras de processamento
                     "temperature": 0.1
                 }
                 res = requests.post(url, headers=headers, json=payload).json()
+                
+                if 'error' in res and "Provider returned error" in res['error'].get('message', ''):
+                    payload["model"] = "google/gemini-2.0-flash-lite-preview-02-05:free"
+                    res = requests.post(url, headers=headers, json=payload).json()
+
                 try:
                     if 'error' in res:
-                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
+                        raise Exception(f"OpenRouter Error: {res['error'].get('message', res['error'])}")
                     generated_json_str = res['choices'][0]['message']['content']
                     tokens_used = res.get('usage', {}).get('total_tokens', 0)
                 except (KeyError, IndexError):
@@ -599,7 +604,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
-                    "model": "google/gemini-2.0-flash-001",
+                    "model": "meta-llama/llama-3.3-70b-instruct:free",
                     "messages": [
                         {"role": "system", "content": system_prompt_generate},
                         {"role": "user", "content": user_content_generate}
@@ -607,9 +612,14 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                     "temperature": 0.45
                 }
                 res = requests.post(url, headers=headers, json=payload).json()
+                
+                if 'error' in res and "Provider returned error" in res['error'].get('message', ''):
+                    payload["model"] = "google/gemini-2.0-flash-lite-preview-02-05:free"
+                    res = requests.post(url, headers=headers, json=payload).json()
+
                 try:
                     if 'error' in res:
-                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
+                        raise Exception(f"OpenRouter Error: {res['error'].get('message', res['error'])}")
                     generated_html = res['choices'][0]['message']['content']
                     tokens_used = res.get('usage', {}).get('total_tokens', 0)
                 except (KeyError, IndexError):
