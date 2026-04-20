@@ -392,7 +392,7 @@ Regras de processamento
                 url = "https://openrouter.ai/api/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
-                    "model": "google/gemini-2.0-flash-001",
+                    "model": "meta-llama/llama-3.3-70b-instruct:free",
                     "response_format": {"type": "json_object"},
                     "messages": [
                         {"role": "system", "content": system_prompt_replace},
