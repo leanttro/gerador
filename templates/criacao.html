@@ -393,15 +393,6 @@ textarea.input-control {
 }
 
 .hidden { display: none !important; }
-
-/* ════════════════════════════════════════════
-   BOTÕES ENVIAR PARA DISPARO
-════════════════════════════════════════════ */
-.btn-wpp   { background: #25d366; color: #fff; }
-.btn-wpp:hover:not(:disabled)   { background: #1ebe5a; }
-.btn-email { background: #6366f1; color: #fff; }
-.btn-email:hover:not(:disabled) { background: #4f46e5; }
-.toolbar-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
 </style>
 </head>
 <body data-theme="light">
@@ -625,14 +616,6 @@ textarea.input-control {
                     <button class="btn btn-save-kanban hidden" id="btnSalvarKanban" onclick="salvarNoKanban()">
                         💾 Salvar no Kanban
                     </button>
-                    <div class="toolbar-divider"></div>
-                    <button class="btn btn-wpp" id="btnEnviarWpp" onclick="enviarParaDisparo('whatsapp')" title="Enviar criativo para o módulo WhatsApp">
-                        💬 WhatsApp
-                    </button>
-                    <button class="btn btn-email" id="btnEnviarEmail" onclick="enviarParaDisparo('email')" title="Enviar criativo para o módulo E-mail">
-                        ✉ E-mail
-                    </button>
-                    <div class="toolbar-divider"></div>
                     <button class="btn btn-outline" onclick="openFullscreen()">⛶</button>
                     <button class="btn btn-outline" onclick="captureImageAndDownload()" title="Baixar como foto">📸 Foto</button>
                     <button class="btn btn-outline" onclick="downloadHTML()" title="Baixar HTML">⬇ HTML</button>
@@ -1387,79 +1370,6 @@ function handleConteudoClick(event) {
             limparContexto();
             window.location.href = '/conteudo';
         }
-    }
-}
-
-/* ════════════════════════════════════════════
-   ENVIAR PARA MÓDULO DE DISPARO (WhatsApp ou E-mail)
-════════════════════════════════════════════ */
-async function enviarParaDisparo(destino) {
-    if (!state.currentHTML) {
-        showToast('warning', 'Atenção', 'Gere uma animação antes de enviar para disparo.');
-        return;
-    }
-
-    const label    = destino === 'whatsapp' ? 'WhatsApp' : 'E-mail';
-    const btnId    = destino === 'whatsapp' ? 'btnEnviarWpp' : 'btnEnviarEmail';
-    const lsKey    = destino === 'whatsapp' ? 'wl_pending_wpp' : 'wl_pending_email';
-    const redirect = destino === 'whatsapp' ? '/whatsapp' : '/email';
-    const btn      = document.getElementById(btnId);
-
-    btn.disabled = true;
-    setLoading(true, `Preparando criativo para ${label}`, 'Capturando imagem do preview...');
-
-    try {
-        // 1. Captura o frame como PNG
-        const canvas = await getCanvasFromIframe();
-
-        // 2. Faz upload do PNG via rota já existente (/api/upload)
-        let imageUrl = '';
-        await new Promise((resolve) => {
-            canvas.toBlob(async (blob) => {
-                const fd = new FormData();
-                fd.append('file', blob, `disparo_${Date.now()}.png`);
-                try {
-                    const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-                    const data = await res.json();
-                    if (data.success) imageUrl = window.location.origin + data.url;
-                } catch(e) { console.error('Erro no upload do criativo:', e); }
-                resolve();
-            }, 'image/png');
-        });
-
-        // 3. Faz upload do HTML também para referência
-        let htmlUrl = '';
-        try {
-            const htmlBlob = new Blob([state.currentHTML], { type: 'text/html' });
-            const fdHtml   = new FormData();
-            fdHtml.append('file', htmlBlob, `criativo_${Date.now()}.html`);
-            const resHtml  = await fetch('/api/upload', { method: 'POST', body: fdHtml });
-            const dataHtml = await resHtml.json();
-            if (dataHtml.success) htmlUrl = window.location.origin + dataHtml.url;
-        } catch(e) { console.warn('Upload HTML opcional falhou:', e); }
-
-        // 4. Grava no localStorage para o módulo receptor ler no init
-        const payload = {
-            imageUrl,
-            htmlUrl,
-            titulo:    state.kanbanData?.titulo  || '',
-            copy:      state.kanbanData?.copy    || '',
-            formato:   document.getElementById('formatSelect').value,
-            timestamp: Date.now(),
-        };
-        localStorage.setItem(lsKey, JSON.stringify(payload));
-
-        setLoading(false);
-        showToast('success', `Criativo enviado para ${label}!`, 'Redirecionando...');
-        btn.disabled = false;
-
-        setTimeout(() => { window.location.href = redirect; }, 1400);
-
-    } catch(e) {
-        console.error(e);
-        setLoading(false);
-        btn.disabled = false;
-        showToast('error', 'Erro ao enviar', 'Não foi possível preparar o criativo.');
     }
 }
 
