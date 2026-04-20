@@ -260,22 +260,21 @@ body {
             <div class="page-sub">Dados em tempo real da base de contatos, disparos e metas do mês.</div>
         </div>
 
-        <!-- STATS -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Leads na Base</div>
+                <div class="stat-label">Total Contatos</div>
                 <div class="stat-value" id="stat-leads">—</div>
-                <div class="stat-trend" id="stat-leads-trend">carregando...</div>
+                <div class="stat-trend" id="stat-leads-trend">no CRM</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">E-mails Enviados</div>
-                <div class="stat-value" id="stat-emails">—</div>
-                <div class="stat-trend" id="stat-emails-trend">carregando...</div>
+                <div class="stat-label">Prontos p/ Disparo</div>
+                <div class="stat-value" id="stat-posts">—</div>
+                <div class="stat-trend" id="stat-posts-trend">posts finalizados</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Metas do Mês</div>
-                <div class="stat-value" id="stat-metas">—</div>
-                <div class="stat-trend" id="stat-metas-trend">carregando...</div>
+                <div class="stat-label">Enviados Hoje</div>
+                <div class="stat-value" id="stat-wpp">—</div>
+                <div class="stat-trend" id="stat-wpp-trend">whatsapp</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Módulos Ativos</div>
@@ -284,7 +283,6 @@ body {
             </div>
         </div>
 
-        <!-- FLOW MAP -->
         <div class="section-title">Como o sistema funciona</div>
         <div class="flow-card">
             <div class="flow-row">
@@ -330,7 +328,6 @@ body {
             </div>
         </div>
 
-        <!-- ADVANTAGES -->
         <div class="section-title">Por que usar este sistema</div>
         <div class="adv-grid">
             <div class="adv-card">
@@ -392,51 +389,41 @@ async function dGet(endpoint) {
 }
 
 async function carregarStats() {
-    const mes = new Date();
-    const mesAno = `${mes.getFullYear()}-${String(mes.getMonth()+1).padStart(2,'0')}`;
-
-    // Leads totais
+    // Total contatos (Directus)
     try {
         const crm = await dGet(`/items/${DIRECTUS_TABLE}?aggregate[count]=id`);
         if (crm?.data?.[0]) {
             const total = crm.data[0]?.count?.id || 0;
             document.getElementById('stat-leads').textContent = Number(total).toLocaleString('pt-BR');
-            document.getElementById('stat-leads-trend').textContent = 'total na base CRM';
             document.getElementById('stat-leads-trend').className = 'stat-trend ok';
         }
     } catch {}
 
-    // E-mails enviados (histórico real)
+    // Posts Finalizados (Local Storage)
     try {
-        const hist = await fetch('/api/email/history');
-        const hd = await hist.json();
-        if (hd.history) {
-            const enviados = hd.history.filter(h => h.status === 'enviado').length;
-            document.getElementById('stat-emails').textContent = Number(enviados).toLocaleString('pt-BR');
-            document.getElementById('stat-emails-trend').textContent = 'total no histórico';
-            document.getElementById('stat-emails-trend').className = 'stat-trend ok';
-        }
+        let prontos = [];
+        const raw = localStorage.getItem('wl_kanban_prontos');
+        if (raw) prontos = JSON.parse(raw);
+        document.getElementById('stat-posts').textContent = prontos.length;
+        if (prontos.length > 0) document.getElementById('stat-posts-trend').className = 'stat-trend ok';
     } catch {}
 
-    // Metas do mês
+    // Enviados Hoje WPP (Local Storage)
     try {
-        const goals = await dGet(`/items/goals?filter[workspace_id][_eq]=${DIRECTUS_TABLE}&filter[mes_ano][_eq]=${mesAno}&limit=30`);
-        if (goals?.data) {
-            const total = goals.data.length;
-            const atingidas = goals.data.filter(g => g.valor_atual >= g.valor_meta).length;
-            document.getElementById('stat-metas').textContent = total > 0 ? `${atingidas}/${total}` : '—';
-            document.getElementById('stat-metas-trend').textContent = total > 0
-                ? `${Math.round((atingidas/total)*100)}% atingidas`
-                : 'nenhuma meta cadastrada';
-            if (atingidas > 0) document.getElementById('stat-metas-trend').className = 'stat-trend ok';
-        }
+        let sentToday = parseInt(localStorage.getItem('wpp_sent_today') || '0');
+        let sentDate = localStorage.getItem('wpp_sent_date') || '';
+        const today = new Date().toISOString().split('T')[0];
+        if (sentDate !== today) { sentToday = 0; }
+        
+        document.getElementById('stat-wpp').textContent = sentToday;
+        if (sentToday > 0) document.getElementById('stat-wpp-trend').className = 'stat-trend ok';
     } catch {}
 }
 
 if (DIRECTUS_URL && DIRECTUS_TOKEN && !DIRECTUS_TOKEN.includes('directus_token')) {
     carregarStats();
 } else {
-    ['stat-leads-trend','stat-emails-trend','stat-metas-trend'].forEach(id => {
+    ['stat-leads-trend','stat-posts-trend','stat-wpp-trend'].forEach(id => {
         document.getElementById(id).textContent = 'configure o directus';
     });
 }
