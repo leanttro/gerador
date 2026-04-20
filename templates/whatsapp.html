@@ -1043,18 +1043,21 @@ function clearLog() {
 
 function loadKanbanArtes() {
     const select = document.getElementById('arteKanbanSelect');
+    // Remove opções antigas (exceto a primeira "Não usar arte do Kanban")
+    while (select.options.length > 1) select.remove(1);
+
     try {
         const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
         prontos.forEach(item => {
             const opt = document.createElement('option');
-            opt.value = item.id;
+            opt.value = String(item.id);
             opt.textContent = item.titulo || 'Arte #' + item.id;
             select.appendChild(opt);
         });
 
         const activeDispatch = localStorage.getItem('wl_active_dispatch');
         if (activeDispatch) {
-            select.value = activeDispatch;
+            select.value = String(activeDispatch);
             loadSelectedArtImage();
             localStorage.removeItem('wl_active_dispatch');
         }
@@ -1067,10 +1070,10 @@ function loadSelectedArtImage() {
     const select = document.getElementById('arteKanbanSelect');
     const msgInput = document.getElementById('msgInput');
     const value = select.value;
-    
+    const prev = document.getElementById('uploadPreview');
+
     if (!value) {
         selectedImage = null;
-        const prev = document.getElementById('uploadPreview');
         prev.style.display = 'none';
         prev.innerHTML = '';
         return;
@@ -1078,31 +1081,66 @@ function loadSelectedArtImage() {
 
     try {
         const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-        const card = prontos.find(c => c.id === value);
-        
-        if (card) {
-            if (card.copy) {
-                msgInput.value = card.copy;
-            }
-            
-            const thumbRef = card.thumb || card.id;
-            const imageUrl = thumbRef.startsWith('http') ? thumbRef : `${CONFIG.DIRECTUS_URL}/assets/${thumbRef}`;
-            
-            fetch(imageUrl)
-                .then(r => r.blob())
-                .then(blob => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        selectedImage = e.target.result.split(',')[1];
-                        const prev = document.getElementById('uploadPreview');
-                        prev.style.display = 'block';
-                        prev.innerHTML = `<img src="${e.target.result}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
-                    };
-                    reader.readAsDataURL(blob);
-                })
-                .catch(() => { console.warn('Erro ao carregar imagem do Kanban.'); });
+        const card = prontos.find(c => String(c.id) === String(value));
+
+        if (!card) {
+            console.warn('Card não encontrado no localStorage para id:', value);
+            return;
         }
-    } catch(e) {}
+
+        if (card.copy) {
+            msgInput.value = card.copy;
+        }
+
+        // Se já tem base64 salvo diretamente no card, usa direto
+        if (card.imageBase64) {
+            selectedImage = card.imageBase64.includes(',') ? card.imageBase64.split(',')[1] : card.imageBase64;
+            const src = card.imageBase64.startsWith('data:') ? card.imageBase64 : `data:image/jpeg;base64,${selectedImage}`;
+            prev.style.display = 'block';
+            prev.innerHTML = `<img src="${src}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
+            return;
+        }
+
+        // Monta a URL corretamente independente do formato do thumb
+        let imageUrl = '';
+        const thumbRef = card.thumb || card.imagem || card.image || card.id;
+
+        if (!thumbRef) {
+            console.warn('Card sem thumb/imagem definido:', card);
+            return;
+        }
+
+        if (typeof thumbRef === 'string' && thumbRef.startsWith('http')) {
+            imageUrl = thumbRef;
+        } else {
+            const base = (CONFIG.DIRECTUS_URL || '').replace(/\/$/, '');
+            imageUrl = `${base}/assets/${thumbRef}`;
+        }
+
+        prev.style.display = 'block';
+        prev.innerHTML = `<small style="color:var(--text-muted); font-size:10px;">⏳ Carregando imagem do Kanban...</small>`;
+
+        fetch(imageUrl)
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.blob();
+            })
+            .then(blob => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    selectedImage = e.target.result.split(',')[1];
+                    prev.style.display = 'block';
+                    prev.innerHTML = `<img src="${e.target.result}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
+                };
+                reader.readAsDataURL(blob);
+            })
+            .catch(err => {
+                console.warn('Erro ao carregar imagem do Kanban:', err, 'URL:', imageUrl);
+                prev.innerHTML = `<small style="color:var(--danger); font-size:10px;">⚠ Imagem não carregou (${err.message}). Verifique a URL do Directus.</small>`;
+            });
+    } catch(e) {
+        console.error('Erro em loadSelectedArtImage:', e);
+    }
 }
 
 updateCounters();
