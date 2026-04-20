@@ -1011,13 +1011,21 @@ async function iniciarDisparo() {
     const delayMax = currentMode === 'lote50' ? 288 : (parseInt(document.getElementById('delayMax').value) || 90);
 
     const fd = new FormData();
-    fd.append('assunto',     assunto);
-    fd.append('corpo',       corpo);
-    fd.append('contact_ids', JSON.stringify([...selectedIds]));
-    fd.append('delay_min',   delayMin);
-    fd.append('delay_max',   delayMax);
-    if (anexoFile) fd.append('anexo', anexoFile);
+    
+    // Mapeia os contatos selecionados com todos os dados necessários
+    const targets = allContacts.filter(c => selectedIds.has(c.id)).map(c => ({
+        id: c.id,
+        nome: c.nome,
+        empresa: c.empresa,
+        email: c.email
+    }));
 
+    fd.append('assunto',   assunto);
+    fd.append('corpo',     corpo);
+    fd.append('targets',   JSON.stringify(targets)); // Agora manda a lista completa
+    fd.append('delay_min', delayMin);
+    fd.append('delay_max', delayMax);
+    if (anexoFile) fd.append('anexo', anexoFile);
     document.getElementById('sendBtn').disabled = true;
 
     try {
