@@ -457,6 +457,13 @@ textarea { min-height: 110px; }
             </div>
 
             <div class="form-block">
+                <label class="form-label">Arte Finalizada Kanban</label>
+                <select class="filter-select" id="arteKanbanSelect" style="width: 100%; margin-bottom: 12px; display: block;" onchange="loadSelectedArtImage()">
+                    <option value="">Não usar arte do Kanban</option>
+                </select>
+            </div>
+
+            <div class="form-block">
                 <label class="form-label">Mensagem</label>
                 <textarea id="msgInput" placeholder="Opa {nome}, tudo bem? Vi que sua empresa {empresa} pode se interessar por..."></textarea>
                 <p class="form-hint">Personalize com variáveis dinâmicas:</p>
@@ -1033,9 +1040,56 @@ function clearLog() {
     document.getElementById('logSection').style.display = 'none';
 }
 
+
+async function loadKanbanArtes() {
+    try {
+        const url = `${CONFIG.DIRECTUS_URL}/items/kanban?filter[status][_eq]=Arte%20Finalizada&limit=-1`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
+        const data = await res.json();
+        const select = document.getElementById('arteKanbanSelect');
+        if (data.data && data.data.length > 0) {
+            data.data.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.imagem || '';
+                opt.textContent = item.titulo || item.nome || `Arte #${item.id}`;
+                select.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.warn('Não foi possível carregar artes do Kanban:', e);
+    }
+}
+
+function loadSelectedArtImage() {
+    const select = document.getElementById('arteKanbanSelect');
+    const value = select.value;
+    if (!value) {
+        selectedImage = null;
+        const prev = document.getElementById('uploadPreview');
+        prev.style.display = 'none';
+        prev.innerHTML = '';
+        return;
+    }
+    const imageUrl = value.startsWith('http') ? value : `${CONFIG.DIRECTUS_URL}/assets/${value}`;
+    fetch(imageUrl)
+        .then(r => r.blob())
+        .then(blob => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                selectedImage = e.target.result.split(',')[1];
+                const prev = document.getElementById('uploadPreview');
+                prev.style.display = 'block';
+                prev.innerHTML = `<img src="${e.target.result}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
+            };
+            reader.readAsDataURL(blob);
+        })
+        .catch(() => { console.warn('Erro ao carregar imagem do Kanban.'); });
+}
+
 updateCounters();
 checkChipStatus();
 loadContacts();
+loadKanbanArtes();
 setInterval(checkChipStatus, 30000);
 </script>
 </body>
