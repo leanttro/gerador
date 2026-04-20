@@ -60,7 +60,6 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-/* ── SIDEBAR ── */
 .sidebar {
     width: 260px; min-width: 260px;
     background: var(--bg-surface);
@@ -84,10 +83,8 @@ body {
 .nav-link.active { background: var(--accent-bg); color: var(--accent-dark); font-weight: 600; }
 [data-theme="dark"] .nav-link.active { color: var(--accent); }
 
-/* ── MAIN ── */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
-/* ── TOPBAR ── */
 .topbar {
     height: 64px; background: var(--bg-surface);
     border-bottom: 1px solid var(--border);
@@ -119,10 +116,8 @@ body {
     font-weight: 600; font-size: 12px;
 }
 
-/* ── PAGE BODY ── */
 .page-body { flex: 1; display: flex; overflow: hidden; }
 
-/* ── LEFT PANEL ── */
 .left-panel {
     width: 340px; min-width: 340px;
     border-right: 1px solid var(--border);
@@ -138,7 +133,6 @@ body {
     letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; display: block;
 }
 
-/* Status SMTP */
 .smtp-status {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 12px; border-radius: var(--radius);
@@ -148,19 +142,18 @@ body {
 .smtp-dot.ok { background: var(--success); }
 .smtp-dot.err { background: var(--danger); }
 
-/* Contadores */
-.counters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.counters { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .counter-card {
     background: var(--bg-body); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 10px; text-align: center;
+    border-radius: var(--radius); padding: 8px; text-align: center;
 }
-.counter-value { font-size: 20px; font-weight: 700; line-height: 1; }
-.counter-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.counter-value { font-size: 16px; font-weight: 700; line-height: 1; }
+.counter-label { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
 .counter-value.blue  { color: var(--accent); }
 .counter-value.green { color: var(--success); }
 .counter-value.red   { color: var(--danger); }
+.counter-value.orange{ color: var(--warning); }
 
-/* Filtros */
 .filter-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .filter-input, .filter-select {
     flex: 1; padding: 8px 10px; background: var(--bg-body);
@@ -171,7 +164,6 @@ body {
 .filter-input:focus, .filter-select:focus { border-color: var(--accent); }
 .filter-select { appearance: none; cursor: pointer; }
 
-/* Select bar */
 .select-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 8px 20px; border-bottom: 1px solid var(--border);
@@ -182,7 +174,6 @@ body {
     cursor: pointer; font-family: inherit; font-weight: 500;
 }
 
-/* Lista de contatos */
 .contacts-list { flex: 1; overflow-y: auto; }
 .contact-item {
     display: flex; align-items: center; gap: 12px;
@@ -212,10 +203,8 @@ body {
 .empty-state svg { width: 36px; height: 36px; stroke: var(--border); stroke-width: 1.5; fill: none; }
 .empty-state p { font-size: 12px; text-align: center; line-height: 1.5; }
 
-/* ── RIGHT PANEL ── */
 .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-body); }
 
-/* Tabs */
 .tab-bar {
     display: flex; background: var(--bg-surface);
     border-bottom: 1px solid var(--border); flex-shrink: 0;
@@ -235,7 +224,6 @@ body {
 .tab-content { flex: 1; overflow-y: auto; padding: 24px; display: none; }
 .tab-content.active { display: block; }
 
-/* Blocos do formulário */
 .page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
 .page-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
 
@@ -256,7 +244,6 @@ body {
 .form-select { appearance: none; cursor: pointer; }
 .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
 
-/* Chips de variáveis */
 .vars-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .var-chip {
     padding: 4px 10px; background: var(--accent-bg); color: var(--accent);
@@ -266,7 +253,6 @@ body {
 }
 .var-chip:hover { background: var(--accent); color: white; }
 
-/* Modo de disparo */
 .mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .mode-tab {
     flex: 1; padding: 10px; background: var(--bg-surface);
@@ -277,7 +263,6 @@ body {
 .mode-tab:hover { border-color: var(--accent); color: var(--accent); }
 .mode-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-/* Botão IA */
 .ai-btn {
     width: 100%; padding: 11px; background: var(--primary-bg);
     border: 1px solid var(--border); border-radius: var(--radius);
@@ -288,7 +273,6 @@ body {
 .ai-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
 .ai-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
 
-/* Botão de disparar */
 .send-btn {
     width: 100%; padding: 13px; background: var(--accent);
     border: none; border-radius: var(--radius-lg);
@@ -301,7 +285,6 @@ body {
 .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .send-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
 
-/* Upload zone */
 .upload-zone {
     border: 2px dashed var(--border); border-radius: var(--radius);
     padding: 16px; text-align: center; cursor: pointer; position: relative;
@@ -314,7 +297,6 @@ body {
 .file-info { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--success-bg); border: 1px solid rgba(16,185,129,0.2); border-radius: var(--radius); font-size: 12px; color: var(--success); margin-top: 8px; }
 .file-info button { background: none; border: none; cursor: pointer; color: var(--danger); font-size: 14px; margin-left: auto; }
 
-/* Progresso de disparo */
 .disparo-progress {
     display: none; background: var(--bg-surface); border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 20px; margin-top: 16px;
@@ -338,7 +320,6 @@ body {
 .log-line.info    { color: var(--text-muted); }
 .log-line.warning { color: var(--warning); }
 
-/* Histórico */
 .history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .history-table th {
     padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700;
@@ -355,8 +336,8 @@ body {
 }
 .status-badge.enviado { background: var(--success-bg); color: var(--success); }
 .status-badge.erro    { background: var(--danger-bg);  color: var(--danger); }
+.status-badge.aberto  { background: rgba(37,99,235,0.1); color: var(--accent); }
 
-/* Config SMTP */
 .config-card {
     background: var(--bg-surface); border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
@@ -384,11 +365,9 @@ body {
 .test-result.ok  { background: var(--success-bg); color: var(--success); border: 1px solid rgba(16,185,129,0.2); display: block; }
 .test-result.err { background: var(--danger-bg);  color: var(--danger);  border: 1px solid rgba(239,68,68,0.2);  display: block; }
 
-/* Spinner */
 .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Toast */
 .toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
 .toast {
     background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -479,7 +458,7 @@ body {
             </div>
 
             <div class="panel-section">
-                <span class="section-label">Progresso do Disparo</span>
+                <span class="section-label">Métricas de Disparo</span>
                 <div class="counters">
                     <div class="counter-card">
                         <div class="counter-value blue" id="cntSelected">0</div>
@@ -488,6 +467,10 @@ body {
                     <div class="counter-card">
                         <div class="counter-value green" id="cntSent">0</div>
                         <div class="counter-label">Enviados</div>
+                    </div>
+                    <div class="counter-card">
+                        <div class="counter-value orange" id="cntOpens">0</div>
+                        <div class="counter-label">Aberturas</div>
                     </div>
                     <div class="counter-card">
                         <div class="counter-value red" id="cntErrors">0</div>
@@ -574,6 +557,14 @@ body {
                 </div>
 
                 <div class="form-block">
+                    <label class="form-label">Arte Finalizada (Kanban)</label>
+                    <select class="form-select" id="arteKanbanSelect">
+                        <option value="">Não usar arte (apenas texto/anexo)</option>
+                    </select>
+                    <div class="form-hint">O HTML da arte será convertido em imagem no servidor e enviado inline.</div>
+                </div>
+
+                <div class="form-block">
                     <label class="form-label">Assunto do E-mail</label>
                     <input type="text" class="form-input" id="assuntoInput"
                         placeholder="Ex: {nome}, tenho algo importante para sua empresa">
@@ -587,8 +578,8 @@ body {
                 <div class="form-block">
                     <label class="form-label">Corpo do E-mail (HTML)</label>
                     <textarea class="form-textarea" id="corpoInput" rows="8"
-                        placeholder="Olá {nome},&#10;&#10;Vi que a empresa {empresa} pode se beneficiar de...&#10;&#10;Use {{imagem}} para inserir imagem inline."></textarea>
-                    <div class="form-hint">Suporta HTML. Use <strong>{{imagem}}</strong> para imagem inline no corpo.</div>
+                        placeholder="Olá {nome},&#10;&#10;Vi que a empresa {empresa} pode se beneficiar de...&#10;&#10;Use {{imagem}} para inserir a imagem da arte gerada."></textarea>
+                    <div class="form-hint">Suporta HTML. Use <strong>{{imagem}}</strong> para imagem da Arte do Kanban no corpo.</div>
                     <div class="vars-row">
                         <button class="var-chip" onclick="insertVar('corpo','{nome}')">+ {nome}</button>
                         <button class="var-chip" onclick="insertVar('corpo','{empresa}')">+ {empresa}</button>
@@ -660,10 +651,11 @@ body {
                                 <th>Nome</th>
                                 <th>Assunto</th>
                                 <th>Status</th>
+                                <th>Rastreamento</th>
                             </tr>
                         </thead>
                         <tbody id="historyBody">
-                            <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px;">Carregando...</td></tr>
+                            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px;">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -721,18 +713,12 @@ body {
             </div></div></div></div><div class="toast-container" id="toastContainer"></div>
 
 <script>
-/* ════════════════════════════════════════════
-   CONFIG DIRECTUS
-════════════════════════════════════════════ */
 const CONFIG = {
     DIRECTUS_URL: "{{ directus_url }}",
     DIRECTUS_TOKEN: "{{ directus_token }}",
     DIRECTUS_TABLE: "{{ directus_table }}"
 };
 
-/* ════════════════════════════════════════════
-   ESTADO
-════════════════════════════════════════════ */
 let allContacts   = [];
 let filteredList  = [];
 let selectedIds   = new Set();
@@ -741,17 +727,15 @@ let currentJobId  = null;
 let pollingTimer  = null;
 let anexoFile     = null;
 let lastLogCount  = 0;
+let kanbanArts    = [];
 
-/* ════════════════════════════════════════════
-   INIT
-════════════════════════════════════════════ */
 function init() {
     const t = localStorage.getItem('wl_theme');
     if (t) document.body.setAttribute('data-theme', t);
     checkSmtpStatus();
     loadContacts();
+    loadKanbanArts();
 
-    // Drag-drop na zona de upload
     const zone = document.getElementById('uploadZone');
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -762,18 +746,26 @@ function init() {
     });
 }
 
-/* ════════════════════════════════════════════
-   TEMA
-════════════════════════════════════════════ */
+function loadKanbanArts() {
+    const sel = document.getElementById('arteKanbanSelect');
+    try {
+        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+        kanbanArts = prontos;
+        prontos.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.titulo + ' (' + p.tipo + ')';
+            sel.appendChild(opt);
+        });
+    } catch(e) {}
+}
+
 function toggleTheme() {
     const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
     document.body.setAttribute('data-theme', t);
     localStorage.setItem('wl_theme', t);
 }
 
-/* ════════════════════════════════════════════
-   TABS
-════════════════════════════════════════════ */
 function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach((b, i) => {
         b.classList.toggle('active', ['disparo','historico','config'][i] === name);
@@ -784,9 +776,6 @@ function switchTab(name) {
     if (name === 'config')    loadSmtpConfig();
 }
 
-/* ════════════════════════════════════════════
-   SMTP STATUS
-════════════════════════════════════════════ */
 async function checkSmtpStatus() {
     try {
         const r = await fetch('/api/email/smtp-config');
@@ -806,9 +795,6 @@ async function checkSmtpStatus() {
     }
 }
 
-/* ════════════════════════════════════════════
-   CONTATOS - INTEGRADO AO DIRECTUS
-════════════════════════════════════════════ */
 async function loadContacts() {
     if(!CONFIG.DIRECTUS_TOKEN || CONFIG.DIRECTUS_TOKEN === "" || CONFIG.DIRECTUS_TOKEN.includes("SEU_TOKEN")) {
         document.getElementById('contactsList').innerHTML = '<div class="empty-state"><p>Erro: Directus não configurado no Dokploy.</p></div>';
@@ -835,7 +821,6 @@ async function loadContacts() {
             updateCounters();
         }
     } catch (e) {
-        console.error("Erro ao carregar contatos:", e);
         document.getElementById('contactsList').innerHTML =
             '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Erro ao carregar banco de dados.</p></div>';
     }
@@ -865,7 +850,7 @@ function renderContacts() {
     info.textContent = `${filteredList.length} contato${filteredList.length !== 1 ? 's' : ''} com e-mail`;
 
     if (!filteredList.length) {
-        list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Nenhum contato com e-mail encontrado.<br>Adicione e-mails no CRM de Prospecção.</p></div>';
+        list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Nenhum contato com e-mail encontrado.</p></div>';
         return;
     }
 
@@ -903,7 +888,6 @@ function toggleSelectAll() {
 
 function updateCounters() {
     document.getElementById('cntSelected').textContent = selectedIds.size;
-    // Modo lote: pré-seleciona automaticamente
     if (currentMode === 'lote10') autoSelectLote(10);
     if (currentMode === 'lote50') autoSelectLote(50);
 }
@@ -917,9 +901,6 @@ function autoSelectLote(n) {
     document.getElementById('cntSelected').textContent = selectedIds.size;
 }
 
-/* ════════════════════════════════════════════
-   MODO
-════════════════════════════════════════════ */
 function setMode(m) {
     currentMode = m;
     ['manual','lote10','lote50'].forEach(k => {
@@ -936,9 +917,6 @@ function setMode(m) {
     else { selectedIds.clear(); renderContacts(); document.getElementById('cntSelected').textContent = 0; }
 }
 
-/* ════════════════════════════════════════════
-   VARIÁVEIS E ANEXO
-════════════════════════════════════════════ */
 function insertVar(field, v) {
     const id  = field === 'assunto' ? 'assuntoInput' : 'corpoInput';
     const el  = document.getElementById(id);
@@ -965,9 +943,6 @@ function removeAnexo() {
     document.getElementById('anexoInput').value = '';
 }
 
-/* ════════════════════════════════════════════
-   GERAR COPY COM IA
-════════════════════════════════════════════ */
 async function generateCopy() {
     const btn   = document.querySelector('.ai-btn');
     const nicho = document.getElementById('nichoInput').value.trim();
@@ -996,12 +971,10 @@ async function generateCopy() {
     }
 }
 
-/* ════════════════════════════════════════════
-   DISPARAR
-════════════════════════════════════════════ */
 async function iniciarDisparo() {
     const assunto = document.getElementById('assuntoInput').value.trim();
     const corpo   = document.getElementById('corpoInput').value.trim();
+    const arteId  = document.getElementById('arteKanbanSelect').value;
 
     if (!assunto) { showToast('warning', 'Atenção', 'Preencha o assunto.'); return; }
     if (!corpo)   { showToast('warning', 'Atenção', 'Preencha o corpo do e-mail.'); return; }
@@ -1011,8 +984,6 @@ async function iniciarDisparo() {
     const delayMax = currentMode === 'lote50' ? 288 : (parseInt(document.getElementById('delayMax').value) || 90);
 
     const fd = new FormData();
-    
-    // Mapeia os contatos selecionados com todos os dados necessários
     const targets = allContacts.filter(c => selectedIds.has(c.id)).map(c => ({
         id: c.id,
         nome: c.nome,
@@ -1022,10 +993,12 @@ async function iniciarDisparo() {
 
     fd.append('assunto',   assunto);
     fd.append('corpo',     corpo);
-    fd.append('targets',   JSON.stringify(targets)); // Agora manda a lista completa
+    fd.append('targets',   JSON.stringify(targets));
     fd.append('delay_min', delayMin);
     fd.append('delay_max', delayMax);
     if (anexoFile) fd.append('anexo', anexoFile);
+    if (arteId) fd.append('arte_id', arteId);
+    
     document.getElementById('sendBtn').disabled = true;
 
     try {
@@ -1059,7 +1032,6 @@ async function pollJobStatus() {
         const d = await r.json();
         if (!d.success) return;
 
-        // Atualiza UI
         document.getElementById('progressBar').style.width  = d.progress + '%';
         document.getElementById('progPercent').textContent  = d.progress + '%';
         document.getElementById('progSent').textContent     = d.sent;
@@ -1067,7 +1039,6 @@ async function pollJobStatus() {
         document.getElementById('cntSent').textContent      = d.sent;
         document.getElementById('cntErrors').textContent    = d.errors;
 
-        // Adiciona novos logs
         const logEl = document.getElementById('progLog');
         const newLogs = d.log.slice(lastLogCount);
         lastLogCount  = d.log.length;
@@ -1079,7 +1050,6 @@ async function pollJobStatus() {
             logEl.scrollTop = logEl.scrollHeight;
         });
 
-        // Status final
         if (d.status === 'done' || d.status === 'cancelled') {
             clearInterval(pollingTimer);
             pollingTimer = null;
@@ -1093,9 +1063,7 @@ async function pollJobStatus() {
                 loadContacts(); 
             }
         }
-    } catch(e) {
-        console.error('Polling error:', e);
-    }
+    } catch(e) {}
 }
 
 async function cancelarDisparo() {
@@ -1119,9 +1087,6 @@ function showProgress(show) {
     }
 }
 
-/* ════════════════════════════════════════════
-   HISTÓRICO
-════════════════════════════════════════════ */
 async function loadHistory() {
     try {
         const r = await fetch('/api/email/history');
@@ -1129,8 +1094,11 @@ async function loadHistory() {
         const body = document.getElementById('historyBody');
         document.getElementById('histTotal').textContent = `${d.total} registro(s)`;
 
+        let totalAberturas = 0;
+
         if (!d.history || !d.history.length) {
-            body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px;">Nenhum envio registrado.</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px;">Nenhum envio registrado.</td></tr>';
+            document.getElementById('cntOpens').textContent = '0';
             return;
         }
 
@@ -1138,17 +1106,30 @@ async function loadHistory() {
             const date  = new Date(h.ts * 1000).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
             const isOk  = h.status === 'enviado';
             const badge = `<span class="status-badge ${isOk ? 'enviado' : 'erro'}">${esc(h.status)}</span>`;
+            
+            let trackStr = '<span style="color:var(--text-muted)">—</span>';
+            if (h.opened) {
+                trackStr = `<span class="status-badge aberto">Aberto</span>`;
+                totalAberturas++;
+            }
+            if (h.clicked) {
+                trackStr += ` <span class="status-badge aberto" style="background:var(--success-bg);color:var(--success)">Clicado</span>`;
+            }
+
             return `<tr>
                 <td style="color:var(--text-muted);font-size:11px;white-space:nowrap;">${date}</td>
                 <td style="font-size:12px;">${esc(h.to || '—')}</td>
                 <td style="font-size:12px;">${esc(h.nome || '—')}</td>
                 <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(h.assunto || '—')}</td>
                 <td>${badge}</td>
+                <td>${trackStr}</td>
             </tr>`;
         }).join('');
+
+        document.getElementById('cntOpens').textContent = totalAberturas;
     } catch(e) {
         document.getElementById('historyBody').innerHTML =
-            `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--danger);font-size:12px;">Erro ao carregar histórico.</td></tr>`;
+            `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--danger);font-size:12px;">Erro ao carregar histórico.</td></tr>`;
     }
 }
 
@@ -1159,9 +1140,6 @@ async function clearHistory() {
     loadHistory();
 }
 
-/* ════════════════════════════════════════════
-   CONFIG SMTP
-════════════════════════════════════════════ */
 async function loadSmtpConfig() {
     try {
         const r = await fetch('/api/email/smtp-config');
@@ -1222,9 +1200,6 @@ async function testSmtp() {
     }
 }
 
-/* ════════════════════════════════════════════
-   UTILITÁRIOS
-════════════════════════════════════════════ */
 function esc(s) {
     if (!s) return '';
     return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
