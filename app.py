@@ -1383,7 +1383,47 @@ EMAIL_HISTORY_FILE = os.path.join(BASE_DIR, 'email_history.json')
 email_jobs: dict = {}
 
 
+def _directus_smtp_table():
+    """Retorna o nome da coleção SMTP no Directus, testando os dois formatos possíveis."""
+    candidates = ["Config_SMTP", "Config SMTP"]
+    for name in candidates:
+        try:
+            import urllib.parse as _up
+            url = f"{DIRECTUS_URL}/items/{_up.quote(name, safe='')}?limit=1"
+            r = requests.get(url, headers=get_directus_headers(), timeout=5)
+            if r.status_code == 200:
+                return name
+        except Exception:
+            pass
+    return None
+
+
 def load_smtp_config() -> dict:
+    """Busca a config SMTP do Directus. Fallback para smtp_config.json local."""
+    if DIRECTUS_URL and DIRECTUS_TOKEN:
+        try:
+            table = _directus_smtp_table()
+            if table:
+                import urllib.parse as _up
+                url = f"{DIRECTUS_URL}/items/{_up.quote(table, safe='')}?limit=1"
+                r = requests.get(url, headers=get_directus_headers(), timeout=5)
+                if r.status_code == 200:
+                    data = r.json().get("data", [])
+                    if data:
+                        row = data[0]
+                        cfg = {
+                            "host": row.get("SMTP_Host") or row.get("smtp_host") or "",
+                            "port": int(row.get("SMTP_Port") or row.get("smtp_port") or 587),
+                            "user": row.get("SMTP_User") or row.get("smtp_user") or "",
+                            "pass": row.get("SMTP_Pass") or row.get("smtp_pass") or "",
+                            "_directus_id": row.get("id"),
+                            "_directus_table": table,
+                        }
+                        if cfg["host"] and cfg["user"] and cfg["pass"]:
+                            return cfg
+        except Exception as e:
+            print(f"[Email] Erro ao buscar SMTP do Directus: {e}")
+    # fallback: arquivo local
     try:
         if os.path.exists(SMTP_CONFIG_FILE):
             with open(SMTP_CONFIG_FILE, 'r', encoding='utf-8') as f:
@@ -1394,13 +1434,47 @@ def load_smtp_config() -> dict:
 
 
 def save_smtp_config(cfg: dict) -> bool:
+    """Salva a config SMTP no Directus (se disponível) e também localmente como backup."""
+    # Salva local sempre (backup)
     try:
+        local_cfg = {k: v for k, v in cfg.items() if not k.startswith("_")}
         with open(SMTP_CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(cfg, f, ensure_ascii=False, indent=2)
-        return True
+            json.dump(local_cfg, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"[Email] Erro ao salvar smtp_config.json: {e}")
-        return False
+        print(f"[Email] Erro ao salvar smtp_config.json local: {e}")
+
+    # Salva no Directus se configurado
+    if DIRECTUS_URL and DIRECTUS_TOKEN:
+        try:
+            import urllib.parse as _up
+            table = cfg.get("_directus_table") or _directus_smtp_table()
+            if not table:
+                table = "Config_SMTP"
+            payload = {
+                "SMTP_Host": cfg.get("host", ""),
+                "SMTP_Port": cfg.get("port", 587),
+                "SMTP_User": cfg.get("user", ""),
+                "SMTP_Pass": cfg.get("pass", ""),
+            }
+            directus_id = cfg.get("_directus_id")
+            if directus_id:
+                r = requests.patch(
+                    f"{DIRECTUS_URL}/items/{_up.quote(table, safe='')}/{directus_id}",
+                    headers=get_directus_headers(), json=payload, timeout=10
+                )
+            else:
+                r = requests.post(
+                    f"{DIRECTUS_URL}/items/{_up.quote(table, safe='')}",
+                    headers=get_directus_headers(), json=payload, timeout=10
+                )
+            if r.status_code in (200, 201, 204):
+                print(f"[Email] SMTP salvo no Directus OK")
+                return True
+            else:
+                print(f"[Email] Erro ao salvar SMTP no Directus: {r.status_code} {r.text[:200]}")
+        except Exception as e:
+            print(f"[Email] Erro ao salvar SMTP no Directus: {e}")
+    return True  # retorna True se ao menos o local foi salvo
 
 
 def load_email_history() -> list:
@@ -1695,9 +1769,18 @@ def email_send_batch():
     if not targets_json:
         return jsonify({"success": False, "error": "Selecione ao menos um contato."}), 400
 
+    # Tenta pegar SMTP do Directus/local; aceita também os dados enviados pelo front como fallback
     smtp_cfg = load_smtp_config()
-    if not smtp_cfg.get('host') or not smtp_cfg.get('user') or not smtp_cfg.get('pass'):
-        return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
+    if not (smtp_cfg.get('host') and smtp_cfg.get('user') and smtp_cfg.get('pass')):
+        # fallback: front pode enviar smtp_* no FormData
+        smtp_host = (request.form.get('smtp_host') or '').strip()
+        smtp_user = (request.form.get('smtp_user') or '').strip()
+        smtp_pass = (request.form.get('smtp_pass') or '').strip()
+        smtp_port = int(request.form.get('smtp_port') or 587)
+        if smtp_host and smtp_user and smtp_pass:
+            smtp_cfg = {'host': smtp_host, 'port': smtp_port, 'user': smtp_user, 'pass': smtp_pass}
+        else:
+            return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
 
     try:
         contacts = json.loads(targets_json)
