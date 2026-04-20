@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WhatsApp Hub | Leanttro</title>
-<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
-<script src="[https://cdn.socket.io/4.7.2/socket.io.min.js](https://cdn.socket.io/4.7.2/socket.io.min.js)"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://wpp.leanttro.com/socket.io/socket.io.js"></script>
 <style>
 :root {
     --bg-body:      #f4f4f5;
@@ -319,7 +319,7 @@ textarea { min-height: 110px; }
 
 <div class="sidebar">
     <div class="brand">
-        <img src="[https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png](https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png)" alt="Leanttro" class="brand-logo">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
     </div>
     <div class="nav-menu">
@@ -595,7 +595,7 @@ function toggleView(view) {
     }
 }
 
-const socket = io('[https://wpp.leanttro.com](https://wpp.leanttro.com)');
+const socket = io('https://wpp.leanttro.com');
 let chatHistory = {};
 let activeJid = null;
 
