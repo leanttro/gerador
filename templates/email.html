@@ -770,6 +770,18 @@ function loadKanbanArts() {
             opt.textContent = p.titulo + ' (' + p.tipo + ')';
             sel.appendChild(opt);
         });
+        
+        const activeDispatch = localStorage.getItem('wl_active_dispatch');
+        if (activeDispatch) {
+            sel.value = activeDispatch;
+            const card = prontos.find(c => c.id === activeDispatch);
+            if (card) {
+                document.getElementById('assuntoInput').value = card.titulo || '';
+                document.getElementById('corpoInput').value = card.copy || '';
+            }
+            localStorage.removeItem('wl_active_dispatch');
+            showToast('info', 'Arte carregada', 'O conteúdo do Kanban foi importado.');
+        }
     } catch(e) {}
 }
 
