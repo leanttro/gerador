@@ -262,19 +262,19 @@ body {
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Contatos</div>
+                <div class="stat-label">TOTAL CONTATOS</div>
                 <div class="stat-value" id="stat-leads">—</div>
-                <div class="stat-trend" id="stat-leads-trend">no CRM</div>
+                <div class="stat-trend" id="stat-leads-trend">carregando...</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Prontos p/ Disparo</div>
+                <div class="stat-label">PRONTOS P/ DISPARO</div>
                 <div class="stat-value" id="stat-posts">—</div>
-                <div class="stat-trend" id="stat-posts-trend">posts finalizados</div>
+                <div class="stat-trend" id="stat-posts-trend">carregando...</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Enviados Hoje</div>
+                <div class="stat-label">ENVIADOS HOJE</div>
                 <div class="stat-value" id="stat-wpp">—</div>
-                <div class="stat-trend" id="stat-wpp-trend">whatsapp</div>
+                <div class="stat-trend" id="stat-wpp-trend">carregando...</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Módulos Ativos</div>
@@ -389,44 +389,56 @@ async function dGet(endpoint) {
 }
 
 async function carregarStats() {
-    // Total contatos (Directus)
+    // 1. Prontos p/ Disparo (Kanban LocalStorage) - Carrega sempre
     try {
-        const crm = await dGet(`/items/${DIRECTUS_TABLE}?aggregate[count]=id`);
-        if (crm?.data?.[0]) {
-            const total = crm.data[0]?.count?.id || 0;
-            document.getElementById('stat-leads').textContent = Number(total).toLocaleString('pt-BR');
-            document.getElementById('stat-leads-trend').className = 'stat-trend ok';
-        }
-    } catch {}
-
-    // Posts Finalizados (Local Storage)
-    try {
-        let prontos = [];
-        const raw = localStorage.getItem('wl_kanban_prontos');
-        if (raw) prontos = JSON.parse(raw);
+        const prontosRaw = localStorage.getItem('wl_kanban_prontos');
+        const prontos = prontosRaw ? JSON.parse(prontosRaw) : [];
         document.getElementById('stat-posts').textContent = prontos.length;
-        if (prontos.length > 0) document.getElementById('stat-posts-trend').className = 'stat-trend ok';
-    } catch {}
+        document.getElementById('stat-posts-trend').textContent = 'posts finalizados';
+        document.getElementById('stat-posts-trend').className = 'stat-trend ok';
+    } catch (e) {
+        document.getElementById('stat-posts').textContent = '0';
+        document.getElementById('stat-posts-trend').textContent = 'posts finalizados';
+    }
 
-    // Enviados Hoje WPP (Local Storage)
+    // 2. Enviados Hoje (WhatsApp LocalStorage) - Carrega sempre
     try {
-        let sentToday = parseInt(localStorage.getItem('wpp_sent_today') || '0');
-        let sentDate = localStorage.getItem('wpp_sent_date') || '';
+        const sentDate = localStorage.getItem('wpp_sent_date');
         const today = new Date().toISOString().split('T')[0];
-        if (sentDate !== today) { sentToday = 0; }
-        
+        let sentToday = 0;
+        if (sentDate === today) {
+            sentToday = parseInt(localStorage.getItem('wpp_sent_today') || '0');
+        }
         document.getElementById('stat-wpp').textContent = sentToday;
-        if (sentToday > 0) document.getElementById('stat-wpp-trend').className = 'stat-trend ok';
-    } catch {}
+        document.getElementById('stat-wpp-trend').textContent = 'no whatsapp hoje';
+        document.getElementById('stat-wpp-trend').className = 'stat-trend ok';
+    } catch (e) {
+        document.getElementById('stat-wpp').textContent = '0';
+        document.getElementById('stat-wpp-trend').textContent = 'no whatsapp hoje';
+    }
+
+    // 3. Leads Totais (Directus) - Depende do Token
+    if (DIRECTUS_URL && DIRECTUS_TOKEN && !DIRECTUS_TOKEN.includes('directus_token')) {
+        try {
+            const crm = await dGet(`/items/${DIRECTUS_TABLE}?aggregate[count]=id`);
+            if (crm?.data?.[0]) {
+                const total = crm.data[0]?.count?.id || 0;
+                document.getElementById('stat-leads').textContent = Number(total).toLocaleString('pt-BR');
+                document.getElementById('stat-leads-trend').textContent = 'no CRM';
+                document.getElementById('stat-leads-trend').className = 'stat-trend ok';
+            } else {
+                document.getElementById('stat-leads-trend').textContent = 'erro ao carregar';
+            }
+        } catch (e) {
+            document.getElementById('stat-leads-trend').textContent = 'erro ao carregar';
+        }
+    } else {
+        document.getElementById('stat-leads-trend').textContent = 'configure o directus';
+    }
 }
 
-if (DIRECTUS_URL && DIRECTUS_TOKEN && !DIRECTUS_TOKEN.includes('directus_token')) {
-    carregarStats();
-} else {
-    ['stat-leads-trend','stat-posts-trend','stat-wpp-trend'].forEach(id => {
-        document.getElementById(id).textContent = 'configure o directus';
-    });
-}
+// Executa a função pra buscar os dados assim que a página carrega
+carregarStats();
 </script>
 </body>
 </html>
