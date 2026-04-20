@@ -1306,7 +1306,11 @@ def wpp_generate_copy():
 # ─────────────────────────────────────────────
 @app.route('/email')
 def email_page():
-    return render_template('email.html')
+    return render_template('email.html',
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+    )
 
 
 # ─────────────────────────────────────────────
