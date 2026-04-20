@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Métricas | Sistema Operacional</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root{--bg-body:#f4f4f5;--bg-surface:#fff;--text-main:#09090b;--text-muted:#71717a;--border:#e4e4e7;--primary:#18181b;--primary-bg:rgba(24,24,27,0.05);--success:#10b981;--blue:#3b82f6;--purple:#8b5cf6;--radius:6px;--radius-lg:10px;--shadow:0 1px 3px rgba(0,0,0,0.05);--transition:0.2s ease;}
+    [data-theme="dark"]{--bg-body:#09090b;--bg-surface:#121214;--text-main:#fafafa;--text-muted:#a1a1aa;--border:#27272a;--primary:#fafafa;--primary-bg:rgba(250,250,250,0.05);--shadow:0 4px 20px rgba(0,0,0,0.3);}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;background:var(--bg-body);color:var(--text-main);display:flex;height:100vh;overflow:hidden;transition:background-color var(--transition),color var(--transition);}
+    .sidebar{width:260px;background:var(--bg-surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+    .brand{padding:24px 24px 20px;margin-bottom:8px;}
+    .brand-logo{width:130px;height:auto;display:block;filter:brightness(0);transition:filter var(--transition);}
+    [data-theme="dark"] .brand-logo{filter:brightness(0) invert(1);}
+    .brand-sub{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600;margin-top:8px;display:block;}
+    .nav-menu{display:flex;flex-direction:column;gap:2px;padding:0 12px;flex:1;overflow-y:auto;}
+    .nav-link{display:flex;align-items:center;gap:12px;padding:10px 14px;color:var(--text-muted);text-decoration:none;font-size:13px;font-weight:500;border-radius:var(--radius);transition:all var(--transition);}
+    .nav-link svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.5;fill:none;flex-shrink:0;}
+    .nav-link:hover{color:var(--text-main);background:var(--bg-body);}
+    .nav-link.active{background:var(--primary-bg);color:var(--text-main);font-weight:600;}
+    .nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:#8b5cf6;text-transform:uppercase;}
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    .topbar{height:56px;background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;}
+    .topbar-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);}
+    .topbar-right{display:flex;align-items:center;gap:16px;}
+    .theme-toggle{background:none;border:1px solid var(--border);border-radius:var(--radius);width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:all var(--transition);}
+    .theme-toggle:hover{color:var(--text-main);}
+    .theme-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;}
+    .icon-moon{display:none;}[data-theme="dark"] .icon-sun{display:none;}[data-theme="dark"] .icon-moon{display:block;}
+    .user-profile{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;}
+    .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--bg-surface);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+    [data-theme="dark"] .avatar{color:var(--bg-body);}
+    .content{flex:1;overflow-y:auto;padding:28px;}
+    .content::-webkit-scrollbar{width:4px;}.content::-webkit-scrollbar-track{background:transparent;}.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+    .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px;flex-wrap:wrap;}
+    .page-header-left h1{font-size:22px;font-weight:700;letter-spacing:-0.3px;margin-bottom:4px;}
+    .page-header-left p{font-size:13px;color:var(--text-muted);}
+    .page-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .connect-banner{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
+    .connect-left{display:flex;align-items:center;gap:14px;}
+    .connect-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .connect-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.5;}
+    .connect-title{font-size:14px;font-weight:600;margin-bottom:2px;}
+    .connect-sub{font-size:12px;color:var(--text-muted);}
+    .connect-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .conn-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;}
+    .sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+    .s-on{background:rgba(16,185,129,0.1);color:#10b981;}.s-on .sdot{background:#10b981;}
+    .s-off{background:rgba(239,68,68,0.1);color:#ef4444;}.s-off .sdot{background:#ef4444;}
+    .tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);}
+    .tab-btn{padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all var(--transition);font-family:inherit;}
+    .tab-btn:hover{color:var(--text-main);}
+    .tab-btn.active{color:var(--text-main);border-bottom-color:var(--primary);font-weight:600;}
+    .tab-pane{display:none;}.tab-pane.active{display:block;}
+    .period-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .period-btn{padding:6px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);transition:all var(--transition);font-family:inherit;}
+    .period-btn:hover{color:var(--text-main);background:var(--primary-bg);}
+    .period-btn.active{background:var(--primary);color:var(--bg-surface);border-color:var(--primary);}
+    [data-theme="dark"] .period-btn.active{color:var(--bg-body);}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+    .stat-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;}
+    .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px;}
+    .stat-value{font-size:26px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:4px;}
+    .stat-trend{font-size:11px;color:var(--text-muted);}
+    .chart-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:14px;}
+    .chart-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:16px;}
+    .chart-wrap{position:relative;height:200px;width:100%;}
+    .table-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px;}
+    .table-header{padding:13px 20px;border-bottom:1px solid var(--border);}
+    .table-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);}
+    table{width:100%;border-collapse:collapse;}
+    th{text-align:left;padding:10px 20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);background:var(--primary-bg);border-bottom:1px solid var(--border);}
+    td{padding:11px 20px;font-size:13px;border-bottom:1px solid var(--border);}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:var(--primary-bg);}
+    .td-url{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--blue);font-size:12px;}
+    .td-num{font-weight:600;}
+    .mini-bar{height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:5px;}
+    .mini-bar-fill{height:100%;border-radius:99px;}
+    .insight-card{background:var(--primary-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:16px;display:flex;gap:14px;align-items:flex-start;}
+    .insight-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+    .insight-title{font-size:13px;font-weight:700;margin-bottom:6px;}
+    .insight-text{font-size:13px;color:var(--text-muted);line-height:1.6;}
+    .sk{height:13px;background:var(--border);border-radius:4px;margin-bottom:8px;animation:pulse 1.5s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all var(--transition);font-family:inherit;}
+    .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
+    .btn-primary{background:var(--primary);color:var(--bg-surface);}
+    .btn-primary:hover{opacity:0.85;}
+    [data-theme="dark"] .btn-primary{color:var(--bg-body);}
+    .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text-main);}
+    .btn-outline:hover{background:var(--primary-bg);}
+    .btn-google{background:#fff;border:1px solid #dadce0;color:#3c4043;display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--transition);font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+    .btn-google:hover{box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+    .btn-google svg{width:18px;height:18px;flex-shrink:0;}
+    .loading-state{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--text-muted);font-size:13px;}
+    .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .empty-state{text-align:center;padding:40px 20px;color:var(--text-muted);}
+    .empty-state svg{width:40px;height:40px;stroke:var(--border);fill:none;stroke-width:1;margin:0 auto 12px;display:block;}
+    .empty-state p{font-size:13px;margin-bottom:16px;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--primary);color:var(--bg-surface);padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:2000;transform:translateY(80px);opacity:0;transition:all 0.3s ease;}
+    [data-theme="dark"] .toast{color:var(--bg-body);}
+    .toast.show{transform:translateY(0);opacity:1;}
+    /* RESPONSIVE */
+    @media(max-width:900px){
+        .sidebar{display:none;}
+        .stats-grid{grid-template-columns:repeat(2,1fr);}
+        .content{padding:14px 14px 90px;}
+        .topbar{padding:0 14px;}
+        .topbar-title{display:none;}
+        .page-header{flex-direction:column;}
+        .connect-banner{flex-direction:column;align-items:flex-start;}
+        td,th{padding:9px 12px;}
+        .td-url{max-width:110px;}
+    }
+    @media(max-width:600px){.stats-grid{grid-template-columns:1fr 1fr;}.stat-value{font-size:20px;}.tabs{overflow-x:auto;}table{font-size:12px;}}
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-surface);border-top:1px solid var(--border);padding:8px 0 14px;z-index:100;}
+    .mobile-nav-inner{display:flex;justify-content:space-around;}
+    .mobile-nav-link{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-muted);text-decoration:none;font-size:10px;font-weight:500;padding:4px 8px;}
+    .mobile-nav-link svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5;}
+    .mobile-nav-link.active{color:var(--text-main);}
+    @media(max-width:900px){.mobile-nav{display:block;}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="brand">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+        <span class="brand-sub">Marketing OS</span>
+    </div>
+    <nav class="nav-menu">
+        <a href="/home" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Hub de Controle</a>
+        <a href="/conteudo" class="nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>Conteúdo</a>
+        <a href="/criacao" class="nav-link"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Criação</a>
+        <a href="/prospeccao" class="nav-link"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>Prospecção</a>
+        <a href="/whatsapp" class="nav-link"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>WhatsApp</a>
+        <a href="/email" class="nav-link"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>E-mail</a>
+        <a href="/calendario" class="nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Objetivos</a>
+        <a href="/metricas" class="nav-link active"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Métricas<span class="nav-badge">Novo</span></a>
+    </nav>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div class="topbar-title">Sistema Operacional Dedicado</div>
+        <div class="topbar-right">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <div class="user-profile"><span id="ws-nome">Sistema</span><div class="avatar" id="ws-avatar">--</div></div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="page-header">
+            <div class="page-header-left">
+                <h1>Métricas de Performance</h1>
+                <p>Google Search Console e Google Analytics integrados em tempo real.</p>
+            </div>
+            <div class="page-header-right">
+                <button class="btn btn-outline" onclick="analisarComIA()"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"></path><path d="M12 6v6l4 2"></path></svg>Analisar com IA</button>
+                <button class="btn btn-primary" onclick="sincronizarDados()" id="btn-sync"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>Sincronizar</button>
+            </div>
+        </div>
+
+        <!-- BANNER GSC -->
+        <div class="connect-banner">
+            <div class="connect-left">
+                <div class="connect-icon" style="background:rgba(66,133,244,0.1);color:#4285f4;"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+                <div><div class="connect-title">Google Search Console</div><div class="connect-sub" id="gsc-sub">Verificando conexão...</div></div>
+            </div>
+            <div class="connect-right">
+                <span class="conn-status s-off" id="gsc-status"><span class="sdot"></span> Desconectado</span>
+                <button class="btn-google" onclick="conectarGoogle('gsc')" id="btn-gsc">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Conectar GSC
+                </button>
+            </div>
+        </div>
+
+        <!-- BANNER GA4 -->
+        <div class="connect-banner">
+            <div class="connect-left">
+                <div class="connect-icon" style="background:rgba(251,188,5,0.1);color:#fbbc05;"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
+                <div><div class="connect-title">Google Analytics 4</div><div class="connect-sub" id="ga4-sub">Verificando conexão...</div></div>
+            </div>
+            <div class="connect-right">
+                <span class="conn-status s-off" id="ga4-status"><span class="sdot"></span> Desconectado</span>
+                <button class="btn-google" onclick="conectarGoogle('ga4')" id="btn-ga4">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Conectar GA4
+                </button>
+            </div>
+        </div>
+
+        <!-- AI INSIGHT -->
+        <div class="insight-card" id="insight-card" style="display:none">
+            <div class="insight-icon">🤖</div>
+            <div style="flex:1"><div class="insight-title">Análise da IA</div><div class="insight-text" id="insight-text"></div></div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('gsc',this)">Search Console</button>
+            <button class="tab-btn" onclick="switchTab('ga4',this)">Analytics</button>
+        </div>
+
+        <!-- TAB GSC -->
+        <div class="tab-pane active" id="tab-gsc">
+            <div class="period-bar">
+                <button class="period-btn active" onclick="setPeriod(7,this)">7 dias</button>
+                <button class="period-btn" onclick="setPeriod(28,this)">28 dias</button>
+                <button class="period-btn" onclick="setPeriod(90,this)">90 dias</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Cliques</div><div class="stat-value" id="gsc-cliques">—</div><div class="stat-trend" id="gsc-cliques-t">Aguardando dados</div></div>
+                <div class="stat-card"><div class="stat-label">Impressões</div><div class="stat-value" id="gsc-impressoes">—</div><div class="stat-trend" id="gsc-impressoes-t">Aguardando dados</div></div>
+                <div class="stat-card"><div class="stat-label">CTR Médio</div><div class="stat-value" id="gsc-ctr">—</div><div class="stat-trend" id="gsc-ctr-t">Taxa de clique</div></div>
+                <div class="stat-card"><div class="stat-label">Posição Média</div><div class="stat-value" id="gsc-posicao">—</div><div class="stat-trend" id="gsc-posicao-t">No Google</div></div>
+            </div>
+            <div class="chart-card"><div class="chart-title">Cliques e Impressões por dia</div><div class="chart-wrap"><canvas id="chart-gsc"></canvas></div></div>
+            <div class="table-card"><div class="table-header"><span class="table-title">Top Páginas</span></div><div id="table-pages"><div class="loading-state"><div class="spinner"></div> Aguardando conexão...</div></div></div>
+            <div class="table-card"><div class="table-header"><span class="table-title">Top Palavras-chave</span></div><div id="table-keywords"><div class="loading-state"><div class="spinner"></div> Aguardando conexão...</div></div></div>
+        </div>
+
+        <!-- TAB GA4 -->
+        <div class="tab-pane" id="tab-ga4">
+            <div class="period-bar">
+                <button class="period-btn active" onclick="setPeriodGA4(7,this)">7 dias</button>
+                <button class="period-btn" onclick="setPeriodGA4(28,this)">28 dias</button>
+                <button class="period-btn" onclick="setPeriodGA4(90,this)">90 dias</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Sessões</div><div class="stat-value" id="ga4-sessoes">—</div><div class="stat-trend" id="ga4-sessoes-t">Aguardando dados</div></div>
+                <div class="stat-card"><div class="stat-label">Usuários</div><div class="stat-value" id="ga4-usuarios">—</div><div class="stat-trend" id="ga4-usuarios-t">Aguardando dados</div></div>
+                <div class="stat-card"><div class="stat-label">Visualizações</div><div class="stat-value" id="ga4-pageviews">—</div><div class="stat-trend" id="ga4-pageviews-t">Aguardando dados</div></div>
+                <div class="stat-card"><div class="stat-label">Tempo Médio</div><div class="stat-value" id="ga4-tempo">—</div><div class="stat-trend" id="ga4-tempo-t">Por sessão</div></div>
+            </div>
+            <div class="chart-card"><div class="chart-title">Sessões por dia</div><div class="chart-wrap"><canvas id="chart-ga4"></canvas></div></div>
+            <div class="table-card"><div class="table-header"><span class="table-title">Canais de Tráfego</span></div><div id="table-canais"><div class="loading-state"><div class="spinner"></div> Aguardando conexão...</div></div></div>
+            <div class="table-card"><div class="table-header"><span class="table-title">Páginas Mais Visitadas</span></div><div id="table-ga4-pages"><div class="loading-state"><div class="spinner"></div> Aguardando conexão...</div></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>Hub</a>
+        <a href="/conteudo" class="mobile-nav-link"><svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>Conteúdo</a>
+        <a href="/criacao" class="mobile-nav-link"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Criação</a>
+        <a href="/calendario" class="mobile-nav-link"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>Metas</a>
+        <a href="/metricas" class="mobile-nav-link active"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>Métricas</a>
+    </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const DIRECTUS_URL='{{ directus_url }}',DIRECTUS_TOKEN='{{ directus_token }}',DIRECTUS_TABLE='{{ directus_table }}';
+let pGSC=7,pGA4=7,cGSC=null,cGA4=null,dGSC=null,dGA4=null;
+
+function toggleTheme(){const d=document.body.getAttribute('data-theme')==='dark';document.body.setAttribute('data-theme',d?'light':'dark');localStorage.setItem('wl_theme',d?'light':'dark');if(cGSC){cGSC.destroy();cGSC=null;}if(cGA4){cGA4.destroy();cGA4=null;}if(dGSC)renderGSC(dGSC);if(dGA4)renderGA4(dGA4);}
+const st=localStorage.getItem('wl_theme');if(st)document.body.setAttribute('data-theme',st);
+function toast(m,d=3500){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);}
+function switchTab(tab,el){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));el.classList.add('active');document.getElementById('tab-'+tab).classList.add('active');setTimeout(()=>{if(tab==='gsc'&&dGSC)renderGSC(dGSC);if(tab==='ga4'&&dGA4)renderGA4(dGA4);},50);}
+function setPeriod(d,el){document.querySelectorAll('#tab-gsc .period-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');pGSC=d;loadGSC();}
+function setPeriodGA4(d,el){document.querySelectorAll('#tab-ga4 .period-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');pGA4=d;loadGA4();}
+function gc(){const dk=document.body.getAttribute('data-theme')==='dark';return{g:dk?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)',t:dk?'#a1a1aa':'#71717a'};}
+
+async function loadWorkspace(){try{const r=await fetch(`${DIRECTUS_URL}/items/workspaces/${DIRECTUS_TABLE}`,{headers:{'Authorization':`Bearer ${DIRECTUS_TOKEN}`}});const d=await r.json();const w=d.data;if(w){document.getElementById('ws-nome').textContent=w.nome||'Workspace';document.getElementById('ws-avatar').textContent=(w.nome||'WS').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();}}catch{}}
+
+async function checkStatus(){
+    try{
+        const r=await fetch('/api/metricas/status');const d=await r.json();
+        if(d.gsc_conectado){document.getElementById('gsc-status').className='conn-status s-on';document.getElementById('gsc-status').innerHTML='<span class="sdot"></span> Conectado';document.getElementById('gsc-sub').textContent=d.gsc_site||'Site vinculado';document.getElementById('btn-gsc').textContent='Reconectar';loadGSC();}
+        else document.getElementById('gsc-sub').textContent='Clique para autorizar acesso ao Search Console';
+        if(d.ga4_conectado){document.getElementById('ga4-status').className='conn-status s-on';document.getElementById('ga4-status').innerHTML='<span class="sdot"></span> Conectado';document.getElementById('ga4-sub').textContent=d.ga4_property||'Propriedade vinculada';document.getElementById('btn-ga4').textContent='Reconectar';loadGA4();}
+        else document.getElementById('ga4-sub').textContent='Clique para autorizar acesso ao Analytics';
+    }catch{document.getElementById('gsc-sub').textContent='Clique para autorizar acesso ao Search Console';document.getElementById('ga4-sub').textContent='Clique para autorizar acesso ao Analytics';}
+}
+
+function conectarGoogle(s){window.location.href=`/api/metricas/oauth/start?servico=${s}`;}
+
+async function sincronizarDados(){
+    const b=document.getElementById('btn-sync');b.disabled=true;b.innerHTML='<div class="spinner" style="width:14px;height:14px;border-width:2px"></div> Sincronizando...';
+    try{const r=await fetch('/api/metricas/sync',{method:'POST'});const d=await r.json();if(d.success){toast('Sincronizado!');loadGSC();loadGA4();}else toast('Erro: '+(d.error||'Falha'));}
+    catch{toast('Erro ao sincronizar.');}
+    finally{b.disabled=false;b.innerHTML='<svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Sincronizar';}
+}
+
+async function loadGSC(){try{const r=await fetch(`/api/metricas/gsc?dias=${pGSC}`);const d=await r.json();if(!d.success){emptyGSC(d.error);return;}dGSC=d;renderGSC(d);}catch{emptyGSC('Conecte o Search Console para ver os dados.');}}
+
+function renderGSC(d){
+    const f=n=>Number(n||0).toLocaleString('pt-BR');
+    document.getElementById('gsc-cliques').textContent=f(d.totais?.cliques);
+    document.getElementById('gsc-impressoes').textContent=f(d.totais?.impressoes);
+    document.getElementById('gsc-ctr').textContent=(d.totais?.ctr||0).toFixed(1)+'%';
+    document.getElementById('gsc-posicao').textContent=(d.totais?.posicao||0).toFixed(1);
+    ['cliques','impressoes','ctr','posicao'].forEach(k=>document.getElementById(`gsc-${k}-t`).textContent=`Últimos ${pGSC} dias`);
+    const {g,t}=gc();
+    if(cGSC)cGSC.destroy();
+    cGSC=new Chart(document.getElementById('chart-gsc').getContext('2d'),{type:'line',data:{labels:(d.por_dia||[]).map(x=>new Date(x.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})),datasets:[{label:'Cliques',data:(d.por_dia||[]).map(x=>x.cliques||0),borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.08)',tension:0.4,fill:true,pointRadius:3,borderWidth:2},{label:'Impressões',data:(d.por_dia||[]).map(x=>x.impressoes||0),borderColor:'#8b5cf6',backgroundColor:'rgba(139,92,246,0.05)',tension:0.4,fill:true,pointRadius:3,borderWidth:2,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:t,font:{size:12}}}},scales:{x:{grid:{color:g},ticks:{color:t,font:{size:11},maxTicksLimit:8}},y:{grid:{color:g},ticks:{color:t,font:{size:11}},position:'left'},y2:{grid:{drawOnChartArea:false},ticks:{color:t,font:{size:11}},position:'right'}}}});
+    const pg=d.top_paginas||[];
+    document.getElementById('table-pages').innerHTML=pg.length===0?`<div class="empty-state"><p>Sem dados de páginas.</p></div>`:`<table><thead><tr><th>Página</th><th>Cliques</th><th>Impressões</th><th>CTR</th><th>Posição</th></tr></thead><tbody>${pg.map(p=>`<tr><td class="td-url" title="${p.pagina}">${p.pagina}</td><td class="td-num">${f(p.cliques)}</td><td class="td-num">${f(p.impressoes)}</td><td class="td-num">${(p.ctr||0).toFixed(1)}%</td><td class="td-num">${(p.posicao||0).toFixed(1)}</td></tr>`).join('')}</tbody></table>`;
+    const kw=d.top_keywords||[];
+    document.getElementById('table-keywords').innerHTML=kw.length===0?`<div class="empty-state"><p>Sem dados de palavras-chave.</p></div>`:`<table><thead><tr><th>Palavra-chave</th><th>Cliques</th><th>Impressões</th><th>CTR</th><th>Posição</th></tr></thead><tbody>${kw.map(k=>`<tr><td>${k.query}</td><td class="td-num">${f(k.cliques)}</td><td class="td-num">${f(k.impressoes)}</td><td class="td-num">${(k.ctr||0).toFixed(1)}%</td><td class="td-num">${(k.posicao||0).toFixed(1)}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function emptyGSC(msg){['gsc-cliques','gsc-impressoes','gsc-ctr','gsc-posicao'].forEach(id=>document.getElementById(id).textContent='—');const v=`<div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg><p>${msg||'Conecte o Search Console.'}</p><button class="btn btn-primary" onclick="conectarGoogle('gsc')">Conectar GSC</button></div>`;document.getElementById('table-pages').innerHTML=v;document.getElementById('table-keywords').innerHTML='';}
+
+async function loadGA4(){try{const r=await fetch(`/api/metricas/ga4?dias=${pGA4}`);const d=await r.json();if(!d.success){emptyGA4(d.error);return;}dGA4=d;renderGA4(d);}catch{emptyGA4('Conecte o Analytics para ver os dados.');}}
+
+function renderGA4(d){
+    const f=n=>Number(n||0).toLocaleString('pt-BR');
+    document.getElementById('ga4-sessoes').textContent=f(d.totais?.sessoes);
+    document.getElementById('ga4-usuarios').textContent=f(d.totais?.usuarios);
+    document.getElementById('ga4-pageviews').textContent=f(d.totais?.pageviews);
+    const seg=d.totais?.tempo_medio||0;document.getElementById('ga4-tempo').textContent=`${Math.floor(seg/60)}m${String(Math.floor(seg%60)).padStart(2,'0')}s`;
+    ['sessoes','usuarios','pageviews','tempo'].forEach(k=>document.getElementById(`ga4-${k}-t`).textContent=`Últimos ${pGA4} dias`);
+    const {g,t}=gc();
+    if(cGA4)cGA4.destroy();
+    cGA4=new Chart(document.getElementById('chart-ga4').getContext('2d'),{type:'bar',data:{labels:(d.por_dia||[]).map(x=>new Date(x.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})),datasets:[{label:'Sessões',data:(d.por_dia||[]).map(x=>x.sessoes||0),backgroundColor:'rgba(16,185,129,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:t,font:{size:12}}}},scales:{x:{grid:{color:g},ticks:{color:t,font:{size:11},maxTicksLimit:10}},y:{grid:{color:g},ticks:{color:t,font:{size:11}}}}}});
+    const cn=d.canais||[];const tot=cn.reduce((a,x)=>a+(x.sessoes||0),0);
+    document.getElementById('table-canais').innerHTML=cn.length===0?`<div class="empty-state"><p>Sem dados de canais.</p></div>`:`<table><thead><tr><th>Canal</th><th>Sessões</th><th>Usuários</th><th>% Total</th></tr></thead><tbody>${cn.map(c=>{const p=tot>0?Math.round((c.sessoes/tot)*100):0;return`<tr><td>${c.canal}</td><td class="td-num">${f(c.sessoes)}</td><td class="td-num">${f(c.usuarios)}</td><td><span style="font-size:12px;font-weight:600">${p}%</span><div class="mini-bar"><div class="mini-bar-fill" style="width:${p}%;background:#10b981"></div></div></td></tr>`;}).join('')}</tbody></table>`;
+    const pg=d.top_paginas||[];
+    document.getElementById('table-ga4-pages').innerHTML=pg.length===0?`<div class="empty-state"><p>Sem dados.</p></div>`:`<table><thead><tr><th>Página</th><th>Visualizações</th><th>Usuários</th></tr></thead><tbody>${pg.map(p=>`<tr><td class="td-url" title="${p.pagina}">${p.pagina}</td><td class="td-num">${f(p.pageviews)}</td><td class="td-num">${f(p.usuarios)}</td></tr>`).join('')}</tbody></table>`;
+}
+
+function emptyGA4(msg){['ga4-sessoes','ga4-usuarios','ga4-pageviews','ga4-tempo'].forEach(id=>document.getElementById(id).textContent='—');const v=`<div class="empty-state"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><p>${msg||'Conecte o Analytics.'}</p><button class="btn btn-primary" onclick="conectarGoogle('ga4')">Conectar GA4</button></div>`;document.getElementById('table-canais').innerHTML=v;document.getElementById('table-ga4-pages').innerHTML='';}
+
+async function analisarComIA(){
+    if(!dGSC&&!dGA4){toast('Conecte pelo menos um serviço antes de analisar.');return;}
+    const card=document.getElementById('insight-card'),txt=document.getElementById('insight-text');
+    card.style.display='flex';txt.innerHTML='<div class="sk" style="width:90%"></div><div class="sk" style="width:70%"></div><div class="sk" style="width:80%"></div>';
+    try{const r=await fetch('/api/metricas/ia-analise',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gsc:dGSC?.totais,ga4:dGA4?.totais,periodo:pGSC})});const d=await r.json();txt.textContent=d.success?d.analise:'Verifique se a GROQ_API_KEY está configurada.';}
+    catch{txt.textContent='Erro ao conectar com a IA.';}
+}
+
+loadWorkspace();checkStatus();
+</script>
+</body>
+</html>
