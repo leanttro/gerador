@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Disparo WhatsApp | Leanttro</title>
+<title>WhatsApp Hub | Leanttro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <style>
 :root {
     --bg-body:      #f4f4f5;
@@ -46,7 +47,6 @@ body {
     transition: background-color var(--transition), color var(--transition);
 }
 
-/* ── SIDEBAR ── */
 .sidebar {
     width: 260px;
     min-width: 260px;
@@ -66,13 +66,13 @@ body {
     padding: 10px 14px; color: var(--text-muted);
     text-decoration: none; font-size: 13px; font-weight: 500;
     border-radius: var(--radius); transition: all var(--transition);
+    cursor: pointer;
 }
 .nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; }
 .nav-link:hover { color: var(--text-main); background: var(--bg-body); }
 .nav-link.active { background: var(--accent-bg); color: var(--accent-dark); font-weight: 600; }
 [data-theme="dark"] .nav-link.active { color: var(--accent); }
 
-/* ── MAIN ── */
 .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 .topbar {
     height: 64px; background: var(--bg-surface);
@@ -81,7 +81,7 @@ body {
     padding: 0 32px; flex-shrink: 0;
     transition: background-color var(--transition), border-color var(--transition);
 }
-.topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+.topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
 .topbar-right { display: flex; align-items: center; gap: 20px; }
 .theme-toggle {
     background: none; border: 1px solid var(--border);
@@ -105,7 +105,6 @@ body {
     font-weight: 600; font-size: 12px;
 }
 
-/* ── LAYOUT CONTEÚDO ── */
 .page-body { flex: 1; display: flex; overflow: hidden; }
 .left-panel {
     width: 420px; min-width: 420px;
@@ -116,7 +115,6 @@ body {
 }
 .right-panel { flex: 1; overflow-y: auto; padding: 32px; background: var(--bg-body); }
 
-/* ── PAINEL ESQUERDO ── */
 .panel-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
 .panel-section:last-child { border-bottom: none; }
 .section-label {
@@ -124,7 +122,6 @@ body {
     letter-spacing: 1px; color: var(--text-muted); margin-bottom: 14px;
 }
 
-/* Indicador de status do chip */
 .chip-status {
     display: flex; align-items: center; gap: 10px;
     padding: 12px 14px; border-radius: var(--radius-lg);
@@ -138,7 +135,6 @@ body {
 .chip-dot.connected { background: var(--accent); box-shadow: 0 0 6px rgba(37,211,102,0.5); }
 .chip-dot.disconnected { background: var(--danger); }
 
-/* Contador de disparo */
 .counters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .counter-card {
     background: var(--bg-body); border: 1px solid var(--border);
@@ -147,7 +143,6 @@ body {
 .counter-value { font-size: 22px; font-weight: 700; }
 .counter-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
 
-/* Filtros */
 .filter-row { display: flex; gap: 8px; }
 .filter-select, .filter-input {
     flex: 1; padding: 8px 10px; font-size: 12px;
@@ -158,7 +153,6 @@ body {
 }
 .filter-select:focus, .filter-input:focus { border-color: var(--accent); }
 
-/* Lista de contatos */
 .contacts-list { flex: 1; overflow-y: auto; }
 .contact-item {
     display: flex; align-items: center; gap: 12px;
@@ -202,11 +196,9 @@ body {
 }
 [data-theme="dark"] .select-bar button { color: var(--accent); }
 
-/* Empty state */
 .empty-state { padding: 40px 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
 .empty-state svg { width: 32px; height: 32px; stroke: var(--text-muted); margin-bottom: 12px; }
 
-/* ── PAINEL DIREITO ── */
 .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
 .page-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
 
@@ -235,10 +227,8 @@ textarea { min-height: 110px; }
 [data-theme="dark"] .var-chip { color: var(--accent); }
 .var-chip:hover { background: var(--accent); color: white; }
 
-/* Configurações de intervalo */
 .interval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* Imagem upload */
 .upload-area {
     border: 1.5px dashed var(--border); border-radius: var(--radius-lg);
     padding: 24px; text-align: center; cursor: pointer;
@@ -251,7 +241,6 @@ textarea { min-height: 110px; }
 .upload-preview { margin-top: 10px; }
 .upload-preview img { max-height: 80px; border-radius: var(--radius); border: 1px solid var(--border); }
 
-/* Botão de IA */
 .ai-btn {
     display: flex; align-items: center; gap: 8px;
     padding: 9px 16px; border-radius: var(--radius);
@@ -263,7 +252,6 @@ textarea { min-height: 110px; }
 [data-theme="dark"] .ai-btn:hover { color: var(--accent); }
 .ai-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
 
-/* Botão disparo */
 .dispatch-btn {
     width: 100%; padding: 14px; border-radius: var(--radius-lg);
     background: var(--accent); color: white; border: none;
@@ -276,7 +264,6 @@ textarea { min-height: 110px; }
 .dispatch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .dispatch-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
 
-/* Log de envio */
 .log-section { margin-top: 24px; }
 .log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .log-title { font-size: 13px; font-weight: 600; }
@@ -299,14 +286,12 @@ textarea { min-height: 110px; }
 .log-msg { flex: 1; }
 .log-time { color: var(--text-muted); flex-shrink: 0; }
 
-/* Progress bar */
 .progress-wrap { margin-bottom: 20px; display: none; }
 .progress-wrap.active { display: block; }
 .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
 .progress-track { background: var(--border); border-radius: 99px; height: 6px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--accent); width: 0%; border-radius: 99px; transition: width 0.4s ease; }
 
-/* Countdown timer */
 .timer-badge {
     display: none; align-items: center; gap: 8px;
     padding: 8px 14px; border-radius: var(--radius);
@@ -316,7 +301,6 @@ textarea { min-height: 110px; }
 .timer-badge.active { display: flex; }
 .timer-badge svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
 
-/* Tabs do modo */
 .mode-tabs { display: flex; gap: 4px; padding: 4px; background: var(--bg-body); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 20px; }
 .mode-tab {
     flex: 1; padding: 8px; text-align: center; font-size: 12px; font-weight: 600;
@@ -326,7 +310,6 @@ textarea { min-height: 110px; }
 }
 .mode-tab.active { background: var(--bg-surface); color: var(--text-main); box-shadow: var(--shadow); }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -334,7 +317,6 @@ textarea { min-height: 110px; }
 </head>
 <body data-theme="light">
 
-<!-- ══ SIDEBAR ══ -->
 <div class="sidebar">
     <div class="brand">
         <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
@@ -357,9 +339,13 @@ textarea { min-height: 110px; }
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
             Prospecção
         </a>
-        <a href="/whatsapp" class="nav-link active">
+        <a class="nav-link active" id="navDispatch" onclick="toggleView('dispatch')">
             <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-            WhatsApp
+            Disparo
+        </a>
+        <a class="nav-link" id="navChat" onclick="toggleView('chat')">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Caixa de Entrada
         </a>
         <a href="#" class="nav-link">
             <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
@@ -372,12 +358,10 @@ textarea { min-height: 110px; }
     </div>
 </div>
 
-<!-- ══ MAIN ══ -->
 <div class="main">
 
-    <!-- Topbar -->
     <div class="topbar">
-        <div class="topbar-title">DISPARO WHATSAPP</div>
+        <div class="topbar-title" id="topbarTitle">DISPARO WHATSAPP</div>
         <div class="topbar-right">
             <button class="theme-toggle" onclick="toggleTheme()">
                 <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -390,12 +374,8 @@ textarea { min-height: 110px; }
         </div>
     </div>
 
-    <div class="page-body">
-
-        <!-- ══ PAINEL ESQUERDO — Lista de contatos ══ -->
+    <div class="page-body" id="viewDispatch">
         <div class="left-panel">
-
-            <!-- Status do chip -->
             <div class="panel-section">
                 <div class="section-label">Chip de Prospecção</div>
                 <div class="chip-status">
@@ -404,7 +384,6 @@ textarea { min-height: 110px; }
                 </div>
             </div>
 
-            <!-- Contadores -->
             <div class="panel-section">
                 <div class="section-label">Progresso do Dia</div>
                 <div class="counters">
@@ -423,7 +402,6 @@ textarea { min-height: 110px; }
                 </div>
             </div>
 
-            <!-- Filtros -->
             <div class="panel-section" style="padding-bottom:12px;">
                 <div class="section-label">Filtrar Contatos</div>
                 <div class="filter-row" style="margin-bottom:8px;">
@@ -448,35 +426,29 @@ textarea { min-height: 110px; }
                 </div>
             </div>
 
-            <!-- Barra de seleção -->
             <div class="select-bar">
                 <span id="selectInfo">0 contatos com WhatsApp</span>
                 <button onclick="toggleSelectAll()">Selecionar todos</button>
             </div>
 
-            <!-- Lista -->
             <div class="contacts-list" id="contactsList">
                 <div class="empty-state">
                     <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                     <p>Carregando contatos...</p>
                 </div>
             </div>
-
         </div>
 
-        <!-- ══ PAINEL DIREITO — Configuração do disparo ══ -->
         <div class="right-panel">
             <h1 class="page-title">Configurar Disparo</h1>
             <p class="page-sub">Selecione os contatos na lista ao lado e configure a mensagem abaixo.</p>
 
-            <!-- Modo de disparo -->
             <div class="mode-tabs">
                 <button class="mode-tab active" onclick="setMode('manual')" id="tabManual">Manual (1 a 1)</button>
                 <button class="mode-tab" onclick="setMode('lote10')" id="tabLote10">Lote 10 rápido</button>
                 <button class="mode-tab" onclick="setMode('lote50')" id="tabLote50">Lote 50 / 4h</button>
             </div>
 
-            <!-- Mensagem -->
             <div class="form-block">
                 <label class="form-label">Mensagem</label>
                 <textarea id="msgInput" placeholder="Opa {nome}, tudo bem? Vi que sua empresa {empresa} pode se interessar por..."></textarea>
@@ -488,7 +460,6 @@ textarea { min-height: 110px; }
                 </div>
             </div>
 
-            <!-- Gerar copy com IA -->
             <div class="form-block">
                 <button class="ai-btn" onclick="generateCopy()">
                     <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -496,7 +467,6 @@ textarea { min-height: 110px; }
                 </button>
             </div>
 
-            <!-- Imagem opcional -->
             <div class="form-block">
                 <label class="form-label">Imagem (opcional)</label>
                 <div class="upload-area" id="uploadArea" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
@@ -507,7 +477,6 @@ textarea { min-height: 110px; }
                 </div>
             </div>
 
-            <!-- Intervalo entre mensagens -->
             <div class="form-block">
                 <label class="form-label">Intervalo entre mensagens (seg.)</label>
                 <div class="interval-grid">
@@ -523,13 +492,11 @@ textarea { min-height: 110px; }
                 <p class="form-hint" style="margin-top:8px;">Intervalo aleatório entre min e máx para proteção anti-ban.</p>
             </div>
 
-            <!-- URL de vídeo -->
             <div class="form-block">
                 <label class="form-label">URL de vídeo (opcional)</label>
                 <input type="text" id="videoUrl" placeholder="https://... (Cloudinary ou MP4 direto)">
             </div>
 
-            <!-- Barra de progresso -->
             <div class="progress-wrap" id="progressWrap">
                 <div class="progress-label">
                     <span id="progressText">Enviando...</span>
@@ -538,19 +505,16 @@ textarea { min-height: 110px; }
                 <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
             </div>
 
-            <!-- Timer -->
             <div class="timer-badge" id="timerBadge">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                 <span id="timerText">Aguardando próximo envio...</span>
             </div>
 
-            <!-- Botão principal -->
             <button class="dispatch-btn" id="dispatchBtn" onclick="startDispatch()">
                 <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 Iniciar Disparo
             </button>
 
-            <!-- Log -->
             <div class="log-section" id="logSection" style="display:none;">
                 <div class="log-header">
                     <span class="log-title">Log de Envios</span>
@@ -558,15 +522,34 @@ textarea { min-height: 110px; }
                 </div>
                 <div class="log-box" id="logBox"></div>
             </div>
-
         </div>
     </div>
+
+    <div class="page-body" id="viewChat" style="display:none; flex-direction: row; background: var(--bg-body);">
+        <div class="left-panel" style="width: 320px;">
+            <div class="panel-section">
+                <div class="section-label">Conversas Ativas</div>
+            </div>
+            <div class="contacts-list" id="chatContactList">
+                <div class="empty-state"><p>Aguardando mensagens ou histórico de envio</p></div>
+            </div>
+        </div>
+        <div class="right-panel" style="display: flex; flex-direction: column; padding: 0;">
+            <div class="topbar" style="border-bottom: 1px solid var(--border); height: 60px; padding: 0 24px; flex-shrink: 0; background: transparent;">
+                <div class="topbar-title" id="currentChatTitle">Selecione uma conversa</div>
+            </div>
+            <div id="chatMessageArea" style="flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+            </div>
+            <div style="padding: 16px 24px; border-top: 1px solid var(--border); background: var(--bg-surface); display: flex; gap: 12px; flex-shrink: 0;">
+                <input type="text" id="chatReplyInput" placeholder="Digite sua resposta e aperte Enter..." style="flex: 1;" onkeypress="if(event.key==='Enter') sendReply()">
+                <button class="dispatch-btn" style="width: auto; padding: 10px 20px;" onclick="sendReply()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-// ESTADO GLOBAL
-// ─────────────────────────────────────────────
 let allContacts    = [];
 let filteredList   = [];
 let selectedIds    = new Set();
@@ -574,16 +557,12 @@ let sentToday      = parseInt(localStorage.getItem('wpp_sent_today') || '0');
 let sentDate       = localStorage.getItem('wpp_sent_date') || '';
 let currentMode    = 'manual';
 let isDispatching  = false;
-let selectedImage  = null;  // base64
+let selectedImage  = null;
 let cancelDispatch = false;
 
-// Resetar contador diário
 const today = new Date().toISOString().split('T')[0];
 if (sentDate !== today) { sentToday = 0; sentDate = today; localStorage.setItem('wpp_sent_date', today); localStorage.setItem('wpp_sent_today', '0'); }
 
-// ─────────────────────────────────────────────
-// TEMA
-// ─────────────────────────────────────────────
 function toggleTheme() {
     const body = document.body;
     const t = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
@@ -593,12 +572,99 @@ function toggleTheme() {
 const savedTheme = localStorage.getItem('wl_theme');
 if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 
-// ─────────────────────────────────────────────
-// STATUS DO CHIP (verifica Baileys)
-// ─────────────────────────────────────────────
+function toggleView(view) {
+    if(view === 'dispatch') {
+        document.getElementById('viewDispatch').style.display = 'flex';
+        document.getElementById('viewChat').style.display = 'none';
+        document.getElementById('navDispatch').classList.add('active');
+        document.getElementById('navChat').classList.remove('active');
+        document.getElementById('topbarTitle').textContent = 'DISPARO WHATSAPP';
+    } else {
+        document.getElementById('viewDispatch').style.display = 'none';
+        document.getElementById('viewChat').style.display = 'flex';
+        document.getElementById('navDispatch').classList.remove('active');
+        document.getElementById('navChat').classList.add('active');
+        document.getElementById('topbarTitle').textContent = 'CAIXA DE ENTRADA';
+        renderChatContacts();
+    }
+}
+
+const socket = io(`http://${window.location.hostname}:3001`);
+let chatHistory = {};
+let activeJid = null;
+
+socket.on('connect', () => {
+    console.log('Conectado ao Node.js Websocket');
+});
+
+socket.on('nova_mensagem', (data) => {
+    const jid = data.remoteJid;
+    if(!chatHistory[jid]) chatHistory[jid] = [];
+    chatHistory[jid].push(data);
+    
+    if(document.getElementById('viewChat').style.display === 'flex') {
+        renderChatContacts();
+        if(activeJid === jid) renderMessages();
+    }
+});
+
+function selectChat(jid) {
+    activeJid = jid;
+    document.getElementById('currentChatTitle').textContent = jid.split('@')[0];
+    renderChatContacts();
+    renderMessages();
+}
+
+function renderChatContacts() {
+    const list = document.getElementById('chatContactList');
+    const jids = Object.keys(chatHistory);
+    
+    if(jids.length === 0) {
+        list.innerHTML = '<div class="empty-state"><p>Nenhuma mensagem ainda</p></div>';
+        return;
+    }
+
+    list.innerHTML = jids.map(jid => {
+        const history = chatHistory[jid];
+        const lastMsg = history[history.length - 1].text || 'Mídia';
+        const isActive = jid === activeJid ? 'background: var(--accent-bg);' : '';
+        return `
+        <div class="contact-item" style="${isActive}" onclick="selectChat('${jid}')">
+            <div class="contact-info">
+                <div class="contact-name">${jid.split('@')[0]}</div>
+                <div class="contact-sub" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">${lastMsg}</div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderMessages() {
+    const area = document.getElementById('chatMessageArea');
+    if(!activeJid || !chatHistory[activeJid]) {
+        area.innerHTML = '';
+        return;
+    }
+
+    area.innerHTML = chatHistory[activeJid].map(msg => {
+        const align = msg.fromMe ? 'align-self: flex-end; background: var(--accent); color: white;' : 'align-self: flex-start; background: var(--bg-surface); border: 1px solid var(--border);';
+        return `<div style="max-width: 70%; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.4; ${align}">${msg.text || 'Mensagem multimídia'}</div>`;
+    }).join('');
+    
+    area.scrollTop = area.scrollHeight;
+}
+
+function sendReply() {
+    const input = document.getElementById('chatReplyInput');
+    const text = input.value.trim();
+    if(!text || !activeJid) return;
+
+    socket.emit('enviar_resposta', { jid: activeJid, text: text });
+    input.value = '';
+}
+
 async function checkChipStatus() {
     try {
-        const r = await fetch('/api/wpp/status', { method: 'GET' });
+        const r = await fetch('/api/wpp/status');
         const d = await r.json();
         const dot = document.getElementById('chipDot');
         const lbl = document.getElementById('chipLabel');
@@ -615,14 +681,10 @@ async function checkChipStatus() {
     }
 }
 
-// ─────────────────────────────────────────────
-// CARREGAR CONTATOS DO CRM
-// ─────────────────────────────────────────────
 async function loadContacts() {
     try {
         const r = await fetch('/api/crm/contacts');
         const d = await r.json();
-        // Filtra apenas quem tem WhatsApp
         allContacts = (d.contacts || []).filter(c => c.whatsapp && c.whatsapp.trim() !== '');
         filterContacts();
         updateSelectInfo();
@@ -631,9 +693,6 @@ async function loadContacts() {
     }
 }
 
-// ─────────────────────────────────────────────
-// FILTRAR E RENDERIZAR
-// ─────────────────────────────────────────────
 function filterContacts() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const status = document.getElementById('filterStatus').value.toLowerCase();
@@ -666,9 +725,7 @@ function renderContacts() {
         const sub       = c.whatsapp + (c.origem ? ` · ${c.origem}` : '');
         return `
         <div class="contact-item ${sel ? 'selected' : ''}" onclick="toggleContact('${c.id}')">
-            <div class="contact-check">
-                <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
-            </div>
+            <div class="contact-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
             <div class="contact-info">
                 <div class="contact-name">${empresa}</div>
                 <div class="contact-sub">${sub}</div>
@@ -709,16 +766,12 @@ function getDailyLimit() {
     return currentMode === 'lote50' ? 50 : currentMode === 'lote10' ? 10 : 50;
 }
 
-// ─────────────────────────────────────────────
-// MODO DE DISPARO
-// ─────────────────────────────────────────────
 function setMode(mode) {
     currentMode = mode;
     ['manual', 'lote10', 'lote50'].forEach(m => {
         document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('active', m === mode);
     });
 
-    // Se lote, seleciona automaticamente N contatos com status "novo"
     if (mode !== 'manual') {
         const limit  = mode === 'lote10' ? 10 : 50;
         const novos  = filteredList.filter(c => (c.status || '').toLowerCase() === 'novo').slice(0, limit);
@@ -728,9 +781,6 @@ function setMode(mode) {
     updateCounters();
 }
 
-// ─────────────────────────────────────────────
-// GERAÇÃO DE COPY COM IA
-// ─────────────────────────────────────────────
 async function generateCopy() {
     const btn = event.target.closest('.ai-btn');
     btn.disabled = true;
@@ -749,9 +799,6 @@ async function generateCopy() {
     btn.innerHTML = `<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Gerar mensagem com IA (Groq)`;
 }
 
-// ─────────────────────────────────────────────
-// UPLOAD DE IMAGEM
-// ─────────────────────────────────────────────
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (file) processImageFile(file);
@@ -766,7 +813,7 @@ function processImageFile(file) {
     if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande. Máximo 5MB.'); return; }
     const reader = new FileReader();
     reader.onload = e => {
-        selectedImage = e.target.result.split(',')[1]; // base64 sem prefixo
+        selectedImage = e.target.result.split(',')[1];
         const prev = document.getElementById('uploadPreview');
         prev.style.display = 'block';
         prev.innerHTML = `<img src="${e.target.result}" alt="preview"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ ${file.name}</small>`;
@@ -774,9 +821,6 @@ function processImageFile(file) {
     reader.readAsDataURL(file);
 }
 
-// ─────────────────────────────────────────────
-// INSERIR VARIÁVEL NA MENSAGEM
-// ─────────────────────────────────────────────
 function insertVar(v) {
     const ta = document.getElementById('msgInput');
     const start = ta.selectionStart, end = ta.selectionEnd;
@@ -786,9 +830,6 @@ function insertVar(v) {
     ta.focus();
 }
 
-// ─────────────────────────────────────────────
-// DISPARO PRINCIPAL
-// ─────────────────────────────────────────────
 async function startDispatch() {
     if (isDispatching) {
         cancelDispatch = true;
@@ -809,7 +850,6 @@ async function startDispatch() {
 
     if (sentToday >= limit) { alert(`Limite diário de ${limit} mensagens atingido.`); return; }
 
-    // UI de disparo ativo
     isDispatching = true;
     cancelDispatch = false;
     const btn = document.getElementById('dispatchBtn');
@@ -838,17 +878,15 @@ async function startDispatch() {
             .replace(/{empresa}/g, empFmt || '')
             .replace(/{numero}/g, numero);
 
-        // Progresso
         const pct = Math.round(((i) / total) * 100);
         document.getElementById('progressFill').style.width = pct + '%';
         document.getElementById('progressPct').textContent  = pct + '%';
         document.getElementById('progressText').textContent = `Enviando ${i+1} de ${total}...`;
 
-        // Disparo
         try {
             const payload = { number: numero, message: msgFinal };
-            if (selectedImage) payload.image   = selectedImage;
-            if (videoUrl)       payload.videoUrl = videoUrl;
+            if (selectedImage) payload.image = selectedImage;
+            if (videoUrl) payload.videoUrl = videoUrl;
 
             const r = await fetch('/api/wpp/send', {
                 method: 'POST',
@@ -862,7 +900,6 @@ async function startDispatch() {
                 sentToday++;
                 localStorage.setItem('wpp_sent_today', sentToday);
                 addLog('ok',  i+1, `Enviado → ${nomeFmt || numero} (${numero})`);
-                // Marca como enviado no CRM
                 await fetch(`/api/crm/contacts/${contact.id}`, {
                     method: 'PATCH',
                     headers: {'Content-Type': 'application/json'},
@@ -877,17 +914,12 @@ async function startDispatch() {
 
         updateCounters();
 
-        // Aguarda intervalo (exceto no último)
         if (i < total - 1 && !cancelDispatch) {
-            const delay = currentMode === 'lote50'
-                ? 288  // ~50 msg em 4h
-                : Math.floor(Math.random() * (delayMax - delayMin + 1)) + delayMin;
-
+            const delay = currentMode === 'lote50' ? 288 : Math.floor(Math.random() * (delayMax - delayMin + 1)) + delayMin;
             await countdown(delay);
         }
     }
 
-    // Finalizado
     isDispatching = false;
     cancelDispatch = false;
     btn.innerHTML = `<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Iniciar Disparo`;
@@ -898,10 +930,9 @@ async function startDispatch() {
     document.getElementById('timerBadge').classList.remove('active');
 
     addLog('ok', '✓', `Disparo finalizado: ${sent}/${total} enviados com sucesso.`);
-    loadContacts(); // Recarrega para refletir status atualizados
+    loadContacts(); 
 }
 
-// Countdown com timer visual
 function countdown(seconds) {
     return new Promise(resolve => {
         const badge = document.getElementById('timerBadge');
@@ -921,9 +952,6 @@ function countdown(seconds) {
     });
 }
 
-// ─────────────────────────────────────────────
-// LOG
-// ─────────────────────────────────────────────
 function addLog(type, num, msg) {
     const box = document.getElementById('logBox');
     const now = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -942,13 +970,10 @@ function clearLog() {
     document.getElementById('logSection').style.display = 'none';
 }
 
-// ─────────────────────────────────────────────
-// INIT
-// ─────────────────────────────────────────────
 updateCounters();
 checkChipStatus();
 loadContacts();
-setInterval(checkChipStatus, 30000); // Verifica chip a cada 30s
+setInterval(checkChipStatus, 30000);
 </script>
 </body>
 </html>
