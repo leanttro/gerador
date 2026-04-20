@@ -392,7 +392,7 @@ Regras de processamento
                 url = "https://openrouter.ai/api/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
-                    "model": "google/gemini-2.0-flash-001",
+                    "model": "meta-llama/llama-3.3-70b-instruct:free",
                     "response_format": {"type": "json_object"},
                     "messages": [
                         {"role": "system", "content": system_prompt_replace},
@@ -401,9 +401,14 @@ Regras de processamento
                     "temperature": 0.1
                 }
                 res = requests.post(url, headers=headers, json=payload).json()
+                
+                if 'error' in res and "Provider returned error" in res['error'].get('message', ''):
+                    payload["model"] = "google/gemini-2.0-flash-lite-preview-02-05:free"
+                    res = requests.post(url, headers=headers, json=payload).json()
+
                 try:
                     if 'error' in res:
-                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
+                        raise Exception(f"OpenRouter Error: {res['error'].get('message', res['error'])}")
                     generated_json_str = res['choices'][0]['message']['content']
                     tokens_used = res.get('usage', {}).get('total_tokens', 0)
                 except (KeyError, IndexError):
@@ -578,7 +583,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not GEMINI_API_KEY:
                     return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
                 
-                url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){GEMINI_API_KEY}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
                 payload = {
                     "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
                     "contents": [{"parts": [{"text": user_content_generate}]}],
@@ -596,7 +601,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not OPENROUTER_API_KEY:
                     return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
                 
-                url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
+                url = "https://openrouter.ai/api/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
                     "model": "google/gemini-2.0-flash-001",
@@ -1462,6 +1467,7 @@ def goals_relatorio():
         pdf_bytes = weasyprint.HTML(string=html).write_pdf()
         return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename=relatorio_leanttro_{mes}.pdf'})
     except Exception as e: return jsonify({"success": False, "error": str(e)}), 500
+
 
 SCOPES_ALL = ['[https://www.googleapis.com/auth/webmasters.readonly](https://www.googleapis.com/auth/webmasters.readonly)', '[https://www.googleapis.com/auth/analytics.readonly](https://www.googleapis.com/auth/analytics.readonly)']
 
