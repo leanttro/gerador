@@ -1968,7 +1968,7 @@ def metricas_oauth_callback():
     )
 
     try:
-        flow.fetch_token(authorization_response=request.url)
+        flow.fetch_token(authorization_response=request.url.replace('http://', 'https://'))
         creds = flow.credentials
 
         gsc_site = ""
