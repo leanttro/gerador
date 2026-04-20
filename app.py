@@ -333,7 +333,7 @@ def api_generate():
 
     if generation_mode == "replace":
         if not previous_code:
-            return jsonify({"success": False, "error": "Modo 'replace' exige um template base (previous_code)."}), 400
+            return jsonify({"success": False, "error": "Modo replace exige um template base (previous_code)."}), 400
 
         style_guides = {
             'dark':      'Cores HEX para paleta escura premium. Pretos profundos, cinzas e acentos neon.',
@@ -392,7 +392,7 @@ Regras de processamento
                 url = "https://openrouter.ai/api/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
-                    "model": "meta-llama/llama-3.3-70b-instruct:free",
+                    "model": "meta-llama/llama-3.3-70b-instruct",
                     "response_format": {"type": "json_object"},
                     "messages": [
                         {"role": "system", "content": system_prompt_replace},
@@ -402,8 +402,8 @@ Regras de processamento
                 }
                 res = requests.post(url, headers=headers, json=payload).json()
                 
-                if 'error' in res and "Provider returned error" in res['error'].get('message', ''):
-                    payload["model"] = "google/gemini-2.0-flash-lite-preview-02-05:free"
+                if 'error' in res:
+                    payload["model"] = "google/gemini-2.0-flash-001"
                     res = requests.post(url, headers=headers, json=payload).json()
 
                 try:
@@ -482,11 +482,207 @@ Regras de processamento
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg or "limit" in error_msg.lower():
-                msg = "Cota de IA excedida (429). Aguarde alguns segundos ou troque de motor."
+                msg = "Cota de IA excedida. Aguarde alguns segundos ou troque de motor."
             elif "api_key" in error_msg.lower() or "auth" in error_msg.lower():
                 msg = "Erro de autenticação nas chaves de API."
             else:
                 msg = f"Erro no replace: {error_msg}"
+            return jsonify({"success": False, "error": msg}), 500
+
+    else:
+        style_guides = {
+            'dark':      'Paleta escura premium pretos profundos cinzas acentos neon sutis',
+            'neon':      'Paleta neon vibrante roxo rosa azul elétrico verde limão fundo preto absoluto estética cyberpunk',
+            'minimal':   'Design minimalista clean muito espaço branco tipografia grande e forte cores sólidas e sóbrias',
+            'gold':      'Paleta luxo e premium dourado rico preto fosco champagne branco pérola elegante e sofisticado',
+            'gradient':  'Gradientes ricos e fluídos moderno colorido e extremamente chamativo',
+            'corporate': 'Corporativo profissional confiável azul petróleo branco cinza clean e sério',
+        }
+
+        format_guides = {
+            '9:16':  'VERTICAL 9:16 largura 100vw altura 177.78vw. Ideal para Stories Reels TikTok.',
+            '1:1':   'QUADRADO 1:1 largura e altura iguais em 100vmin. Ideal para feed do Instagram e LinkedIn.',
+            '16:9':  'HORIZONTAL 16:9 largura 100vw altura 56.25vw. Ideal para YouTube apresentações e LinkedIn.',
+            '4:5':   'PORTRAIT 4:5 largura 100vw altura 125vw. Ideal para feed do Instagram com mais área vertical.',
+        }
+
+        style_guide  = style_guides.get(style_preset,  style_guides['dark'])
+        format_guide = format_guides.get(format_ratio, format_guides['9:16'])
+
+        system_prompt_generate = f"""Você é um Desenvolvedor Front-End ELITE, Diretor de Arte e Especialista em Motion Design (Motor Dark Studio).
+
+MISSÃO ABSOLUTA
+Gerar um arquivo HTML 100% autocontido (CSS + JS embutidos), criando uma animação cinematográfica de altíssimo nível. O código deve criar um motor de renderização fluído na própria página.
+
+ESPECIFICAÇÕES DE FORMATO
+{format_guide}
+O container principal deve usar width 100% height 100% overflow hidden sem scrollbar.
+
+IDENTIDADE VISUAL
+{style_guide}
+Use variáveis CSS (:root) para todas as cores e tamanhos. Crie uma paleta coesa com pelo menos 5 variáveis de cor.
+
+REGRAS OBRIGATÓRIAS E TÉCNICAS
+1. MOTOR DE CENAS Use um sistema de Cenas que aparecem e desaparecem. Controle a visibilidade usando opacity transform e transition. NUNCA use display none para transições de cena.
+2. TIMING Use script JS no final com requestAnimationFrame setTimeout ou Promises para controlar o tempo exato de entrada e saída.
+3. IMAGENS PERFEITAS Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção max-width 100% max-height 100% object-fit contain para NUNCA serem cortadas ou distorcidas.
+4. EFEITOS CANVAS Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 canvas.
+5. TIPOGRAFIA Importe fontes elegantes do Google Fonts e use tamanhos responsivos dinâmicos com clamp.
+6. TRANSIÇÕES Crie transições longas e suaves de pelo menos 1.2 segundos entre os elementos e camadas.
+7. PROFUNDIDADE Use box-shadow text-shadow drop-shadow e backdrop-filter blur para criar camadas.
+8. CARROSSEL Se o usuário pedir um carrossel de fotos NUNCA USE auto-play rápido. Crie botões visíveis de navegação ou permita troca de cena por clique.
+
+REGRAS DE CONTEÚDO E ASSETS
+NUNCA use Lorem ipsum crie conteúdo coerente e persuasivo com a instrução.
+NUNCA deixe regiões vazias sem intenção visual.
+SEMPRE crie hierarquia visual.
+Se houver assets do usuário ELES SÃO O ELEMENTO CENTRAL DO DESIGN.
+Aplique as imagens logos do usuário com destaque absoluto. NUNCA distorça essas imagens.
+Vídeos do usuário use tag video autoplay muted loop playsinline object-fit contain.
+
+SAÍDA ESPERADA
+Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZERO texto antes ou depois do código. ZERO explicações. Comece com <!DOCTYPE html> e termine com </html>."""
+
+        user_content_generate = f"INSTRUÇÃO CRIATIVA: {prompt}\n\n"
+
+        if assets:
+            user_content_generate += "ASSETS DO USUÁRIO INTEGRE OBRIGATORIAMENTE\n"
+            for i, asset_url in enumerate(assets, 1):
+                mtype = 'VÍDEO' if any(asset_url.lower().endswith(v) for v in ['.mp4', '.webm']) else 'IMAGEM'
+                user_content_generate += f"  [{i}] {mtype}: {asset_url}\n"
+            user_content_generate += "\nTodos os assets acima DEVEM aparecer no HTML final como elementos visuais centrais. NÃO corte-os e mantenha a proporção natural.\n\n"
+
+        if previous_code:
+            user_content_generate += (
+                "CÓDIGO HTML EXISTENTE TEMPLATE BASE\n"
+                "O código abaixo é um template funcional de alta qualidade.\n"
+                "PRESERVE estritamente a física do canvas os temporizadores os z-indexes e o motor de cenas.\n"
+                "Sua tarefa é SUBSTITUIR APENAS textos URLs de imagens cores e tipografia para se adaptar perfeitamente à INSTRUÇÃO CRIATIVA e aos ASSETS DO USUÁRIO.\n\n"
+                f"{previous_code}"
+            )
+        else:
+            user_content_generate += "Crie do zero com base na instrução acima."
+
+        try:
+            generated_html = ""
+            tokens_used = 0
+
+            if ai_engine == 'gemini':
+                if not GEMINI_API_KEY:
+                    return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
+                
+                url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){GEMINI_API_KEY}"
+                payload = {
+                    "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
+                    "contents": [{"parts": [{"text": user_content_generate}]}],
+                    "generationConfig": {"temperature": 0.45, "maxOutputTokens": 8192}
+                }
+                res = requests.post(url, json=payload).json()
+                try:
+                    if 'error' in res:
+                        raise Exception(f"Gemini Error: {res['error']['message']}")
+                    generated_html = res['candidates'][0]['content']['parts'][0]['text']
+                except (KeyError, IndexError):
+                    return jsonify({"success": False, "error": f"Erro resposta Gemini: {res}"}), 500
+
+            elif ai_engine == 'openrouter':
+                if not OPENROUTER_API_KEY:
+                    return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
+                
+                url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
+                headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
+                payload = {
+                    "model": "meta-llama/llama-3.3-70b-instruct",
+                    "messages": [
+                        {"role": "system", "content": system_prompt_generate},
+                        {"role": "user", "content": user_content_generate}
+                    ],
+                    "temperature": 0.45
+                }
+                res = requests.post(url, headers=headers, json=payload).json()
+                
+                if 'error' in res:
+                    payload["model"] = "google/gemini-2.0-flash-001"
+                    res = requests.post(url, headers=headers, json=payload).json()
+
+                try:
+                    if 'error' in res:
+                        raise Exception(f"OpenRouter Error: {res['error'].get('message', res['error'])}")
+                    generated_html = res['choices'][0]['message']['content']
+                    tokens_used = res.get('usage', {}).get('total_tokens', 0)
+                except (KeyError, IndexError):
+                    return jsonify({"success": False, "error": f"Erro resposta OpenRouter: {res}"}), 500
+
+            else:
+                if not groq_client:
+                    return jsonify({"success": False, "error": "GROQ_API_KEY ausente no servidor"}), 500
+                    
+                response = groq_client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": system_prompt_generate},
+                        {"role": "user", "content": user_content_generate}
+                    ],
+                    model=BEST_FREE_MODEL,
+                    temperature=0.45,
+                    max_tokens=8000,
+                    top_p=0.92,
+                )
+                generated_html = response.choices[0].message.content
+                tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
+
+            generated_html = generated_html.strip()
+            if generated_html.startswith("```html"):
+                generated_html = generated_html[7:]
+            elif generated_html.startswith("```"):
+                generated_html = generated_html[3:]
+            if generated_html.endswith("```"):
+                generated_html = generated_html[:-3]
+            generated_html = generated_html.strip()
+
+            lower = generated_html.lower()
+            if not (lower.startswith('<!doctype') or lower.startswith('<html')):
+                return jsonify({
+                    "success": False,
+                    "error": "O modelo não retornou HTML válido. Tente reformular a instrução."
+                }), 500
+
+            session_id = get_session_id(request)
+            if session_id not in version_history:
+                version_history[session_id] = []
+
+            version_entry = {
+                "id":        str(uuid.uuid4()),
+                "timestamp": int(time.time()),
+                "prompt":    prompt,
+                "style":     style_preset,
+                "format":    format_ratio,
+                "html":      generated_html,
+                "assets":    assets,
+                "mode":      "generate"
+            }
+            version_history[session_id].append(version_entry)
+
+            if len(version_history[session_id]) > 15:
+                version_history[session_id] = version_history[session_id][-15:]
+
+            return jsonify({
+                "success":       True,
+                "html":          generated_html,
+                "version_id":    version_entry["id"],
+                "version_count": len(version_history[session_id]),
+                "tokens_used":   tokens_used,
+                "model":         ai_engine,
+                "mode":          "generate"
+            })
+
+        except Exception as e:
+            error_msg = str(e)
+            if "429" in error_msg or "limit" in error_msg.lower():
+                msg = "Cota de IA excedida. Aguarde alguns segundos ou troque de motor."
+            elif "api_key" in error_msg.lower() or "auth" in error_msg.lower():
+                msg = "Erro de autenticação nas chaves de API."
+            else:
+                msg = f"Erro na geração: {error_msg}"
             return jsonify({"success": False, "error": msg}), 500
 
     else:
