@@ -392,7 +392,7 @@ Regras de processamento
                 url = "https://openrouter.ai/api/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
-                    "model": "meta-llama/llama-3.3-70b-instruct:free",
+                    "model": "google/gemini-2.0-flash-001",
                     "response_format": {"type": "json_object"},
                     "messages": [
                         {"role": "system", "content": system_prompt_replace},
@@ -401,14 +401,9 @@ Regras de processamento
                     "temperature": 0.1
                 }
                 res = requests.post(url, headers=headers, json=payload).json()
-                
-                if 'error' in res and "Provider returned error" in res['error'].get('message', ''):
-                    payload["model"] = "meta-llama/llama-3.3-70b-instruct:free"
-                    res = requests.post(url, headers=headers, json=payload).json()
-
                 try:
                     if 'error' in res:
-                        raise Exception(f"OpenRouter Error: {res['error'].get('message', res['error'])}")
+                        raise Exception(f"OpenRouter Error: {res['error']['message']}")
                     generated_json_str = res['choices'][0]['message']['content']
                     tokens_used = res.get('usage', {}).get('total_tokens', 0)
                 except (KeyError, IndexError):
