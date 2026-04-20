@@ -732,7 +732,7 @@ async function loadContacts() {
         
         if (data.data) {
             allContacts = data.data.map(c => ({
-                id: c.id,
+                id: String(c.id),
                 nome: c.nome || '',
                 empresa: c.empresa || '',
                 whatsapp: c.telefone || '',
