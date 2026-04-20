@@ -4,501 +4,204 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hub de Controle | Leanttro</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg:        #0a0a0b;
-    --surface:   #111113;
-    --surface2:  #1a1a1d;
-    --border:    #222226;
-    --border2:   #2e2e33;
-    --text:      #f0f0f2;
-    --muted:     #6b6b78;
-    --muted2:    #4a4a55;
-    --accent:    #e8ff47;
-    --accent2:   #b8cc30;
-    --green:     #22c55e;
-    --blue:      #3b82f6;
-    --purple:    #a855f7;
-    --orange:    #f97316;
-    --red:       #ef4444;
-    --radius:    8px;
-    --radius-lg: 14px;
+    --bg-body:      #f4f4f5;
+    --bg-surface:   #ffffff;
+    --text-main:    #09090b;
+    --text-muted:   #71717a;
+    --border:       #e4e4e7;
+    --primary:      #18181b;
+    --primary-bg:   rgba(24,24,27,0.05);
+    --accent:       #2563eb;
+    --accent-dark:  #1d4ed8;
+    --accent-bg:    rgba(37,99,235,0.08);
+    --success:      #10b981;
+    --success-bg:   rgba(16,185,129,0.08);
+    --radius:       6px;
+    --radius-lg:    10px;
+    --shadow:       0 1px 3px rgba(0,0,0,0.06);
+    --transition:   0.2s ease;
 }
-
+[data-theme="dark"] {
+    --bg-body:      #09090b;
+    --bg-surface:   #121214;
+    --text-main:    #fafafa;
+    --text-muted:   #a1a1aa;
+    --border:       #27272a;
+    --primary:      #fafafa;
+    --primary-bg:   rgba(250,250,250,0.05);
+    --accent-bg:    rgba(37,99,235,0.15);
+    --shadow:       0 4px 20px rgba(0,0,0,0.3);
+}
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
-
 body {
-    font-family: 'Syne', sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
     display: flex;
     font-size: 14px;
+    transition: background-color var(--transition), color var(--transition);
 }
-
-/* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-/* ── SIDEBAR ── */
+/* SIDEBAR */
 .sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: var(--surface);
+    width: 260px; min-width: 260px;
+    background: var(--bg-surface);
     border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
+    transition: background-color var(--transition), border-color var(--transition);
 }
-
-.brand {
-    padding: 24px 20px 20px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 12px;
-}
-
-.brand-logo {
-    width: 120px;
-    height: auto;
-    display: block;
-    filter: brightness(0) invert(1);
-}
-
-.brand-sub {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 8px;
-    display: block;
-}
-
-.nav-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 0 10px;
-    flex: 1;
-}
-
+.brand { padding: 24px 24px 20px; margin-bottom: 8px; }
+.brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
+[data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
+.brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 8px; display: block; }
+.nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
 .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    border-radius: var(--radius);
-    transition: all 0.15s ease;
-    letter-spacing: 0.2px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; color: var(--text-muted);
+    text-decoration: none; font-size: 13px; font-weight: 500;
+    border-radius: var(--radius); transition: all var(--transition);
 }
+.nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; flex-shrink: 0; }
+.nav-link:hover { color: var(--text-main); background: var(--bg-body); }
+.nav-badge { margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 99px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: #8b5cf6; text-transform: uppercase; }
+.nav-link.active { background: var(--accent-bg); color: var(--accent-dark); font-weight: 600; }
+[data-theme="dark"] .nav-link.active { color: var(--accent); }
 
-.nav-link svg {
-    width: 16px; height: 16px;
-    stroke: currentColor; stroke-width: 1.5; fill: none; flex-shrink: 0;
-}
-
-.nav-link:hover { color: var(--text); background: var(--surface2); }
-.nav-link.active { color: var(--accent); background: rgba(232,255,71,0.07); }
-
-.nav-badge {
-    margin-left: auto;
-    font-size: 8px;
-    font-weight: 700;
-    padding: 2px 5px;
-    border-radius: 99px;
-    background: rgba(168,85,247,0.15);
-    border: 1px solid rgba(168,85,247,0.3);
-    color: var(--purple);
-    text-transform: uppercase;
-    font-family: 'IBM Plex Mono', monospace;
-}
-
-/* ── MAIN ── */
-.main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-}
-
+/* MAIN */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 .topbar {
-    height: 56px;
-    background: var(--surface);
+    height: 64px; background: var(--bg-surface);
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; flex-shrink: 0;
+    transition: background-color var(--transition), border-color var(--transition);
 }
-
-.topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.topbar-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
-
-.status-dot {
-    width: 6px; height: 6px;
-    background: var(--green);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
+.topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.topbar-right { display: flex; align-items: center; gap: 20px; }
 .theme-toggle {
     background: none; border: 1px solid var(--border);
-    color: var(--muted); cursor: pointer; padding: 7px;
-    border-radius: var(--radius); display: flex; align-items: center;
-    transition: all 0.15s;
+    color: var(--text-muted); cursor: pointer; padding: 8px;
+    border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition);
 }
-.theme-toggle:hover { color: var(--text); border-color: var(--border2); }
-.theme-toggle svg { width: 15px; height: 15px; stroke: currentColor; stroke-width: 2; fill: none; }
-
+.theme-toggle:hover { color: var(--text-main); border-color: var(--text-muted); }
+.theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+[data-theme="dark"] .icon-moon { display: none; }
+.icon-sun { display: none; }
+[data-theme="dark"] .icon-sun { display: block; }
 .user-profile {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 12px; font-weight: 600;
-    border-left: 1px solid var(--border);
-    padding-left: 20px;
+    display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500;
+    border-left: 1px solid var(--border); padding-left: 20px;
 }
-
 .avatar {
-    width: 30px; height: 30px;
-    background: var(--accent);
-    color: #000;
-    border-radius: 50%;
+    width: 32px; height: 32px; background: var(--text-main);
+    color: var(--bg-surface); border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700; font-size: 11px;
 }
 
-/* ── CONTENT AREA ── */
-.content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 32px 36px 48px;
-}
+/* CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 32px 36px 48px; }
 
-/* ── HEADER ROW ── */
-.page-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 32px;
-}
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.2px; }
+.page-sub { font-size: 12px; color: var(--text-muted); }
 
-.page-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-
-.page-title span {
-    color: var(--accent);
-}
-
-.page-sub {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 8px;
-    letter-spacing: 0.3px;
-}
-
-/* ── STATS ROW ── */
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 36px;
-}
-
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 36px; }
 .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px 22px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.15s;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 22px;
+    box-shadow: var(--shadow); transition: box-shadow var(--transition);
 }
+.stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.stat-label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+.stat-value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; margin-bottom: 6px; }
+.stat-trend { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+.stat-trend.ok { color: var(--success); }
 
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent-color, var(--accent));
-    opacity: 0.5;
+/* SECTION TITLE */
+.section-title { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 16px; }
+
+/* FLOW */
+.flow-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 28px;
+    margin-bottom: 32px; box-shadow: var(--shadow);
 }
-
-.stat-card:hover { border-color: var(--border2); }
-
-.stat-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    margin-bottom: 12px;
-}
-
-.stat-value {
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    line-height: 1;
-    color: var(--text);
-    margin-bottom: 8px;
-}
-
-.stat-trend {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-}
-
-.stat-trend.positive { color: var(--green); }
-
-/* ── SECTION LABEL ── */
-.section-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-}
-
-/* ── FLOW MAP ── */
-.flow-wrapper {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 36px 32px;
-    margin-bottom: 36px;
-    position: relative;
-    overflow: hidden;
-}
-
-.flow-wrapper::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(232,255,71,0.03) 0%, transparent 60%);
-    pointer-events: none;
-}
-
-.flow-grid {
-    display: grid;
-    grid-template-columns: 1fr 48px 1fr 48px 1fr 48px 1fr;
-    align-items: center;
-    gap: 0;
-    position: relative;
-}
-
-/* Arrow connectors */
-.flow-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted2);
-}
-
-.flow-arrow svg {
-    width: 20px; height: 20px;
-    stroke: currentColor; stroke-width: 1.5; fill: none;
-}
-
-/* Flow nodes */
+.flow-row { display: grid; grid-template-columns: 1fr 36px 1fr 36px 1fr 36px 1fr; align-items: center; }
+.flow-arrow { display: flex; align-items: center; justify-content: center; color: var(--border); }
+.flow-arrow svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
 .flow-node {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 20px 18px;
-    text-align: center;
-    transition: all 0.2s;
-    cursor: default;
-    position: relative;
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px 16px; text-align: center;
+    transition: all var(--transition); text-decoration: none; color: inherit;
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--bg-body);
 }
-
 .flow-node:hover {
-    border-color: var(--node-color, var(--accent));
-    box-shadow: 0 0 20px rgba(232,255,71,0.06);
+    border-color: var(--nc);
+    background: var(--bg-surface);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
-
-.flow-node-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border2);
+.flow-step { font-size: 9px; font-weight: 700; color: var(--nc); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.flow-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--primary-bg);
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 14px;
-    color: var(--node-color, var(--muted));
-    transition: all 0.2s;
+    color: var(--text-muted); margin-bottom: 12px;
+    transition: all var(--transition);
 }
-
-.flow-node:hover .flow-node-icon {
-    background: var(--node-color, var(--accent));
-    color: #000;
-    border-color: var(--node-color, var(--accent));
+.flow-node:hover .flow-icon { background: var(--nc); color: #fff; }
+.flow-icon svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+.flow-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.flow-desc { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.flow-cta {
+    display: inline-block; margin-top: 10px;
+    font-size: 9px; font-weight: 700; padding: 3px 10px;
+    border-radius: 99px; text-transform: uppercase; letter-spacing: 0.3px;
+    background: var(--nb); color: var(--nc); border: 1px solid var(--nbd);
+    opacity: 0; transition: opacity var(--transition);
 }
+.flow-node:hover .flow-cta { opacity: 1; }
 
-.flow-node-icon svg {
-    width: 18px; height: 18px;
-    stroke: currentColor; stroke-width: 1.5; fill: none;
-}
-
-.flow-node-title {
-    font-size: 12px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    letter-spacing: 0.2px;
-}
-
-.flow-node-desc {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    color: var(--muted);
-    line-height: 1.6;
-    letter-spacing: 0.2px;
-}
-
-.flow-node-link {
-    display: inline-block;
-    margin-top: 12px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 9px;
-    font-weight: 600;
-    color: var(--node-color, var(--accent));
-    text-decoration: none;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.flow-node:hover .flow-node-link { opacity: 1; }
-
-/* ── ADVANTAGES ── */
-.adv-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-}
-
+/* ADVANTAGES */
+.adv-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
 .adv-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 22px 20px;
-    transition: border-color 0.15s;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px 20px;
+    box-shadow: var(--shadow); transition: all var(--transition);
 }
-
-.adv-card:hover { border-color: var(--border2); }
-
-.adv-number {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 36px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: -2px;
-    line-height: 1;
-    margin-bottom: 10px;
-    opacity: 0.8;
+.adv-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.adv-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--primary-bg);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-main); margin-bottom: 14px; transition: background var(--transition);
 }
-
-.adv-title {
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 6px;
-}
-
-.adv-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.6;
-}
-
-/* ── LIGHT THEME ── */
-[data-theme="light"] {
-    --bg: #f4f4f5;
-    --surface: #ffffff;
-    --surface2: #f8f8f9;
-    --border: #e4e4e7;
-    --border2: #d4d4d8;
-    --text: #09090b;
-    --muted: #71717a;
-    --muted2: #a1a1aa;
-    --accent: #1a1a1a;
-    --accent2: #333;
-}
-
-[data-theme="light"] .brand-logo { filter: brightness(0); }
-[data-theme="light"] .avatar { background: #1a1a1a; color: #e8ff47; }
-[data-theme="light"] .status-dot { box-shadow: 0 0 8px var(--green); }
-[data-theme="light"] .flow-wrapper::before { display: none; }
-[data-theme="light"] .adv-number { color: #1a1a1a; opacity: 1; }
-
-[data-theme="light"] .flow-node-link { color: var(--node-color, #1a1a1a); }
-[data-theme="light"] .flow-node:hover {
-    border-color: var(--node-color, #1a1a1a);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-}
-[data-theme="light"] .flow-node:hover .flow-node-icon {
-    background: var(--node-color, #1a1a1a);
-    color: #fff;
-    border-color: var(--node-color, #1a1a1a);
-}
-
-[data-theme="light"] .stat-card::before { opacity: 0.3; }
+.adv-card:hover .adv-icon { background: var(--primary); color: var(--bg-surface); }
+[data-theme="dark"] .adv-card:hover .adv-icon { color: var(--bg-body); }
+.adv-icon svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+.adv-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.adv-desc { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 </style>
 </head>
-<body data-theme="dark">
+<body data-theme="light">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
     <div class="brand">
         <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
     </div>
-    <nav class="nav-menu">
+    <div class="nav-menu">
         <a href="/home" class="nav-link active">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Hub de Controle
@@ -532,19 +235,16 @@ body {
             Métricas
             <span class="nav-badge">NOVO</span>
         </a>
-    </nav>
+    </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
     <div class="topbar">
-        <div class="topbar-left">
-            <div class="status-dot"></div>
-            <span class="topbar-tag">Sistema Operacional</span>
-        </div>
+        <div class="topbar-title">Hub de Controle</div>
         <div class="topbar-right">
             <button class="theme-toggle" onclick="toggleTheme()">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </button>
             <div class="user-profile">
                 <span>Leanttro</span>
@@ -555,154 +255,132 @@ body {
 
     <div class="content">
 
-        <!-- HEADER -->
         <div class="page-header">
-            <div>
-                <div class="page-title">Hub de <span>Controle</span></div>
-                <div class="page-sub">// visão geral do sistema em tempo real</div>
-            </div>
+            <div class="page-title">Visão Geral do Sistema</div>
+            <div class="page-sub">Dados em tempo real da base de contatos, disparos e metas do mês.</div>
         </div>
 
         <!-- STATS -->
-        <div class="stats-row">
-            <div class="stat-card" style="--accent-color: #22c55e;">
+        <div class="stats-grid">
+            <div class="stat-card">
                 <div class="stat-label">Leads na Base</div>
                 <div class="stat-value" id="stat-leads">—</div>
                 <div class="stat-trend" id="stat-leads-trend">carregando...</div>
             </div>
-            <div class="stat-card" style="--accent-color: #3b82f6;">
+            <div class="stat-card">
                 <div class="stat-label">E-mails Enviados</div>
                 <div class="stat-value" id="stat-emails">—</div>
                 <div class="stat-trend" id="stat-emails-trend">carregando...</div>
             </div>
-            <div class="stat-card" style="--accent-color: #a855f7;">
+            <div class="stat-card">
                 <div class="stat-label">Metas do Mês</div>
                 <div class="stat-value" id="stat-metas">—</div>
                 <div class="stat-trend" id="stat-metas-trend">carregando...</div>
             </div>
-            <div class="stat-card" style="--accent-color: #f97316;">
+            <div class="stat-card">
                 <div class="stat-label">Módulos Ativos</div>
                 <div class="stat-value">7</div>
-                <div class="stat-trend positive">sistema operacional</div>
+                <div class="stat-trend ok">sistema operacional</div>
             </div>
         </div>
 
         <!-- FLOW MAP -->
-        <div class="section-label">Como o sistema funciona</div>
+        <div class="section-title">Como o sistema funciona</div>
+        <div class="flow-card">
+            <div class="flow-row">
 
-        <div class="flow-wrapper">
-            <div class="flow-grid">
+                <a href="/prospeccao" class="flow-node" style="--nc:#10b981;--nb:rgba(16,185,129,0.08);--nbd:rgba(16,185,129,0.2);">
+                    <div class="flow-step">01 — Entrada</div>
+                    <div class="flow-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+                    <div class="flow-name">Prospecção</div>
+                    <div class="flow-desc">Extrai leads B2B qualificados por nicho via Google Maps, Instagram e LinkedIn</div>
+                    <span class="flow-cta">Acessar módulo</span>
+                </a>
 
-                <!-- 1. PROSPECÇÃO -->
-                <div class="flow-node" style="--node-color: #22c55e;">
-                    <div class="flow-node-icon">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                    </div>
-                    <div class="flow-node-title">Prospecção</div>
-                    <div class="flow-node-desc">Extrai leads B2B qualificados via Google Maps, Instagram e LinkedIn por nicho e região</div>
-                    <a href="/prospeccao" class="flow-node-link">Acessar →</a>
-                </div>
+                <div class="flow-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
 
-                <div class="flow-arrow">
-                    <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </div>
+                <a href="/conteudo" class="flow-node" style="--nc:#3b82f6;--nb:rgba(59,130,246,0.08);--nbd:rgba(59,130,246,0.2);">
+                    <div class="flow-step">02 — Criação</div>
+                    <div class="flow-icon"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                    <div class="flow-name">Conteúdo & Criação</div>
+                    <div class="flow-desc">IA gera pautas, organiza no Kanban e cria posts, stories e banners prontos</div>
+                    <span class="flow-cta">Acessar módulo</span>
+                </a>
 
-                <!-- 2. CONTEÚDO & CRIAÇÃO -->
-                <div class="flow-node" style="--node-color: #3b82f6;">
-                    <div class="flow-node-icon">
-                        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    </div>
-                    <div class="flow-node-title">Conteúdo & Criação</div>
-                    <div class="flow-node-desc">IA gera pautas, organiza no Kanban e cria posts, stories e banners prontos para publicar</div>
-                    <a href="/conteudo" class="flow-node-link">Acessar →</a>
-                </div>
+                <div class="flow-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
 
-                <div class="flow-arrow">
-                    <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </div>
+                <a href="/whatsapp" class="flow-node" style="--nc:#f97316;--nb:rgba(249,115,22,0.08);--nbd:rgba(249,115,22,0.2);">
+                    <div class="flow-step">03 — Disparo</div>
+                    <div class="flow-icon"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+                    <div class="flow-name">Disparo em Massa</div>
+                    <div class="flow-desc">WhatsApp anti-bloqueio + E-mail via SMTP com copy personalizada por contato</div>
+                    <span class="flow-cta">Acessar módulo</span>
+                </a>
 
-                <!-- 3. DISPARO -->
-                <div class="flow-node" style="--node-color: #f97316;">
-                    <div class="flow-node-icon">
-                        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    </div>
-                    <div class="flow-node-title">Disparo em Massa</div>
-                    <div class="flow-node-desc">WhatsApp com anti-bloqueio e E-mail via SMTP — envia copy gerada pela IA para toda a base</div>
-                    <a href="/whatsapp" class="flow-node-link">Acessar →</a>
-                </div>
+                <div class="flow-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
 
-                <div class="flow-arrow">
-                    <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                </div>
-
-                <!-- 4. MÉTRICAS -->
-                <div class="flow-node" style="--node-color: #a855f7;">
-                    <div class="flow-node-icon">
-                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                    </div>
-                    <div class="flow-node-title">Métricas & Objetivos</div>
-                    <div class="flow-node-desc">Dashboard com GSC, GA4 e metas mensais — IA analisa os resultados e sugere próximas ações</div>
-                    <a href="/metricas" class="flow-node-link">Acessar →</a>
-                </div>
+                <a href="/metricas" class="flow-node" style="--nc:#8b5cf6;--nb:rgba(139,92,246,0.08);--nbd:rgba(139,92,246,0.2);">
+                    <div class="flow-step">04 — Resultado</div>
+                    <div class="flow-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                    <div class="flow-name">Métricas & Objetivos</div>
+                    <div class="flow-desc">GSC, GA4 e metas mensais — IA analisa resultados e sugere próximas ações</div>
+                    <span class="flow-cta">Acessar módulo</span>
+                </a>
 
             </div>
         </div>
 
         <!-- ADVANTAGES -->
-        <div class="section-label">Por que usar este sistema</div>
-
+        <div class="section-title">Por que usar este sistema</div>
         <div class="adv-grid">
             <div class="adv-card">
-                <div class="adv-number">01</div>
+                <div class="adv-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
                 <div class="adv-title">Tudo em um só lugar</div>
-                <div class="adv-desc">Prospecção, criação de conteúdo, disparos e métricas integrados — sem precisar trocar de ferramenta no meio do processo.</div>
+                <div class="adv-desc">Prospecção, criação, disparos e métricas integrados — sem precisar trocar de ferramenta no meio do processo.</div>
             </div>
             <div class="adv-card">
-                <div class="adv-number">02</div>
+                <div class="adv-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
                 <div class="adv-title">IA em cada etapa</div>
                 <div class="adv-desc">A IA gera pautas, cria criativos, escreve copy personalizada por contato e analisa os resultados automaticamente.</div>
             </div>
             <div class="adv-card">
-                <div class="adv-number">03</div>
+                <div class="adv-icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
                 <div class="adv-title">Base de leads própria</div>
-                <div class="adv-desc">Os leads extraídos ficam no seu CRM no Directus — você tem controle total dos dados, sem depender de plataformas externas.</div>
+                <div class="adv-desc">Leads extraídos ficam no seu CRM no Directus — controle total dos dados, sem depender de plataformas externas.</div>
             </div>
             <div class="adv-card">
-                <div class="adv-number">04</div>
+                <div class="adv-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
                 <div class="adv-title">Disparo anti-bloqueio</div>
                 <div class="adv-desc">WhatsApp com delay aleatório entre envios e E-mail via SMTP próprio — sem risco de banimento e sem custo por mensagem.</div>
             </div>
             <div class="adv-card">
-                <div class="adv-number">05</div>
+                <div class="adv-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
                 <div class="adv-title">Criativos em escala</div>
                 <div class="adv-desc">Gere posts, carrosséis, stories e banners com IA em segundos — personalizados por nicho, sem precisar de designer.</div>
             </div>
             <div class="adv-card">
-                <div class="adv-number">06</div>
+                <div class="adv-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
                 <div class="adv-title">Dados em tempo real</div>
-                <div class="adv-desc">Google Search Console, GA4 e histórico de disparos integrados — veja o que funciona e ajuste a estratégia com dados reais.</div>
+                <div class="adv-desc">Google Search Console, GA4 e histórico de disparos — veja o que funciona e ajuste a estratégia com dados reais.</div>
             </div>
         </div>
 
-    </div><!-- /content -->
-</div><!-- /main -->
+    </div>
+</div>
 
 <script>
 const DIRECTUS_URL   = '{{ directus_url }}';
 const DIRECTUS_TOKEN = '{{ directus_token }}';
 const DIRECTUS_TABLE = '{{ directus_table }}';
 
-// ── TEMA ──────────────────────────────────────
 function toggleTheme() {
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
     localStorage.setItem('wl_theme', isDark ? 'light' : 'dark');
 }
-
 const savedTheme = localStorage.getItem('wl_theme');
 if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 
-// ── STATS ─────────────────────────────────────
 async function dGet(endpoint) {
     try {
         const res = await fetch(`${DIRECTUS_URL}${endpoint}`, {
@@ -717,26 +395,26 @@ async function carregarStats() {
     const mes = new Date();
     const mesAno = `${mes.getFullYear()}-${String(mes.getMonth()+1).padStart(2,'0')}`;
 
-    // Leads totais no CRM (tabela do Directus)
+    // Leads totais
     try {
         const crm = await dGet(`/items/${DIRECTUS_TABLE}?aggregate[count]=id`);
         if (crm?.data?.[0]) {
             const total = crm.data[0]?.count?.id || 0;
             document.getElementById('stat-leads').textContent = Number(total).toLocaleString('pt-BR');
             document.getElementById('stat-leads-trend').textContent = 'total na base CRM';
-            document.getElementById('stat-leads-trend').className = 'stat-trend positive';
+            document.getElementById('stat-leads-trend').className = 'stat-trend ok';
         }
     } catch {}
 
-    // E-mails enviados (histórico)
+    // E-mails enviados (histórico real)
     try {
         const hist = await fetch('/api/email/history');
         const hd = await hist.json();
         if (hd.history) {
             const enviados = hd.history.filter(h => h.status === 'enviado').length;
             document.getElementById('stat-emails').textContent = Number(enviados).toLocaleString('pt-BR');
-            document.getElementById('stat-emails-trend').textContent = `histórico de envios`;
-            document.getElementById('stat-emails-trend').className = 'stat-trend positive';
+            document.getElementById('stat-emails-trend').textContent = 'total no histórico';
+            document.getElementById('stat-emails-trend').className = 'stat-trend ok';
         }
     } catch {}
 
@@ -750,21 +428,17 @@ async function carregarStats() {
             document.getElementById('stat-metas-trend').textContent = total > 0
                 ? `${Math.round((atingidas/total)*100)}% atingidas`
                 : 'nenhuma meta cadastrada';
-            if (atingidas > 0) document.getElementById('stat-metas-trend').className = 'stat-trend positive';
+            if (atingidas > 0) document.getElementById('stat-metas-trend').className = 'stat-trend ok';
         }
     } catch {}
 }
 
-if (DIRECTUS_URL && DIRECTUS_TOKEN && DIRECTUS_TABLE
-    && !DIRECTUS_TOKEN.includes('directus_token')) {
+if (DIRECTUS_URL && DIRECTUS_TOKEN && !DIRECTUS_TOKEN.includes('directus_token')) {
     carregarStats();
 } else {
-    document.getElementById('stat-leads').textContent = '—';
-    document.getElementById('stat-leads-trend').textContent = 'directus não configurado';
-    document.getElementById('stat-emails').textContent = '—';
-    document.getElementById('stat-emails-trend').textContent = 'sem histórico';
-    document.getElementById('stat-metas').textContent = '—';
-    document.getElementById('stat-metas-trend').textContent = 'configure o directus';
+    ['stat-leads-trend','stat-emails-trend','stat-metas-trend'].forEach(id => {
+        document.getElementById(id).textContent = 'configure o directus';
+    });
 }
 </script>
 </body>
