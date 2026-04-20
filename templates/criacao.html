@@ -776,7 +776,7 @@ function init() {
 
     const zone = document.getElementById('uploadZone');
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'); });
     zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFileSelect(e.dataTransfer.files); });
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFullscreen(); });
@@ -1327,7 +1327,7 @@ async function salvarNoKanban() {
         return;
     }
 
-    setLoading(true, 'Salvando no Kanban', 'Gerando miniatura da arte...');
+    setLoading(true, 'Salvando no Kanban', 'Enviando código e miniatura...');
     try {
         const canvas = await getCanvasFromIframe();
         canvas.toBlob(async (blob) => {
@@ -1343,6 +1343,22 @@ async function salvarNoKanban() {
                 console.error('Erro no upload da thumbnail', e);
             }
 
+            // CHAMA O BACKEND AQUI
+            try {
+                await fetch('/api/salvar-kanban', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        cardId: state.pendingCardId,
+                        html: state.currentHTML,
+                        prompt: document.getElementById('promptInput').value
+                    })
+                });
+            } catch(e) {
+                console.error('Erro ao salvar no backend', e);
+            }
+
+            // Mantém no localStorage para o conteudo.html atualizar a UI lá
             localStorage.setItem('wl_card_done', JSON.stringify({
                 cardId: state.pendingCardId,
                 status: 'pronto',
@@ -1351,7 +1367,7 @@ async function salvarNoKanban() {
             localStorage.removeItem('wl_pending_creation');
             
             setLoading(false);
-            showToast('success', 'Salvo com Foto!', 'Card pronto. Voltando para o Conteúdo...');
+            showToast('success', 'Salvo com Sucesso!', 'Card atualizado. Voltando para o Conteúdo...');
             setTimeout(() => { window.location.href = '/conteudo'; }, 1600);
         }, 'image/png');
     } catch (e) {
