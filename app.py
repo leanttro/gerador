@@ -1941,13 +1941,17 @@ def metricas_oauth_start():
         include_granted_scopes='true',
         prompt='consent',
     )
-    session['oauth_state']   = state
+    session['oauth_state'] = state
+    # NOVA LINHA: Salva o código de verificação para usar na volta
+    session['code_verifier'] = getattr(flow, 'code_verifier', None) 
+    
     return redirect(auth_url)
 
 
 @app.route('/api/metricas/oauth/callback')
 def metricas_oauth_callback():
     state = session.get('oauth_state', '')
+    code_verifier = session.get('code_verifier') # <--- RECUPERA AQUI
 
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         return "Erro de configuração OAuth.", 400
@@ -1968,7 +1972,16 @@ def metricas_oauth_callback():
     )
 
     try:
-        flow.fetch_token(authorization_response=request.url.replace('http://', 'https://'))
+        # Corrige o http para https que fizemos antes
+        auth_response = request.url.replace('http://', 'https://')
+        
+        # Cria os argumentos para enviar ao Google
+        fetch_kwargs = {'authorization_response': auth_response}
+        if code_verifier:
+            fetch_kwargs['code_verifier'] = code_verifier
+            
+        # Pega o token final enviando o verifier junto
+        flow.fetch_token(**fetch_kwargs)
         creds = flow.credentials
 
         gsc_site = ""
