@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>E-mail Marketing | Leanttro</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
 <style>
 :root {
     --bg-body:      #f4f4f5;
@@ -396,7 +396,7 @@ body {
 
 <div class="sidebar">
     <div class="brand">
-        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
+        <img src="[https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png](https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png)" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
     </div>
     <div class="nav-menu">
@@ -554,6 +554,12 @@ body {
                 </div>
 
                 <div class="form-block">
+                    <label class="form-label">Agendamento (Opcional)</label>
+                    <input type="datetime-local" class="form-input" id="agendamentoInput">
+                    <div class="form-hint">Deixe vazio para disparar agora. A thread aguardará a hora exata.</div>
+                </div>
+
+                <div class="form-block">
                     <button class="ai-btn" onclick="generateCopy()">
                         <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                         Gerar assunto + corpo com IA (Groq)
@@ -586,7 +592,7 @@ body {
                     <label class="form-label">Corpo do E-mail (HTML)</label>
                     <textarea class="form-textarea" id="corpoInput" rows="8"
                         placeholder="Olá {nome},&#10;&#10;Vi que a empresa {empresa} pode se beneficiar de...&#10;&#10;Use {{imagem}} para inserir a imagem da arte gerada."></textarea>
-                    <div class="form-hint">Suporta HTML. Use <strong>{{imagem}}</strong> para imagem da Arte do Kanban no corpo.</div>
+                    <div class="form-hint">Suporta HTML. Links são rastreados automaticamente para cliques.</div>
                     <div class="vars-row">
                         <button class="var-chip" onclick="insertVar('corpo','{nome}')">+ {nome}</button>
                         <button class="var-chip" onclick="insertVar('corpo','{empresa}')">+ {empresa}</button>
@@ -641,7 +647,7 @@ body {
 
             </div><div class="tab-content" id="tab-historico">
                 <div class="page-title">Histórico de Envios</div>
-                <div class="page-sub">Registro de todos os e-mails disparados pelo sistema.</div>
+                <div class="page-sub">Registro de todos os e-mails disparados e rastreamento de aberturas/cliques.</div>
 
                 <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center;">
                     <button class="test-btn" onclick="loadHistory()">↺ Atualizar</button>
@@ -672,7 +678,7 @@ body {
 
                 <div class="config-card">
                     <div class="config-card-title">📧 Servidor SMTP</div>
-                    <div class="config-card-sub">Para Gmail: use smtp.gmail.com porta 587 com uma <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent);">Senha de App</a>.</div>
+                    <div class="config-card-sub">Para Gmail: use smtp.gmail.com porta 587 com uma <a href="[https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)" target="_blank" style="color:var(--accent);">Senha de App</a>.</div>
 
                     <div class="form-grid-2" style="margin-bottom:12px;">
                         <div>
@@ -982,6 +988,7 @@ async function iniciarDisparo() {
     const assunto = document.getElementById('assuntoInput').value.trim();
     const corpo   = document.getElementById('corpoInput').value.trim();
     const arteId  = document.getElementById('arteKanbanSelect').value;
+    const agendamento = document.getElementById('agendamentoInput').value;
 
     if (!assunto) { showToast('warning', 'Atenção', 'Preencha o assunto.'); return; }
     if (!corpo)   { showToast('warning', 'Atenção', 'Preencha o corpo do e-mail.'); return; }
@@ -1003,6 +1010,7 @@ async function iniciarDisparo() {
     fd.append('targets',   JSON.stringify(targets));
     fd.append('delay_min', delayMin);
     fd.append('delay_max', delayMax);
+    if (agendamento) fd.append('agendamento', Math.floor(new Date(agendamento).getTime() / 1000));
     if (anexoFile) fd.append('anexo', anexoFile);
     if (arteId) fd.append('arte_id', arteId);
     
@@ -1016,7 +1024,11 @@ async function iniciarDisparo() {
             lastLogCount = 0;
             showProgress(true);
             startPolling();
-            showToast('info', 'Disparo iniciado!', `${d.total} e-mails na fila.`);
+            if(agendamento) {
+                showToast('info', 'Disparo agendado!', `${d.total} e-mails na fila.`);
+            } else {
+                showToast('info', 'Disparo iniciado!', `${d.total} e-mails na fila.`);
+            }
         } else {
             showToast('error', 'Erro', d.error || 'Não foi possível iniciar o disparo.');
             document.getElementById('sendBtn').disabled = false;
@@ -1045,6 +1057,12 @@ async function pollJobStatus() {
         document.getElementById('progErrors').textContent   = d.errors;
         document.getElementById('cntSent').textContent      = d.sent;
         document.getElementById('cntErrors').textContent    = d.errors;
+
+        if (d.status === 'agendado') {
+            document.getElementById('progTitle').textContent = '⏳ Disparo Agendado... aguardando horário.';
+        } else if (d.status === 'running') {
+            document.getElementById('progTitle').textContent = 'Disparando...';
+        }
 
         const logEl = document.getElementById('progLog');
         const newLogs = d.log.slice(lastLogCount);
@@ -1083,7 +1101,7 @@ function showProgress(show) {
     const el = document.getElementById('disparoProgress');
     el.classList.toggle('show', show);
     if (show) {
-        document.getElementById('progTitle').textContent = 'Disparando...';
+        document.getElementById('progTitle').textContent = 'Iniciando...';
         document.getElementById('progressBar').style.width = '0%';
         document.getElementById('progSent').textContent   = '0';
         document.getElementById('progErrors').textContent = '0';
