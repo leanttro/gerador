@@ -413,7 +413,6 @@ body {
 </head>
 <body data-theme="light">
 
-<!-- ════ SIDEBAR ════ -->
 <div class="sidebar">
     <div class="brand">
         <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
@@ -451,7 +450,6 @@ body {
     </div>
 </div>
 
-<!-- ════ MAIN ════ -->
 <div class="main">
 
     <div class="topbar">
@@ -470,10 +468,8 @@ body {
 
     <div class="page-body">
 
-        <!-- ════ LEFT PANEL ════ -->
         <div class="left-panel">
 
-            <!-- Status SMTP -->
             <div class="panel-section">
                 <span class="section-label">Servidor de E-mail</span>
                 <div class="smtp-status">
@@ -482,7 +478,6 @@ body {
                 </div>
             </div>
 
-            <!-- Contadores -->
             <div class="panel-section">
                 <span class="section-label">Progresso do Disparo</span>
                 <div class="counters">
@@ -501,7 +496,6 @@ body {
                 </div>
             </div>
 
-            <!-- Filtros -->
             <div class="panel-section" style="padding-bottom: 12px;">
                 <span class="section-label">Filtrar Contatos</span>
                 <div class="filter-row">
@@ -526,13 +520,11 @@ body {
                 </div>
             </div>
 
-            <!-- Select bar -->
             <div class="select-bar">
                 <span id="selectInfo">0 contatos com e-mail</span>
                 <button onclick="toggleSelectAll()">Selecionar todos</button>
             </div>
 
-            <!-- Lista -->
             <div class="contacts-list" id="contactsList">
                 <div class="empty-state">
                     <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -540,25 +532,19 @@ body {
                 </div>
             </div>
 
-        </div><!-- /left-panel -->
+        </div><div class="right-panel">
 
-        <!-- ════ RIGHT PANEL ════ -->
-        <div class="right-panel">
-
-            <!-- Tabs -->
             <div class="tab-bar">
                 <button class="tab-btn active" onclick="switchTab('disparo')">📧 Disparo</button>
                 <button class="tab-btn" onclick="switchTab('historico')">📋 Histórico</button>
                 <button class="tab-btn" onclick="switchTab('config')">⚙ Configurações</button>
             </div>
 
-            <!-- ── TAB DISPARO ── -->
             <div class="tab-content active" id="tab-disparo">
 
                 <div class="page-title">Configurar Disparo</div>
                 <div class="page-sub">Selecione os contatos ao lado, configure a mensagem e dispare.</div>
 
-                <!-- Modo -->
                 <div class="form-block">
                     <label class="form-label">Modo de Disparo</label>
                     <div class="mode-tabs">
@@ -577,7 +563,6 @@ body {
                     </div>
                 </div>
 
-                <!-- Gerar com IA -->
                 <div class="form-block">
                     <button class="ai-btn" onclick="generateCopy()">
                         <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
@@ -588,7 +573,6 @@ body {
                     </div>
                 </div>
 
-                <!-- Assunto -->
                 <div class="form-block">
                     <label class="form-label">Assunto do E-mail</label>
                     <input type="text" class="form-input" id="assuntoInput"
@@ -600,7 +584,6 @@ body {
                     </div>
                 </div>
 
-                <!-- Corpo -->
                 <div class="form-block">
                     <label class="form-label">Corpo do E-mail (HTML)</label>
                     <textarea class="form-textarea" id="corpoInput" rows="8"
@@ -613,7 +596,6 @@ body {
                     </div>
                 </div>
 
-                <!-- Anexo -->
                 <div class="form-block">
                     <label class="form-label">Anexo (opcional)</label>
                     <div class="upload-zone" id="uploadZone">
@@ -629,13 +611,11 @@ body {
                     </div>
                 </div>
 
-                <!-- Botão disparar -->
                 <button class="send-btn" id="sendBtn" onclick="iniciarDisparo()">
                     <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Disparar E-mails
                 </button>
 
-                <!-- Progresso -->
                 <div class="disparo-progress" id="disparoProgress">
                     <div class="prog-header">
                         <span class="prog-title" id="progTitle">Disparando...</span>
@@ -661,10 +641,7 @@ body {
                     <div class="prog-log" id="progLog"></div>
                 </div>
 
-            </div><!-- /tab-disparo -->
-
-            <!-- ── TAB HISTÓRICO ── -->
-            <div class="tab-content" id="tab-historico">
+            </div><div class="tab-content" id="tab-historico">
                 <div class="page-title">Histórico de Envios</div>
                 <div class="page-sub">Registro de todos os e-mails disparados pelo sistema.</div>
 
@@ -690,10 +667,7 @@ body {
                         </tbody>
                     </table>
                 </div>
-            </div><!-- /tab-historico -->
-
-            <!-- ── TAB CONFIG ── -->
-            <div class="tab-content" id="tab-config">
+            </div><div class="tab-content" id="tab-config">
                 <div class="page-title">Configurações SMTP</div>
                 <div class="page-sub">Configure o servidor de e-mail para o disparo. Recomendamos Gmail com Senha de App.</div>
 
@@ -744,17 +718,18 @@ body {
                     <div class="form-hint" style="margin-top:8px;">Lote 50 em 4h usa delay fixo de ~288s independente desta config.</div>
                 </div>
 
-            </div><!-- /tab-config -->
-
-        </div><!-- /right-panel -->
-
-    </div><!-- /page-body -->
-
-</div><!-- /main -->
-
-<div class="toast-container" id="toastContainer"></div>
+            </div></div></div></div><div class="toast-container" id="toastContainer"></div>
 
 <script>
+/* ════════════════════════════════════════════
+   CONFIG DIRECTUS
+════════════════════════════════════════════ */
+const CONFIG = {
+    DIRECTUS_URL: "{{ directus_url }}",
+    DIRECTUS_TOKEN: "{{ directus_token }}",
+    DIRECTUS_TABLE: "{{ directus_table }}"
+};
+
 /* ════════════════════════════════════════════
    ESTADO
 ════════════════════════════════════════════ */
@@ -832,19 +807,37 @@ async function checkSmtpStatus() {
 }
 
 /* ════════════════════════════════════════════
-   CONTATOS
+   CONTATOS - INTEGRADO AO DIRECTUS
 ════════════════════════════════════════════ */
 async function loadContacts() {
+    if(!CONFIG.DIRECTUS_TOKEN || CONFIG.DIRECTUS_TOKEN === "" || CONFIG.DIRECTUS_TOKEN.includes("SEU_TOKEN")) {
+        document.getElementById('contactsList').innerHTML = '<div class="empty-state"><p>Erro: Directus não configurado no Dokploy.</p></div>';
+        return;
+    }
+
     try {
-        const r = await fetch('/api/crm/contacts');
-        const d = await r.json();
-        // Filtra apenas quem tem e-mail
-        allContacts = (d.contacts || []).filter(c => c.email && c.email.includes('@'));
-        filterContacts();
-        updateCounters();
-    } catch {
+        const url = `${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}?limit=-1`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
+        const data = await res.json();
+        
+        if (data.data) {
+            allContacts = data.data.map(c => ({
+                id: c.id,
+                nome: c.nome || '',
+                empresa: c.empresa || '',
+                whatsapp: c.telefone || '',
+                email: c.email || '',
+                origem: c.origem || 'Manual',
+                status: c.status || 'Novo'
+            })).filter(c => c.email && c.email.includes('@'));
+
+            filterContacts();
+            updateCounters();
+        }
+    } catch (e) {
+        console.error("Erro ao carregar contatos:", e);
         document.getElementById('contactsList').innerHTML =
-            '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Erro ao carregar contatos.</p></div>';
+            '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Erro ao carregar banco de dados.</p></div>';
     }
 }
 
@@ -1089,7 +1082,7 @@ async function pollJobStatus() {
 
             if (d.status === 'done') {
                 showToast('success', 'Concluído!', `${d.sent} enviados, ${d.errors} erros.`);
-                loadContacts(); // Recarrega para atualizar status
+                loadContacts(); 
             }
         }
     } catch(e) {
@@ -1169,7 +1162,6 @@ async function loadSmtpConfig() {
             document.getElementById('smtpHost').value = d.config.host || 'smtp.gmail.com';
             document.getElementById('smtpPort').value = d.config.port || 587;
             document.getElementById('smtpUser').value = d.config.user || '';
-            // Não carrega a senha por segurança
         }
     } catch(e) {}
 }
