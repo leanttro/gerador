@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WhatsApp Hub | Leanttro</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<link href="[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)" rel="stylesheet">
+<script src="[https://cdn.socket.io/4.7.2/socket.io.min.js](https://cdn.socket.io/4.7.2/socket.io.min.js)"></script>
 <style>
 :root {
     --bg-body:      #f4f4f5;
@@ -319,7 +319,7 @@ textarea { min-height: 110px; }
 
 <div class="sidebar">
     <div class="brand">
-        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
+        <img src="[https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png](https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png)" alt="Leanttro" class="brand-logo">
         <span class="brand-sub">Marketing OS</span>
     </div>
     <div class="nav-menu">
@@ -410,18 +410,18 @@ textarea { min-height: 110px; }
                 <div class="filter-row">
                     <select class="filter-select" id="filterStatus" onchange="filterContacts()">
                         <option value="">Todos os status</option>
-                        <option value="novo">Novo</option>
-                        <option value="quente">Quente</option>
-                        <option value="enviado">Enviado</option>
-                        <option value="convertido">Convertido</option>
+                        <option value="Novo">Novo</option>
+                        <option value="Quente">Quente</option>
+                        <option value="Cliente">Cliente</option>
+                        <option value="Enviado em Massa">Enviado</option>
                     </select>
                     <select class="filter-select" id="filterOrigem" onchange="filterContacts()">
                         <option value="">Todas as origens</option>
-                        <option value="maps">Google Maps</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="manual">Manual</option>
-                        <option value="csv">CSV</option>
+                        <option value="Google Maps">Google Maps</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="CSV">CSV</option>
+                        <option value="Manual">Manual</option>
                     </select>
                 </div>
             </div>
@@ -550,6 +550,12 @@ textarea { min-height: 110px; }
 </div>
 
 <script>
+const CONFIG = {
+    DIRECTUS_URL: "{{ directus_url }}",
+    DIRECTUS_TOKEN: "{{ directus_token }}",
+    DIRECTUS_TABLE: "{{ directus_table }}"
+};
+
 let allContacts    = [];
 let filteredList   = [];
 let selectedIds    = new Set();
@@ -572,9 +578,6 @@ function toggleTheme() {
 const savedTheme = localStorage.getItem('wl_theme');
 if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 
-// ─────────────────────────────────────────────
-// ALTERNAR TELAS
-// ─────────────────────────────────────────────
 function toggleView(view) {
     if(view === 'dispatch') {
         document.getElementById('viewDispatch').style.display = 'flex';
@@ -592,10 +595,7 @@ function toggleView(view) {
     }
 }
 
-// ─────────────────────────────────────────────
-// WEBSOCKET LOGIC (CHAT)
-// ─────────────────────────────────────────────
-const socket = io('https://wpp.leanttro.com');
+const socket = io('[https://wpp.leanttro.com](https://wpp.leanttro.com)');
 let chatHistory = {};
 let activeJid = null;
 
@@ -614,23 +614,19 @@ socket.on('nova_mensagem', (data) => {
     }
 });
 
-// NOVA FUNÇÃO: Busca o melhor nome para exibir
 function getContactDisplayName(jid, history) {
     const numLimpo = jid.split('@')[0];
 
-    // 1. Tenta achar no seu CRM (Lista de contatos da Leanttro)
     const crmContact = allContacts.find(c => c.whatsapp === numLimpo);
     if (crmContact && (crmContact.nome || crmContact.empresa)) {
         return crmContact.nome || crmContact.empresa;
     }
 
-    // 2. Tenta achar o nome público do WhatsApp (pushName)
     const msgComNome = history.find(m => m.pushName && !m.fromMe);
     if (msgComNome && msgComNome.pushName) {
         return msgComNome.pushName;
     }
 
-    // 3. Fallback: exibe o número limpo
     return numLimpo;
 }
 
@@ -691,10 +687,6 @@ function sendReply() {
     input.value = '';
 }
 
-
-// ─────────────────────────────────────────────
-// FUNÇÕES DE DISPARO
-// ─────────────────────────────────────────────
 async function checkChipStatus() {
     try {
         const r = await fetch('/api/wpp/status');
@@ -715,14 +707,40 @@ async function checkChipStatus() {
 }
 
 async function loadContacts() {
+    if(!CONFIG.DIRECTUS_TOKEN || CONFIG.DIRECTUS_TOKEN === "" || CONFIG.DIRECTUS_TOKEN.includes("SEU_TOKEN")) {
+        document.getElementById('contactsList').innerHTML = `<div class="empty-state"><p>Configure o Directus no .env</p></div>`;
+        return;
+    }
     try {
-        const r = await fetch('/api/crm/contacts');
-        const d = await r.json();
-        allContacts = (d.contacts || []).filter(c => c.whatsapp && c.whatsapp.trim() !== '');
-        filterContacts();
-        updateSelectInfo();
+        const url = `${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}?limit=-1`;
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
+        const data = await res.json();
+        
+        if (data.data) {
+            allContacts = data.data.map(c => ({
+                id: c.id,
+                nome: c.nome || '',
+                empresa: c.empresa || '',
+                whatsapp: c.telefone || '',
+                email: c.email || '',
+                origem: c.origem || 'Manual',
+                status: c.status || 'Novo'
+            })).filter(c => c.whatsapp && c.whatsapp.trim() !== '');
+
+            try {
+                const pre = localStorage.getItem('wpp_pre_selected');
+                if (pre) {
+                    const ids = JSON.parse(pre);
+                    ids.forEach(id => selectedIds.add(id));
+                    localStorage.removeItem('wpp_pre_selected');
+                }
+            } catch(e){}
+
+            filterContacts();
+            updateSelectInfo();
+        }
     } catch (e) {
-        document.getElementById('contactsList').innerHTML = '<div class="empty-state"><p>Erro ao carregar contatos.</p></div>';
+        document.getElementById('contactsList').innerHTML = '<div class="empty-state"><p>Erro ao carregar contatos do Directus.</p></div>';
     }
 }
 
@@ -933,11 +951,16 @@ async function startDispatch() {
                 sentToday++;
                 localStorage.setItem('wpp_sent_today', sentToday);
                 addLog('ok',  i+1, `Enviado → ${nomeFmt || numero} (${numero})`);
-                await fetch(`/api/crm/contacts/${contact.id}`, {
+                
+                await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}/${contact.id}`, {
                     method: 'PATCH',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ status: 'enviado' })
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'Enviado em Massa' })
                 });
+
             } else {
                 addLog('err', i+1, `Falha → ${numero}: ${d.error || 'Erro desconhecido'}`);
             }
