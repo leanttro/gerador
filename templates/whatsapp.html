@@ -572,6 +572,9 @@ function toggleTheme() {
 const savedTheme = localStorage.getItem('wl_theme');
 if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 
+// ─────────────────────────────────────────────
+// ALTERNAR TELAS
+// ─────────────────────────────────────────────
 function toggleView(view) {
     if(view === 'dispatch') {
         document.getElementById('viewDispatch').style.display = 'flex';
@@ -589,6 +592,9 @@ function toggleView(view) {
     }
 }
 
+// ─────────────────────────────────────────────
+// WEBSOCKET LOGIC (CHAT)
+// ─────────────────────────────────────────────
 const socket = io('https://wpp.leanttro.com');
 let chatHistory = {};
 let activeJid = null;
@@ -608,9 +614,30 @@ socket.on('nova_mensagem', (data) => {
     }
 });
 
+// NOVA FUNÇÃO: Busca o melhor nome para exibir
+function getContactDisplayName(jid, history) {
+    const numLimpo = jid.split('@')[0];
+
+    // 1. Tenta achar no seu CRM (Lista de contatos da Leanttro)
+    const crmContact = allContacts.find(c => c.whatsapp === numLimpo);
+    if (crmContact && (crmContact.nome || crmContact.empresa)) {
+        return crmContact.nome || crmContact.empresa;
+    }
+
+    // 2. Tenta achar o nome público do WhatsApp (pushName)
+    const msgComNome = history.find(m => m.pushName && !m.fromMe);
+    if (msgComNome && msgComNome.pushName) {
+        return msgComNome.pushName;
+    }
+
+    // 3. Fallback: exibe o número limpo
+    return numLimpo;
+}
+
 function selectChat(jid) {
     activeJid = jid;
-    document.getElementById('currentChatTitle').textContent = jid.split('@')[0];
+    const displayName = getContactDisplayName(jid, chatHistory[jid]);
+    document.getElementById('currentChatTitle').textContent = displayName;
     renderChatContacts();
     renderMessages();
 }
@@ -628,10 +655,12 @@ function renderChatContacts() {
         const history = chatHistory[jid];
         const lastMsg = history[history.length - 1].text || 'Mídia';
         const isActive = jid === activeJid ? 'background: var(--accent-bg);' : '';
+        const displayName = getContactDisplayName(jid, history);
+
         return `
         <div class="contact-item" style="${isActive}" onclick="selectChat('${jid}')">
             <div class="contact-info">
-                <div class="contact-name">${jid.split('@')[0]}</div>
+                <div class="contact-name">${displayName}</div>
                 <div class="contact-sub" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">${lastMsg}</div>
             </div>
         </div>`;
@@ -662,6 +691,10 @@ function sendReply() {
     input.value = '';
 }
 
+
+// ─────────────────────────────────────────────
+// FUNÇÕES DE DISPARO
+// ─────────────────────────────────────────────
 async function checkChipStatus() {
     try {
         const r = await fetch('/api/wpp/status');
