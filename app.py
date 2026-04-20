@@ -323,7 +323,7 @@ def api_generate():
     style_preset     = data.get('style_preset', 'dark')
     format_ratio     = data.get('format_ratio', '9:16')
     ai_engine        = data.get('ai_engine', 'groq')
-    generation_mode  = data.get('generation_mode', 'generate')
+    generation_mode  = data.get('generation_mode', 'generate')   # 'generate' ou 'replace'
 
     if not prompt:
         return jsonify({"success": False, "error": "Prompt não pode estar vazio"}), 400
@@ -578,7 +578,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not GEMINI_API_KEY:
                     return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
                 
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+                url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){GEMINI_API_KEY}"
                 payload = {
                     "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
                     "contents": [{"parts": [{"text": user_content_generate}]}],
@@ -596,7 +596,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not OPENROUTER_API_KEY:
                     return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
                 
-                url = "https://openrouter.ai/api/v1/chat/completions"
+                url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
                     "model": "google/gemini-2.0-flash-001",
@@ -1462,7 +1462,6 @@ def goals_relatorio():
         pdf_bytes = weasyprint.HTML(string=html).write_pdf()
         return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename=relatorio_leanttro_{mes}.pdf'})
     except Exception as e: return jsonify({"success": False, "error": str(e)}), 500
-
 
 SCOPES_ALL = ['[https://www.googleapis.com/auth/webmasters.readonly](https://www.googleapis.com/auth/webmasters.readonly)', '[https://www.googleapis.com/auth/analytics.readonly](https://www.googleapis.com/auth/analytics.readonly)']
 
