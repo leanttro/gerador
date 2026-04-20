@@ -1542,7 +1542,8 @@ def email_send_batch():
     # Pega dados do form (multipart por causa do anexo)
     assunto     = (request.form.get('assunto') or '').strip()
     corpo       = (request.form.get('corpo') or '').strip()
-    contact_ids = json.loads(request.form.get('contact_ids') or '[]')
+    # AGORA RECEBEMOS OS DADOS COMPLETOS DO CONTATO (NÃO SÓ O ID)
+    targets_json = request.form.get('targets')
     delay_min   = int(request.form.get('delay_min') or 30)
     delay_max   = int(request.form.get('delay_max') or 90)
 
@@ -1550,18 +1551,20 @@ def email_send_batch():
         return jsonify({"success": False, "error": "Assunto é obrigatório."}), 400
     if not corpo:
         return jsonify({"success": False, "error": "Corpo do e-mail é obrigatório."}), 400
-    if not contact_ids:
+    if not targets_json:
         return jsonify({"success": False, "error": "Selecione ao menos um contato."}), 400
 
     smtp_cfg = load_smtp_config()
     if not smtp_cfg.get('host') or not smtp_cfg.get('user') or not smtp_cfg.get('pass'):
         return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
 
-    # Filtro de contatos com e-mail
-    all_contacts = load_contacts()
-    contacts = [c for c in all_contacts if c.get('id') in contact_ids and c.get('email') and '@' in c.get('email', '')]
+    try:
+        contacts = json.loads(targets_json)
+    except json.JSONDecodeError:
+        return jsonify({"success": False, "error": "Erro ao ler a lista de destinatários."}), 400
+
     if not contacts:
-        return jsonify({"success": False, "error": "Nenhum contato selecionado tem e-mail válido."}), 400
+        return jsonify({"success": False, "error": "Nenhum contato válido selecionado."}), 400
 
     # Lida com anexo opcional
     anexo_bytes = None
@@ -1595,7 +1598,6 @@ def email_send_batch():
     t.start()
 
     return jsonify({"success": True, "job_id": job_id, "total": len(contacts)})
-
 
 @app.route('/api/email/job-status/<job_id>', methods=['GET'])
 def email_job_status(job_id):
