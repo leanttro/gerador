@@ -1,1 +1,1297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário de Objetivos | Sistema Operacional</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-body: #f4f4f5;
+        --bg-surface: #ffffff;
+        --text-main: #09090b;
+        --text-muted: #71717a;
+        --border: #e4e4e7;
+        --primary: #18181b;
+        --primary-bg: rgba(24, 24, 27, 0.05);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --blue: #3b82f6;
+        --purple: #8b5cf6;
+        --radius: 6px;
+        --radius-lg: 10px;
+        --shadow: 0 1px 3px rgba(0,0,0,0.05);
+        --transition: 0.2s ease;
+    }
 
+    [data-theme="dark"] {
+        --bg-body: #09090b;
+        --bg-surface: #121214;
+        --text-main: #fafafa;
+        --text-muted: #a1a1aa;
+        --border: #27272a;
+        --primary: #fafafa;
+        --primary-bg: rgba(250, 250, 250, 0.05);
+        --shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--bg-body);
+        color: var(--text-main);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        transition: background-color var(--transition), color var(--transition);
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+        width: 260px;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition: background-color var(--transition), border-color var(--transition);
+    }
+
+    .brand {
+        padding: 24px 24px 20px;
+        margin-bottom: 8px;
+    }
+
+    .brand-logo {
+        width: 130px;
+        height: auto;
+        display: block;
+        filter: brightness(0);
+        transition: filter var(--transition);
+    }
+
+    [data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
+
+    .brand-sub {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        margin-top: 8px;
+        display: block;
+    }
+
+    .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 0 12px;
+        flex: 1;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: var(--radius);
+        transition: all var(--transition);
+    }
+
+    .nav-link svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        fill: none;
+        flex-shrink: 0;
+    }
+
+    .nav-link:hover { color: var(--text-main); background: var(--bg-body); }
+    .nav-link.active { background: var(--primary-bg); color: var(--text-main); font-weight: 600; }
+
+    .sidebar-footer {
+        padding: 16px 12px;
+        border-top: 1px solid var(--border);
+    }
+
+    /* MAIN */
+    .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .topbar {
+        height: 56px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        flex-shrink: 0;
+    }
+
+    .topbar-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+    .theme-toggle {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        width: 34px;
+        height: 34px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        transition: all var(--transition);
+    }
+    .theme-toggle:hover { color: var(--text-main); }
+    .theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+    .icon-moon { display: none; }
+    [data-theme="dark"] .icon-sun { display: none; }
+    [data-theme="dark"] .icon-moon { display: block; }
+
+    .user-profile { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; }
+    .avatar {
+        width: 32px; height: 32px; border-radius: 50%;
+        background: var(--primary); color: var(--bg-surface);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700;
+    }
+    [data-theme="dark"] .avatar { background: var(--primary); color: var(--bg-body); }
+
+    /* CONTENT */
+    .content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        gap: 16px;
+    }
+
+    .page-header-left h1 {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+    }
+
+    .page-header-left p {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .page-header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* MÊS SELECTOR */
+    .mes-selector {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 6px 12px;
+    }
+
+    .mes-selector button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        padding: 2px;
+        border-radius: 4px;
+        transition: color var(--transition);
+    }
+    .mes-selector button:hover { color: var(--text-main); }
+    .mes-selector button svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .mes-selector span { font-size: 13px; font-weight: 600; min-width: 100px; text-align: center; }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all var(--transition);
+    }
+    .btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .btn-primary { background: var(--primary); color: var(--bg-surface); }
+    .btn-primary:hover { opacity: 0.85; }
+    [data-theme="dark"] .btn-primary { color: var(--bg-body); }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:hover { background: var(--primary-bg); }
+
+    /* STATS TOP */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        transition: all var(--transition);
+    }
+
+    .stat-card:hover { box-shadow: var(--shadow); }
+
+    .stat-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 26px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    .stat-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 4px;
+    }
+
+    /* METAS SECTION */
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+    }
+
+    .goals-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        margin-bottom: 28px;
+    }
+
+    .goal-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        transition: all var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .goal-card:hover { box-shadow: var(--shadow); }
+
+    .goal-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .goal-info { display: flex; align-items: center; gap: 10px; }
+
+    .goal-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .goal-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+    .goal-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .goal-tipo {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .goal-actions { display: flex; gap: 6px; }
+
+    .goal-edit-btn {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        transition: all var(--transition);
+    }
+    .goal-edit-btn:hover { color: var(--text-main); background: var(--primary-bg); }
+    .goal-edit-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .goal-progress-wrap { margin-bottom: 10px; }
+
+    .goal-numbers {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+    .goal-atual {
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1;
+    }
+
+    .goal-meta-text {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .progress-bar-bg {
+        height: 6px;
+        background: var(--bg-body);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    .goal-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+
+    .goal-pct {
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .goal-status-badge {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 99px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* CALENDÁRIO EDITORIAL */
+    .calendar-grid-wrap {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 28px;
+    }
+
+    .calendar-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        background: var(--primary-bg);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .cal-day-header {
+        padding: 10px;
+        text-align: center;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-muted);
+    }
+
+    .calendar-body {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+    }
+
+    .cal-cell {
+        min-height: 90px;
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 8px;
+        transition: background var(--transition);
+    }
+
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell:hover { background: var(--primary-bg); }
+    .cal-cell.other-month { opacity: 0.4; }
+    .cal-cell.today { background: var(--primary-bg); }
+    .cal-cell.today .cal-date { background: var(--primary); color: var(--bg-surface); }
+    [data-theme="dark"] .cal-cell.today .cal-date { color: var(--bg-body); }
+
+    .cal-date {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .cal-post {
+        background: var(--primary-bg);
+        border-left: 2px solid var(--primary);
+        border-radius: 3px;
+        padding: 3px 6px;
+        font-size: 10px;
+        font-weight: 500;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        transition: opacity var(--transition);
+    }
+    .cal-post:hover { opacity: 0.7; }
+
+    /* MODAL */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        width: 100%;
+        max-width: 440px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    .modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .modal-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .form-select, .form-input {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 13px;
+        color: var(--text-main);
+        font-family: inherit;
+        transition: border-color var(--transition);
+    }
+    .form-select:focus, .form-input:focus { outline: none; border-color: var(--primary); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+    /* TOAST */
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--primary);
+        color: var(--bg-surface);
+        padding: 12px 20px;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 2000;
+        transform: translateY(80px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+    [data-theme="dark"] .toast { color: var(--bg-body); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* LOADING */
+    .loading-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 40px;
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .spinner {
+        width: 18px;
+        height: 18px;
+        border: 2px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* EMPTY */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+    .empty-state svg { width: 40px; height: 40px; stroke: var(--border); fill: none; stroke-width: 1; margin-bottom: 12px; }
+    .empty-state p { font-size: 13px; margin-bottom: 16px; }
+
+    /* SCROLLBAR */
+    .content::-webkit-scrollbar { width: 4px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* RELATORIO BTN */
+    .relatorio-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: var(--radius);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-muted);
+        transition: all var(--transition);
+    }
+    .relatorio-btn:hover { color: var(--text-main); background: var(--primary-bg); }
+    .relatorio-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">
+        <img src="/static/logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+        <span class="brand-sub">Sistema Operacional</span>
+    </div>
+    <nav class="nav-menu">
+        <a href="/home" class="nav-link">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Dashboard
+        </a>
+        <a href="/conteudo" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            Conteúdo
+        </a>
+        <a href="/criacao" class="nav-link">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Criação
+        </a>
+        <a href="/prospeccao" class="nav-link">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+            Prospecção
+        </a>
+        <a href="/whatsapp" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            WhatsApp
+        </a>
+        <a href="/email" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            E-mail
+        </a>
+        <a href="/calendario" class="nav-link active">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            Objetivos
+        </a>
+        <a href="/metricas" class="nav-link">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            Métricas
+        </a>
+    </nav>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <div class="topbar-title">SISTEMA OPERACIONAL DEDICADO</div>
+        <div class="topbar-right">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <div class="user-profile">
+                <span id="workspace-nome">Carregando...</span>
+                <div class="avatar" id="workspace-avatar">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <!-- HEADER -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <h1>Calendário de Objetivos</h1>
+                <p>Acompanhe metas mensais e o calendário editorial do seu time.</p>
+            </div>
+            <div class="page-header-right">
+                <div class="mes-selector">
+                    <button onclick="mudarMes(-1)" title="Mês anterior">
+                        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <span id="mes-label">Carregando...</span>
+                    <button onclick="mudarMes(1)" title="Próximo mês">
+                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                </div>
+                <button class="relatorio-btn" onclick="gerarRelatorio()">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    Relatório PDF
+                </button>
+                <button class="btn btn-primary" onclick="abrirModalNovaMeta()">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Nova Meta
+                </button>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="loading-state" style="grid-column: 1/-1"><div class="spinner"></div> Carregando resumo...</div>
+        </div>
+
+        <!-- METAS -->
+        <div class="section-header">
+            <span class="section-title">Metas do Mês</span>
+        </div>
+        <div class="goals-grid" id="goals-grid">
+            <div class="loading-state" style="grid-column: 1/-1"><div class="spinner"></div> Carregando metas...</div>
+        </div>
+
+        <!-- CALENDÁRIO EDITORIAL -->
+        <div class="section-header">
+            <span class="section-title">Calendário Editorial</span>
+        </div>
+        <div class="calendar-grid-wrap">
+            <div class="calendar-header">
+                <div class="cal-day-header">Dom</div>
+                <div class="cal-day-header">Seg</div>
+                <div class="cal-day-header">Ter</div>
+                <div class="cal-day-header">Qua</div>
+                <div class="cal-day-header">Qui</div>
+                <div class="cal-day-header">Sex</div>
+                <div class="cal-day-header">Sáb</div>
+            </div>
+            <div class="calendar-body" id="calendar-body">
+                <div class="loading-state" style="grid-column: 1/-1"><div class="spinner"></div> Carregando calendário...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL NOVA META -->
+<div class="modal-overlay" id="modal-meta">
+    <div class="modal">
+        <div class="modal-title" id="modal-meta-title">Nova Meta</div>
+        <div class="modal-sub">Defina uma meta para acompanhar o progresso do mês.</div>
+
+        <input type="hidden" id="meta-id-edit">
+
+        <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" id="meta-tipo">
+                <option value="posts">📝 Posts publicados</option>
+                <option value="disparos">🚀 Disparos (WhatsApp + E-mail)</option>
+                <option value="leads">🎯 Leads capturados</option>
+                <option value="faturamento">💰 Faturamento (R$)</option>
+                <option value="acessos_site">🌐 Acessos ao site</option>
+            </select>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Meta</label>
+                <input type="number" class="form-input" id="meta-valor" placeholder="Ex: 20" min="0">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Atual (opcional)</label>
+                <input type="number" class="form-input" id="meta-atual" placeholder="Deixe 0 para auto" min="0">
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="fecharModal('modal-meta')">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarMeta()">Salvar Meta</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const DIRECTUS_URL = 'https://directus2.leanttro.com';
+const DIRECTUS_TOKEN = '{{ directus_token }}';
+const DIRECTUS_TABLE = '{{ directus_table }}'; // workspace_id do cliente
+
+// Data de referência
+let mesAtual = new Date();
+mesAtual.setDate(1);
+
+// Cache de posts do Directus
+let postsCache = [];
+
+// ─────────────────────────────────────────────
+// UTILITÁRIOS
+// ─────────────────────────────────────────────
+function getMesAno(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+}
+
+function getMesLabel(date) {
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+        .replace(/^\w/, c => c.toUpperCase());
+}
+
+function showToast(msg, duration = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toggleTheme() {
+    const body = document.body;
+    const isDark = body.getAttribute('data-theme') === 'dark';
+    body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    localStorage.setItem('wl_theme', isDark ? 'light' : 'dark');
+}
+
+const savedTheme = localStorage.getItem('wl_theme');
+if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+
+// ─────────────────────────────────────────────
+// DIRECTUS API
+// ─────────────────────────────────────────────
+async function directusGet(endpoint) {
+    const res = await fetch(`${DIRECTUS_URL}${endpoint}`, {
+        headers: { 'Authorization': `Bearer ${DIRECTUS_TOKEN}` }
+    });
+    if (!res.ok) throw new Error(`Directus ${res.status}`);
+    return res.json();
+}
+
+async function directusPost(endpoint, body) {
+    const res = await fetch(`${DIRECTUS_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${DIRECTUS_TOKEN}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`Directus ${res.status}`);
+    return res.json();
+}
+
+async function directusPatch(endpoint, body) {
+    const res = await fetch(`${DIRECTUS_URL}${endpoint}`, {
+        method: 'PATCH',
+        headers: {
+            'Authorization': `Bearer ${DIRECTUS_TOKEN}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`Directus ${res.status}`);
+    return res.json();
+}
+
+async function directusDelete(endpoint) {
+    const res = await fetch(`${DIRECTUS_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${DIRECTUS_TOKEN}` }
+    });
+    return res.ok;
+}
+
+// ─────────────────────────────────────────────
+// CARREGAR WORKSPACE
+// ─────────────────────────────────────────────
+async function carregarWorkspace() {
+    try {
+        const data = await directusGet(`/items/workspaces/${DIRECTUS_TABLE}`);
+        const ws = data.data;
+        if (ws) {
+            document.getElementById('workspace-nome').textContent = ws.nome || 'Workspace';
+            const initials = (ws.nome || 'WS').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+            document.getElementById('workspace-avatar').textContent = initials;
+        }
+    } catch (e) {
+        // fallback silencioso
+        document.getElementById('workspace-nome').textContent = 'Sistema';
+    }
+}
+
+// ─────────────────────────────────────────────
+// PROGRESSO AUTOMÁTICO via Flask
+// ─────────────────────────────────────────────
+async function getProgressoAuto(tipo, mesAno) {
+    try {
+        const res = await fetch(`/api/goals/progresso?tipo=${tipo}&mes=${mesAno}`);
+        const data = await res.json();
+        return data.success ? data.valor : 0;
+    } catch {
+        return 0;
+    }
+}
+
+// ─────────────────────────────────────────────
+// CARREGAR METAS
+// ─────────────────────────────────────────────
+async function carregarMetas() {
+    const mesAno = getMesAno(mesAtual);
+    document.getElementById('goals-grid').innerHTML = `<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div> Carregando metas...</div>`;
+
+    try {
+        const workspaceId = DIRECTUS_TABLE;
+        const data = await directusGet(
+            `/items/goals?filter[workspace_id][_eq]=${workspaceId}&filter[mes_ano][_eq]=${mesAno}&limit=20`
+        );
+
+        const metas = data.data || [];
+
+        if (metas.length === 0) {
+            document.getElementById('goals-grid').innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <p>Nenhuma meta cadastrada para este mês.</p>
+                    <button class="btn btn-primary" onclick="abrirModalNovaMeta()">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Criar primeira meta
+                    </button>
+                </div>`;
+            renderStats([]);
+            return;
+        }
+
+        // Para cada meta, pegar valor_atual auto se não tiver
+        for (const meta of metas) {
+            if (!meta.valor_atual || meta.valor_atual === 0) {
+                meta.valor_atual = await getProgressoAuto(meta.tipo, mesAno);
+            }
+        }
+
+        renderMetas(metas);
+        renderStats(metas);
+
+    } catch (e) {
+        document.getElementById('goals-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>Erro ao carregar metas. Verifique a tabela "goals" no Directus.</p></div>`;
+        console.error(e);
+    }
+}
+
+// ─────────────────────────────────────────────
+// RENDER METAS
+// ─────────────────────────────────────────────
+const TIPO_CONFIG = {
+    posts:        { label: 'Posts Publicados',   icon: `<svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+    disparos:     { label: 'Disparos Realizados', icon: `<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+    leads:        { label: 'Leads Capturados',    icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>`, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+    faturamento:  { label: 'Faturamento (R$)',     icon: `<svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    acessos_site: { label: 'Acessos ao Site',     icon: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+};
+
+function renderMetas(metas) {
+    const grid = document.getElementById('goals-grid');
+
+    if (metas.length === 0) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><p>Nenhuma meta para este mês.</p></div>`;
+        return;
+    }
+
+    grid.innerHTML = metas.map(meta => {
+        const cfg = TIPO_CONFIG[meta.tipo] || TIPO_CONFIG['posts'];
+        const pct = Math.min(Math.round((meta.valor_atual / meta.valor_meta) * 100), 200);
+        const pctBar = Math.min(pct, 100);
+
+        let statusLabel, statusColor, statusBg;
+        if (pct >= 100) {
+            statusLabel = '✅ Atingido'; statusColor = '#10b981'; statusBg = 'rgba(16,185,129,0.1)';
+        } else if (pct >= 60) {
+            statusLabel = '🔄 Em andamento'; statusColor = '#f59e0b'; statusBg = 'rgba(245,158,11,0.1)';
+        } else {
+            statusLabel = '⚠️ Abaixo'; statusColor = '#ef4444'; statusBg = 'rgba(239,68,68,0.1)';
+        }
+
+        const valorAtualFmt = meta.tipo === 'faturamento'
+            ? `R$ ${Number(meta.valor_atual).toLocaleString('pt-BR')}`
+            : Number(meta.valor_atual).toLocaleString('pt-BR');
+
+        const valorMetaFmt = meta.tipo === 'faturamento'
+            ? `R$ ${Number(meta.valor_meta).toLocaleString('pt-BR')}`
+            : Number(meta.valor_meta).toLocaleString('pt-BR');
+
+        return `
+        <div class="goal-card">
+            <div class="goal-card-header">
+                <div class="goal-info">
+                    <div class="goal-icon" style="background:${cfg.bg}; color:${cfg.color}">${cfg.icon}</div>
+                    <div>
+                        <div class="goal-name">${cfg.label}</div>
+                        <div class="goal-tipo">${getMesLabel(mesAtual)}</div>
+                    </div>
+                </div>
+                <div class="goal-actions">
+                    <button class="goal-edit-btn" onclick="editarMeta('${meta.id}')" title="Editar">
+                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="goal-edit-btn" onclick="deletarMeta('${meta.id}')" title="Excluir" style="color:var(--danger)">
+                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="goal-progress-wrap">
+                <div class="goal-numbers">
+                    <span class="goal-atual" style="color:${cfg.color}">${valorAtualFmt}</span>
+                    <span class="goal-meta-text">meta: ${valorMetaFmt}</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width:${pctBar}%; background:${cfg.color}"></div>
+                </div>
+            </div>
+            <div class="goal-footer">
+                <span class="goal-pct" style="color:${statusColor}">${pct}%</span>
+                <span class="goal-status-badge" style="color:${statusColor}; background:${statusBg}">${statusLabel}</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─────────────────────────────────────────────
+// RENDER STATS
+// ─────────────────────────────────────────────
+function renderStats(metas) {
+    const atingidas = metas.filter(m => (m.valor_atual / m.valor_meta) >= 1).length;
+    const total = metas.length;
+    const taxaSucesso = total > 0 ? Math.round((atingidas / total) * 100) : 0;
+
+    const totalDisparos = metas.find(m => m.tipo === 'disparos');
+    const totalLeads = metas.find(m => m.tipo === 'leads');
+    const totalPosts = metas.find(m => m.tipo === 'posts');
+
+    document.getElementById('stats-grid').innerHTML = `
+        <div class="stat-card">
+            <div class="stat-label">Metas Ativas</div>
+            <div class="stat-value">${total}</div>
+            <div class="stat-sub">${getMesLabel(mesAtual)}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Metas Atingidas</div>
+            <div class="stat-value" style="color:#10b981">${atingidas}</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:#10b981"></span>Taxa: ${taxaSucesso}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Posts</div>
+            <div class="stat-value">${totalPosts ? Number(totalPosts.valor_atual).toLocaleString('pt-BR') : '—'}</div>
+            <div class="stat-sub">${totalPosts ? `meta: ${Number(totalPosts.valor_meta).toLocaleString('pt-BR')}` : 'Sem meta'}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Disparos</div>
+            <div class="stat-value">${totalDisparos ? Number(totalDisparos.valor_atual).toLocaleString('pt-BR') : '—'}</div>
+            <div class="stat-sub">${totalDisparos ? `meta: ${Number(totalDisparos.valor_meta).toLocaleString('pt-BR')}` : 'Sem meta'}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Leads</div>
+            <div class="stat-value">${totalLeads ? Number(totalLeads.valor_atual).toLocaleString('pt-BR') : '—'}</div>
+            <div class="stat-sub">${totalLeads ? `meta: ${Number(totalLeads.valor_meta).toLocaleString('pt-BR')}` : 'Sem meta'}</div>
+        </div>`;
+}
+
+// ─────────────────────────────────────────────
+// CALENDÁRIO EDITORIAL
+// ─────────────────────────────────────────────
+async function carregarCalendario() {
+    document.getElementById('calendar-body').innerHTML = `<div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div> Carregando posts...</div>`;
+
+    const ano = mesAtual.getFullYear();
+    const mes = mesAtual.getMonth() + 1;
+    const mesStr = String(mes).padStart(2, '0');
+    const dataInicio = `${ano}-${mesStr}-01`;
+    const dataFim = `${ano}-${mesStr}-31`;
+
+    try {
+        const workspaceId = DIRECTUS_TABLE;
+        const data = await directusGet(
+            `/items/content_cards?filter[workspace_id][_eq]=${workspaceId}&filter[data_publicacao][_between]=${dataInicio},${dataFim}&limit=100&sort=data_publicacao`
+        );
+        postsCache = data.data || [];
+        renderCalendario(postsCache);
+    } catch (e) {
+        // Tenta sem filtro de workspace (compatibilidade)
+        postsCache = [];
+        renderCalendario([]);
+    }
+}
+
+function renderCalendario(posts) {
+    const ano = mesAtual.getFullYear();
+    const mes = mesAtual.getMonth();
+    const hoje = new Date();
+
+    // Primeiro dia do mês e quantos dias
+    const primeiroDia = new Date(ano, mes, 1).getDay();
+    const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+
+    // Agrupar posts por dia
+    const postsPorDia = {};
+    for (const post of posts) {
+        if (!post.data_publicacao) continue;
+        const dia = new Date(post.data_publicacao).getDate();
+        if (!postsPorDia[dia]) postsPorDia[dia] = [];
+        postsPorDia[dia].push(post);
+    }
+
+    // Dias do mês anterior para completar
+    const diasMesAnterior = new Date(ano, mes, 0).getDate();
+
+    let cells = '';
+
+    // Preencher dias do mês anterior
+    for (let i = primeiroDia - 1; i >= 0; i--) {
+        cells += `<div class="cal-cell other-month"><div class="cal-date">${diasMesAnterior - i}</div></div>`;
+    }
+
+    // Dias do mês atual
+    for (let d = 1; d <= diasNoMes; d++) {
+        const isHoje = hoje.getFullYear() === ano && hoje.getMonth() === mes && hoje.getDate() === d;
+        const posts_dia = postsPorDia[d] || [];
+
+        const postItems = posts_dia.slice(0, 3).map(p => {
+            const tipo = p.tipo_post || 'Post';
+            const titulo = p.titulo || 'Sem título';
+            const cor = tipo === 'Reels' ? '#8b5cf6' : tipo === 'Carrossel' ? '#3b82f6' : '#10b981';
+            return `<div class="cal-post" style="border-left-color:${cor}" title="${titulo}">${titulo.substring(0, 20)}</div>`;
+        }).join('');
+
+        const mais = posts_dia.length > 3 ? `<div style="font-size:10px;color:var(--text-muted);padding:2px 6px">+${posts_dia.length - 3} mais</div>` : '';
+
+        cells += `
+            <div class="cal-cell ${isHoje ? 'today' : ''}">
+                <div class="cal-date">${d}</div>
+                ${postItems}${mais}
+            </div>`;
+    }
+
+    // Completar última semana
+    const totalCells = primeiroDia + diasNoMes;
+    const restante = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= restante; i++) {
+        cells += `<div class="cal-cell other-month"><div class="cal-date">${i}</div></div>`;
+    }
+
+    document.getElementById('calendar-body').innerHTML = cells;
+}
+
+// ─────────────────────────────────────────────
+// MÊS
+// ─────────────────────────────────────────────
+function mudarMes(delta) {
+    mesAtual.setMonth(mesAtual.getMonth() + delta);
+    document.getElementById('mes-label').textContent = getMesLabel(mesAtual);
+    carregarMetas();
+    carregarCalendario();
+}
+
+// ─────────────────────────────────────────────
+// MODAL NOVA META
+// ─────────────────────────────────────────────
+function abrirModalNovaMeta() {
+    document.getElementById('modal-meta-title').textContent = 'Nova Meta';
+    document.getElementById('meta-id-edit').value = '';
+    document.getElementById('meta-tipo').value = 'posts';
+    document.getElementById('meta-valor').value = '';
+    document.getElementById('meta-atual').value = '';
+    abrirModal('modal-meta');
+}
+
+async function editarMeta(id) {
+    try {
+        const data = await directusGet(`/items/goals/${id}`);
+        const meta = data.data;
+        document.getElementById('modal-meta-title').textContent = 'Editar Meta';
+        document.getElementById('meta-id-edit').value = meta.id;
+        document.getElementById('meta-tipo').value = meta.tipo;
+        document.getElementById('meta-valor').value = meta.valor_meta;
+        document.getElementById('meta-atual').value = meta.valor_atual || '';
+        abrirModal('modal-meta');
+    } catch {
+        showToast('Erro ao carregar meta.');
+    }
+}
+
+async function salvarMeta() {
+    const id = document.getElementById('meta-id-edit').value;
+    const tipo = document.getElementById('meta-tipo').value;
+    const valorMeta = parseFloat(document.getElementById('meta-valor').value);
+    const valorAtual = parseFloat(document.getElementById('meta-atual').value) || 0;
+
+    if (!tipo || isNaN(valorMeta) || valorMeta <= 0) {
+        showToast('Preencha todos os campos corretamente.');
+        return;
+    }
+
+    const mesAno = getMesAno(mesAtual);
+    const workspaceId = DIRECTUS_TABLE;
+
+    const body = { workspace_id: workspaceId, mes_ano: mesAno, tipo, valor_meta: valorMeta, valor_atual: valorAtual };
+
+    try {
+        if (id) {
+            await directusPatch(`/items/goals/${id}`, body);
+            showToast('Meta atualizada com sucesso!');
+        } else {
+            await directusPost('/items/goals', body);
+            showToast('Meta criada com sucesso!');
+        }
+        fecharModal('modal-meta');
+        carregarMetas();
+    } catch (e) {
+        showToast('Erro ao salvar. Verifique se a tabela "goals" existe no Directus.');
+        console.error(e);
+    }
+}
+
+async function deletarMeta(id) {
+    if (!confirm('Tem certeza que deseja excluir esta meta?')) return;
+    try {
+        await directusDelete(`/items/goals/${id}`);
+        showToast('Meta excluída.');
+        carregarMetas();
+    } catch {
+        showToast('Erro ao excluir meta.');
+    }
+}
+
+// ─────────────────────────────────────────────
+// RELATÓRIO PDF
+// ─────────────────────────────────────────────
+async function gerarRelatorio() {
+    showToast('Gerando relatório... aguarde.');
+    try {
+        const mesAno = getMesAno(mesAtual);
+        const res = await fetch(`/api/goals/relatorio?mes=${mesAno}`);
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `relatorio_${mesAno}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch {
+        showToast('Relatório em breve — rota /api/goals/relatorio ainda não implementada.');
+    }
+}
+
+// ─────────────────────────────────────────────
+// FECHAR MODAL AO CLICAR FORA
+// ─────────────────────────────────────────────
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('open');
+    });
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+document.getElementById('mes-label').textContent = getMesLabel(mesAtual);
+carregarWorkspace();
+carregarMetas();
+carregarCalendario();
+</script>
+</body>
+</html>
