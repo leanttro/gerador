@@ -8,20 +8,33 @@ import smtplib
 import requests
 import urllib.parse
 import re
+import csv
+import io
+import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email import encoders
-from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response, redirect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
 from werkzeug.utils import secure_filename
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
 
-# ─────────────────────────────────────────────
-# CONFIGURAÇÕES BASE
-# ─────────────────────────────────────────────
+try:
+    import imgkit
+except ImportError:
+    imgkit = None
+
+try:
+    import weasyprint
+except ImportError:
+    weasyprint = None
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 HTML_TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'html_templates')
@@ -39,14 +52,18 @@ limiter = Limiter(
     default_limits=["1000 per day", "200 per hour"]
 )
 
-# ─────────────────────────────────────────────
-# CHAVES DE API
-# ─────────────────────────────────────────────
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
+DIRECTUS_URL = os.environ.get("DIRECTUS_URL", "")
+DIRECTUS_TOKEN = os.environ.get("DIRECTUS_TOKEN", "")
+DIRECTUS_TABLE = os.environ.get("DIRECTUS_TABLE", "")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "https://seuapp.com/api/metricas/oauth/callback")
+GA4_PROPERTY_ID = os.environ.get("GA4_PROPERTY_ID", "")
 
 BEST_FREE_MODEL = "llama-3.3-70b-versatile"
 
@@ -55,32 +72,22 @@ if GROQ_API_KEY:
 else:
     groq_client = None
 
-# Histórico de versões em memória (por session_id)
 version_history: dict[str, list[dict]] = {}
 
-# ─────────────────────────────────────────────
-# CONFIGURAÇÃO DO BAILEYS (WhatsApp)
-# ─────────────────────────────────────────────
 BAILEYS_URL = os.environ.get("BAILEYS_URL", "http://213.199.56.207:3000")
 
-# ─────────────────────────────────────────────
-# UTILITÁRIOS
-# ─────────────────────────────────────────────
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 if not os.path.exists(HTML_TEMPLATES_FOLDER):
     os.makedirs(HTML_TEMPLATES_FOLDER)
 
-
 def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 def get_media_type(filename: str) -> str:
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
     return 'video' if ext in {'mp4', 'webm'} else 'image'
-
 
 def cleanup_old_uploads(max_age_hours: int = 24):
     try:
@@ -94,14 +101,15 @@ def cleanup_old_uploads(max_age_hours: int = 24):
     except Exception as e:
         print(f"[cleanup] Erro: {e}")
 
-
 def get_session_id(req) -> str:
     return req.headers.get('X-Session-ID', 'default')
 
+def get_directus_headers():
+    return {
+        "Authorization": f"Bearer {DIRECTUS_TOKEN}",
+        "Content-Type": "application/json"
+    }
 
-# ─────────────────────────────────────────────
-# ROTAS PRINCIPAIS
-# ─────────────────────────────────────────────
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -121,33 +129,28 @@ def criacao():
 @app.route('/prospeccao')
 def prospeccao():
     return render_template('prospeccao.html', 
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", ""),
-        serper_api_key=os.environ.get("SERPER_API_KEY", "")
+        directus_url=DIRECTUS_URL,
+        directus_token=DIRECTUS_TOKEN,
+        directus_table=DIRECTUS_TABLE,
+        serper_api_key=SERPER_API_KEY
     )
 
 @app.route('/whatsapp')
 def whatsapp():
     return render_template('whatsapp.html',
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+        directus_url=DIRECTUS_URL,
+        directus_token=DIRECTUS_TOKEN,
+        directus_table=DIRECTUS_TABLE
     )
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-
 @app.route('/html_templates/<path:filename>')
 def serve_html_templates(filename):
     return send_from_directory(HTML_TEMPLATES_FOLDER, filename)
 
-
-# ─────────────────────────────────────────────
-# UPLOAD DE ASSETS
-# ─────────────────────────────────────────────
 @app.route('/api/upload', methods=['POST'])
 @limiter.limit("60 per minute")
 def api_upload():
@@ -195,10 +198,6 @@ def api_upload():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# BUSCA NO PIXABAY
-# ─────────────────────────────────────────────
 @app.route('/api/pixabay', methods=['POST'])
 @limiter.limit("30 per minute")
 def api_pixabay():
@@ -227,10 +226,6 @@ def api_pixabay():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# NOVA ROTA: INSPIRAÇÕES VIA SERPER
-# ─────────────────────────────────────────────
 @app.route('/api/inspirations', methods=['POST'])
 @limiter.limit("20 per minute")
 def api_inspirations():
@@ -242,7 +237,6 @@ def api_inspirations():
     if not niche:
         return jsonify({"success": False, "error": "Nicho não informado."}), 400
 
-    # Construção da query para buscar ideias de posts orientadas ao criador/negócio
     query = f"ideias de posts para negócio de {niche} criador de conteúdo instagram dicas simples"
     url = "https://google.serper.dev/search"
     headers = {
@@ -264,7 +258,6 @@ def api_inspirations():
             title = item.get("title", "")
             snippet = item.get("snippet", "")
             link = item.get("link", "")
-            # Classificação simples pelo título/snippet
             lower_text = (title + " " + snippet).lower()
             if "reels" in lower_text or " reel " in lower_text:
                 post_type = "Reels"
@@ -280,7 +273,6 @@ def api_inspirations():
                 "link": link
             })
 
-        # Camada de IA: reformula os snippets brutos como ideias práticas para o criador/empresário
         if inspos and groq_client:
             raw_snippets = "\n".join([f"- {i['title']}: {i['snippet']}" for i in inspos])
             try:
@@ -315,16 +307,12 @@ def api_inspirations():
                     for i in ideias
                 ]
             except Exception:
-                pass  # fallback: mantém os inspos originais do Serper
+                pass 
 
         return jsonify({"success": True, "inspirations": inspos})
     except Exception as e:
         return jsonify({"success": False, "error": f"Erro na busca: {str(e)}"}), 500
 
-
-# ─────────────────────────────────────────────
-# GERAÇÃO DE HTML VIA IA (UNIFICADA)
-# ─────────────────────────────────────────────
 @app.route('/api/generate', methods=['POST'])
 @limiter.limit("25 per minute")
 def api_generate():
@@ -335,7 +323,7 @@ def api_generate():
     style_preset     = data.get('style_preset', 'dark')
     format_ratio     = data.get('format_ratio', '9:16')
     ai_engine        = data.get('ai_engine', 'groq')
-    generation_mode  = data.get('generation_mode', 'generate')   # 'generate' ou 'replace'
+    generation_mode  = data.get('generation_mode', 'generate')
 
     if not prompt:
         return jsonify({"success": False, "error": "Prompt não pode estar vazio"}), 400
@@ -343,14 +331,10 @@ def api_generate():
     if len(prompt) > 3000:
         return jsonify({"success": False, "error": "Prompt muito longo. Máximo: 3000 caracteres"}), 400
 
-    # ─────────────────────────────────────────────────────────────────
-    # MODO REPLACE (substituição exata de variáveis CHAVE_)
-    # ─────────────────────────────────────────────────────────────────
     if generation_mode == "replace":
         if not previous_code:
             return jsonify({"success": False, "error": "Modo 'replace' exige um template base (previous_code)."}), 400
 
-        # Mapeamento de estilos para guia de cores (usado pela IA para gerar JSON)
         style_guides = {
             'dark':      'Cores HEX para paleta escura premium. Pretos profundos, cinzas e acentos neon.',
             'neon':      'Cores HEX para paleta neon vibrante. Roxo, rosa, azul elétrico em fundo preto absoluto.',
@@ -425,7 +409,7 @@ Regras de processamento
                 except (KeyError, IndexError):
                     raise Exception(f"Erro na resposta do OpenRouter: {res}")
 
-            else:  # groq
+            else: 
                 if not groq_client:
                     return jsonify({"success": False, "error": "Chave Groq ausente"}), 400
 
@@ -441,7 +425,6 @@ Regras de processamento
                 generated_json_str = response.choices[0].message.content
                 tokens_used = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
 
-            # Limpeza rigorosa para evitar falha de parse JSON
             generated_json_str = generated_json_str.strip()
             if generated_json_str.startswith("```json"):
                 generated_json_str = generated_json_str[7:]
@@ -460,11 +443,9 @@ Regras de processamento
             for chave, valor in substituicoes.items():
                 html_final = html_final.replace(str(chave), str(valor))
 
-            # Garante substituição de CHAVE_PROPORCAO com o formato selecionado
             if 'CHAVE_PROPORCAO' in html_final:
                 html_final = html_final.replace('CHAVE_PROPORCAO', format_ratio)
 
-            # Salvar no histórico
             session_id = get_session_id(request)
             if session_id not in version_history:
                 version_history[session_id] = []
@@ -503,9 +484,6 @@ Regras de processamento
                 msg = f"Erro no replace: {error_msg}"
             return jsonify({"success": False, "error": msg}), 500
 
-    # ─────────────────────────────────────────────────────────────────
-    # MODO GENERATE (criação livre, igual ao original)
-    # ─────────────────────────────────────────────────────────────────
     else:
         style_guides = {
             'dark':      'Paleta escura premium (pretos profundos, cinzas, acentos neon sutis), estilo Motor Dark Studio',
@@ -600,7 +578,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not GEMINI_API_KEY:
                     return jsonify({"success": False, "error": "GEMINI_API_KEY ausente no servidor"}), 400
                 
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+                url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=){GEMINI_API_KEY}"
                 payload = {
                     "systemInstruction": {"parts": [{"text": system_prompt_generate}]},
                     "contents": [{"parts": [{"text": user_content_generate}]}],
@@ -618,7 +596,7 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 if not OPENROUTER_API_KEY:
                     return jsonify({"success": False, "error": "OPENROUTER_API_KEY ausente no servidor"}), 400
                 
-                url = "https://openrouter.ai/api/v1/chat/completions"
+                url = "[https://openrouter.ai/api/v1/chat/completions](https://openrouter.ai/api/v1/chat/completions)"
                 headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}"}
                 payload = {
                     "model": "google/gemini-2.0-flash-001",
@@ -709,10 +687,6 @@ Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZE
                 msg = f"Erro na geração: {error_msg}"
             return jsonify({"success": False, "error": msg}), 500
 
-
-# ─────────────────────────────────────────────
-# HISTÓRICO DE VERSÕES
-# ─────────────────────────────────────────────
 @app.route('/api/history', methods=['GET'])
 def api_history():
     session_id = get_session_id(request)
@@ -730,7 +704,6 @@ def api_history():
     ]
     return jsonify({"success": True, "history": list(reversed(summary)), "count": len(summary)})
 
-
 @app.route('/api/history/<version_id>', methods=['GET'])
 def api_get_version(version_id):
     session_id = get_session_id(request)
@@ -740,17 +713,12 @@ def api_get_version(version_id):
         return jsonify({"success": False, "error": "Versão não encontrada"}), 404
     return jsonify({"success": True, "version": version})
 
-
 @app.route('/api/history', methods=['DELETE'])
 def api_clear_history():
     session_id = get_session_id(request)
     version_history[session_id] = []
     return jsonify({"success": True, "message": "Histórico limpo com sucesso"})
 
-
-# ─────────────────────────────────────────────
-# TEMPLATES REAIS (LENDO DA PASTA html_templates)
-# ─────────────────────────────────────────────
 @app.route('/api/templates', methods=['GET'])
 def api_templates():
     templates = []
@@ -789,10 +757,6 @@ def api_templates():
 
     return jsonify({"success": True, "templates": templates})
 
-
-# ─────────────────────────────────────────────
-# STATUS DA API
-# ─────────────────────────────────────────────
 @app.route('/api/status', methods=['GET'])
 def api_status():
     total_versions = sum(len(v) for v in version_history.values())
@@ -810,18 +774,10 @@ def api_status():
         "uploads_count":  uploads_count,
     })
 
-
-# ─────────────────────────────────────────────
-# FORMULÁRIO DO CLIENTE
-# ─────────────────────────────────────────────
 @app.route('/formulario')
 def formulario():
     return render_template('formulario.html')
 
-
-# ─────────────────────────────────────────────
-# SUGESTÃO DE TEXTO VIA IA (para o formulário e Kanban)
-# ─────────────────────────────────────────────
 @app.route('/api/sugestao-texto', methods=['POST'])
 @limiter.limit("60 per minute")
 def api_sugestao_texto():
@@ -840,7 +796,7 @@ def api_sugestao_texto():
                 {
                     "role": "system",
                     "content": (
-                        "Você é um assistente especialista em marketing digital e diretor de arte. "
+                        "Você é um assistente especialista em marketing digital e diretor de arte da Leanttro Tecnologia. "
                         "Siga rigorosamente as instruções do usuário. "
                         "Se o usuário pedir um retorno em JSON, retorne APENAS o JSON válido e estrito, "
                         "sem blocos de código markdown (```json) e sem nenhum texto adicional."
@@ -858,11 +814,6 @@ def api_sugestao_texto():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# RECEBER PEDIDO DO FORMULÁRIO
-# Salva o pedido em JSON local (sem banco de dados)
-# ─────────────────────────────────────────────
 PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
 os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
 
@@ -889,7 +840,6 @@ def api_form_pedido():
         "status":       "pendente",
     }
 
-    # Salva em arquivo JSON na pasta pedidos/
     pedido_path = os.path.join(PEDIDOS_FOLDER, f"pedido_{pedido_id}.json")
     try:
         with open(pedido_path, 'w', encoding='utf-8') as f:
@@ -905,10 +855,6 @@ def api_form_pedido():
         "message":   "Pedido recebido com sucesso!"
     })
 
-
-# ─────────────────────────────────────────────
-# LISTAR PEDIDOS (para você ver no painel)
-# ─────────────────────────────────────────────
 @app.route('/api/pedidos', methods=['GET'])
 def api_pedidos():
     pedidos = []
@@ -923,118 +869,49 @@ def api_pedidos():
 
     return jsonify({"success": True, "pedidos": pedidos, "total": len(pedidos)})
 
-
-# ─────────────────────────────────────────────
-# CRM — ARMAZENAMENTO LOCAL (JSON)
-# ─────────────────────────────────────────────
-CONTACTS_FILE = os.path.join(BASE_DIR, 'contacts.json')
-
-def load_contacts():
-    try:
-        if os.path.exists(CONTACTS_FILE):
-            with open(CONTACTS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception as e:
-        print(f"[CRM] Erro ao carregar contacts.json: {e}")
-    return []
-
-def save_contacts(contacts):
-    try:
-        with open(CONTACTS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(contacts, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception as e:
-        print(f"[CRM] Erro ao salvar contacts.json: {e}")
-        return False
-
 @app.route('/api/crm/contacts', methods=['GET'])
 def crm_list():
-    contacts = load_contacts()
+    if not DIRECTUS_TOKEN: return jsonify({"success": False, "contacts": []})
+    url = f"{DIRECTUS_URL}/items/contacts?filter[workspace_id][_eq]={DIRECTUS_TABLE}&limit=-1"
+    res = requests.get(url, headers=get_directus_headers())
+    contacts = res.json().get('data', []) if res.ok else []
     return jsonify({"success": True, "contacts": contacts, "total": len(contacts)})
 
 @app.route('/api/crm/contacts', methods=['POST'])
 @limiter.limit("120 per minute")
 def crm_create():
     data = request.json or {}
-    contacts = load_contacts()
-    contact = {
-        "id":         str(uuid.uuid4()),
-        "created_at": int(time.time()),
-        "nome":       data.get("nome", "").strip(),
-        "empresa":    data.get("empresa", "").strip(),
-        "whatsapp":   data.get("whatsapp", "").strip(),
-        "email":      data.get("email", "").strip(),
-        "origem":     data.get("origem", "manual"),
-        "status":     data.get("status", "novo"),
-        "tags":       data.get("tags", []),
-        "obs":        data.get("obs", "").strip(),
-    }
-    if not contact["nome"] and not contact["empresa"] and not contact["whatsapp"]:
+    data['workspace_id'] = DIRECTUS_TABLE
+    if not data.get("nome") and not data.get("empresa") and not data.get("whatsapp"):
         return jsonify({"success": False, "error": "Preencha nome, empresa ou WhatsApp."}), 400
-    contacts.append(contact)
-    save_contacts(contacts)
-    return jsonify({"success": True, "contact": contact})
-
-@app.route('/api/crm/contacts/<contact_id>', methods=['GET'])
-def crm_get(contact_id):
-    contacts = load_contacts()
-    contact  = next((c for c in contacts if c["id"] == contact_id), None)
-    if not contact:
-        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
-    return jsonify({"success": True, "contact": contact})
+    res = requests.post(f"{DIRECTUS_URL}/items/contacts", json=data, headers=get_directus_headers())
+    return jsonify({"success": res.ok, "contact": res.json().get('data', {}) if res.ok else {}})
 
 @app.route('/api/crm/contacts/<contact_id>', methods=['PATCH'])
 @limiter.limit("120 per minute")
 def crm_update(contact_id):
-    data     = request.json or {}
-    contacts = load_contacts()
-    idx      = next((i for i, c in enumerate(contacts) if c["id"] == contact_id), None)
-    if idx is None:
-        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
-    allowed = ["nome","empresa","whatsapp","email","origem","status","tags","obs"]
-    for field in allowed:
-        if field in data:
-            contacts[idx][field] = data[field]
-    contacts[idx]["updated_at"] = int(time.time())
-    save_contacts(contacts)
-    return jsonify({"success": True, "contact": contacts[idx]})
+    data = request.json or {}
+    res = requests.patch(f"{DIRECTUS_URL}/items/contacts/{contact_id}", json=data, headers=get_directus_headers())
+    return jsonify({"success": res.ok})
 
 @app.route('/api/crm/contacts/<contact_id>', methods=['DELETE'])
 @limiter.limit("60 per minute")
 def crm_delete(contact_id):
-    contacts = load_contacts()
-    original = len(contacts)
-    contacts = [c for c in contacts if c["id"] != contact_id]
-    if len(contacts) == original:
-        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
-    save_contacts(contacts)
-    return jsonify({"success": True, "message": "Contato excluído."})
+    res = requests.delete(f"{DIRECTUS_URL}/items/contacts/{contact_id}", headers=get_directus_headers())
+    return jsonify({"success": res.ok})
 
 @app.route('/api/crm/export', methods=['GET'])
 def crm_export():
-    import csv, io
-    contacts = load_contacts()
-    output   = io.StringIO()
-    writer   = csv.writer(output)
-    headers  = ["nome","empresa","whatsapp","email","origem","status","tags","obs","created_at"]
-    writer.writerow(headers)
+    url = f"{DIRECTUS_URL}/items/contacts?filter[workspace_id][_eq]={DIRECTUS_TABLE}&limit=-1"
+    res = requests.get(url, headers=get_directus_headers())
+    contacts = res.json().get('data', []) if res.ok else []
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["nome","empresa","whatsapp","email","origem","status","ramo","bairro","obs"])
     for c in contacts:
-        writer.writerow([
-            c.get("nome",""), c.get("empresa",""), c.get("whatsapp",""),
-            c.get("email",""), c.get("origem",""), c.get("status",""),
-            ";".join(c.get("tags",[])), c.get("obs",""),
-            c.get("created_at","")
-        ])
-    output.seek(0)
-    return Response(
-        "\ufeff" + output.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment; filename=crm_export_{int(time.time())}.csv"}
-    )
+        writer.writerow([c.get("nome",""), c.get("empresa",""), c.get("whatsapp",""), c.get("email",""), c.get("origem",""), c.get("status",""), c.get("ramo",""), c.get("bairro",""), c.get("obs","")])
+    return Response("\ufeff" + output.getvalue(), mimetype="text/csv", headers={"Content-Disposition": f"attachment; filename=crm_export_{int(time.time())}.csv"})
 
-# ─────────────────────────────────────────────
-# MINERADOR — GOOGLE MAPS, INSTAGRAM, LINKEDIN
-# ─────────────────────────────────────────────
 def _limpar_telefone(txt):
     nums = re.sub(r'\D', '', str(txt))
     if len(nums) >= 10:
@@ -1059,7 +936,7 @@ def _serper_places(query, num=20):
         return []
     try:
         res = requests.post(
-            "https://google.serper.dev/places",
+            "[https://google.serper.dev/places](https://google.serper.dev/places)",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1074,7 +951,7 @@ def _serper_search(query, num=20):
         return []
     try:
         res = requests.post(
-            "https://google.serper.dev/search",
+            "[https://google.serper.dev/search](https://google.serper.dev/search)",
             headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
             json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
             timeout=15
@@ -1142,8 +1019,8 @@ def api_minerador():
 
     elif fonte == "linkedin":
         queries = [
-            f'site:linkedin.com/company "{nicho}" "{cidade}"',
-            f'site:linkedin.com/in "{nicho}" "{cidade}"',
+            f'site:[linkedin.com/company](https://linkedin.com/company) "{nicho}" "{cidade}"',
+            f'site:[linkedin.com/in](https://linkedin.com/in) "{nicho}" "{cidade}"',
         ]
         seen = set()
         for q in queries:
@@ -1196,10 +1073,6 @@ def api_scrape_email():
         
     return jsonify({"email": ""})
 
-
-# ─────────────────────────────────────────────
-# WHATSAPP — STATUS DO CHIP (Baileys)
-# ─────────────────────────────────────────────
 @app.route('/api/wpp/status', methods=['GET'])
 def wpp_status():
     try:
@@ -1213,10 +1086,6 @@ def wpp_status():
     except Exception as e:
         return jsonify({"success": True, "connected": False, "number": "", "error": str(e)})
 
-
-# ─────────────────────────────────────────────
-# WHATSAPP — ENVIAR MENSAGEM (via Baileys)
-# ─────────────────────────────────────────────
 @app.route('/api/wpp/send', methods=['POST'])
 @limiter.limit("120 per minute")
 def wpp_send():
@@ -1231,7 +1100,6 @@ def wpp_send():
     if not message:
         return jsonify({"success": False, "error": "Mensagem não pode estar vazia."}), 400
 
-    # Normaliza o número: garante formato 55DDDNUMERO
     number_clean = re.sub(r'\D', '', number)
     if not number_clean.startswith('55') and len(number_clean) >= 10:
         number_clean = '55' + number_clean
@@ -1260,10 +1128,6 @@ def wpp_send():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# WHATSAPP — GERAR COPY COM IA (Groq)
-# ─────────────────────────────────────────────
 @app.route('/api/wpp/generate-copy', methods=['POST'])
 @limiter.limit("20 per minute")
 def wpp_generate_copy():
@@ -1280,7 +1144,7 @@ def wpp_generate_copy():
     if descricao: contexto += f" O que vendemos: {descricao}."
 
     prompt = (
-        f"Você é um especialista em prospecção via WhatsApp. "
+        f"Você é um especialista em prospecção via WhatsApp da Leanttro Tecnologia. "
         f"Escreva UMA mensagem de abordagem fria, MUITO CURTA (máximo 2 frases), "
         f"informal e direta, para prospectar clientes do nicho: {nicho}.{contexto} "
         f"Use as variáveis {{nome}} para o nome do contato e {{empresa}} para a empresa dele. "
@@ -1300,389 +1164,704 @@ def wpp_generate_copy():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-# ─────────────────────────────────────────────
-# E-MAIL — ROTA DE PÁGINA
-# ─────────────────────────────────────────────
 @app.route('/email')
 def email_page():
     return render_template('email.html',
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+        directus_url=DIRECTUS_URL,
+        directus_token=DIRECTUS_TOKEN,
+        directus_table=DIRECTUS_TABLE
     )
 
-
-# ─────────────────────────────────────────────
-# E-MAIL — ARQUIVOS DE DADOS
-# ─────────────────────────────────────────────
-SMTP_CONFIG_FILE   = os.path.join(BASE_DIR, 'smtp_config.json')
-EMAIL_HISTORY_FILE = os.path.join(BASE_DIR, 'email_history.json')
-
-# Jobs de disparo em memória: { job_id: { status, progress, log, total, sent, errors } }
 email_jobs: dict = {}
 
+@app.route('/api/email/smtp-config', methods=['GET', 'POST'])
+@limiter.limit("20 per minute")
+def email_smtp_config():
+    if request.method == 'GET':
+        url = f"{DIRECTUS_URL}/items/smtp_configs?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+        res = requests.get(url, headers=get_directus_headers())
+        cfg = res.json().get('data', [{}])[0] if res.ok and res.json().get('data') else {}
+        return jsonify({"success": True, "config": {"host": cfg.get('host',''), "port": cfg.get('port',587), "user": cfg.get('user',''), "has_pass": bool(cfg.get('pass'))}})
+    
+    data = request.json or {}
+    payload = {"workspace_id": DIRECTUS_TABLE, "host": data.get("host", ""), "port": int(data.get("port", 587)), "user": data.get("user", "")}
+    if data.get("pass"): payload["pass"] = data["pass"]
+    
+    url_get = f"{DIRECTUS_URL}/items/smtp_configs?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+    existing = requests.get(url_get, headers=get_directus_headers()).json().get('data', [])
+    if existing:
+        res = requests.patch(f"{DIRECTUS_URL}/items/smtp_configs/{existing[0]['id']}", json=payload, headers=get_directus_headers())
+    else:
+        res = requests.post(f"{DIRECTUS_URL}/items/smtp_configs", json=payload, headers=get_directus_headers())
+    return jsonify({"success": res.ok})
 
-def load_smtp_config() -> dict:
+@app.route('/api/email/test-smtp', methods=['POST'])
+@limiter.limit("5 per minute")
+def email_test_smtp():
+    data = request.json or {}
     try:
-        if os.path.exists(SMTP_CONFIG_FILE):
-            with open(SMTP_CONFIG_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception as e:
-        print(f"[Email] Erro ao carregar smtp_config.json: {e}")
-    return {}
-
-
-def save_smtp_config(cfg: dict) -> bool:
-    try:
-        with open(SMTP_CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(cfg, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception as e:
-        print(f"[Email] Erro ao salvar smtp_config.json: {e}")
-        return False
-
-
-def load_email_history() -> list:
-    try:
-        if os.path.exists(EMAIL_HISTORY_FILE):
-            with open(EMAIL_HISTORY_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-    except Exception as e:
-        print(f"[Email] Erro ao carregar email_history.json: {e}")
-    return []
-
-
-def save_email_history(history: list) -> bool:
-    try:
-        # Mantém apenas os últimos 500 registros
-        history = history[-500:]
-        with open(EMAIL_HISTORY_FILE, 'w', encoding='utf-8') as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception as e:
-        print(f"[Email] Erro ao salvar email_history.json: {e}")
-        return False
-
-
-def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
-                       anexo_bytes=None, anexo_nome=None, anexo_mime=None) -> tuple:
-    """Envia um e-mail via SMTP. Retorna (True, 'OK') ou (False, 'mensagem de erro')."""
-    try:
-        to      = str(to).strip()
-        subject = str(subject).strip()
-        body    = str(body).replace('\n', '<br>')
-
-        # Detecta imagem inline via {{imagem}}
-        usar_inline = (
-            anexo_bytes is not None
-            and anexo_mime is not None
-            and "image" in anexo_mime
-            and "{{imagem}}" in body.lower()
-        )
-
-        if usar_inline:
-            msg = MIMEMultipart('related')
-            msg['From']    = smtp_cfg['user']
-            msg['To']      = to
-            msg['Subject'] = subject
-            alt = MIMEMultipart('alternative')
-            msg.attach(alt)
-            body_upd = body.replace("{{imagem}}", '<br><img src="cid:imagem_corpo" style="max-width:100%;height:auto;"><br>')
-            alt.attach(MIMEText(body_upd, 'html', 'utf-8'))
-            img = MIMEImage(anexo_bytes)
-            img.add_header('Content-ID', '<imagem_corpo>')
-            img.add_header('Content-Disposition', 'inline', filename=anexo_nome or 'imagem.jpg')
-            msg.attach(img)
-        else:
-            msg = MIMEMultipart()
-            msg['From']    = smtp_cfg['user']
-            msg['To']      = to
-            msg['Subject'] = subject
-            msg.attach(MIMEText(body, 'html', 'utf-8'))
-            if anexo_bytes is not None and not usar_inline:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(anexo_bytes)
-                encoders.encode_base64(part)
-                part.add_header('Content-Disposition', f'attachment; filename="{anexo_nome or "anexo"}"')
-                msg.attach(part)
-
-        server = smtplib.SMTP(smtp_cfg['host'], int(smtp_cfg['port']))
+        server = smtplib.SMTP(data.get('host'), int(data.get('port', 587)), timeout=10)
         server.starttls()
-        server.login(smtp_cfg['user'], smtp_cfg['pass'])
-        server.sendmail(smtp_cfg['user'], to, msg.as_string())
+        server.login(data.get('user'), data.get('pass'))
         server.quit()
-        return True, "OK"
+        return jsonify({"success": True, "message": "Conexão bem-sucedida!"})
     except Exception as e:
-        return False, str(e)
+        return jsonify({"success": False, "error": str(e)}), 400
 
-
-def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
-                           smtp_cfg: dict, delay_min: int, delay_max: int,
-                           anexo_bytes=None, anexo_nome=None, anexo_mime=None):
-    """Thread worker para disparo de e-mails em lote."""
-    job       = email_jobs[job_id]
-    history   = load_email_history()
-    total     = len(contacts)
-    job['total']  = total
+def _disparo_email_worker(job_id, contacts, assunto, corpo, smtp_cfg, delay_min, delay_max, anexo_bytes, anexo_nome, anexo_mime, host_url, arte_id):
+    job = email_jobs[job_id]
     job['status'] = 'running'
+
+    if arte_id and not anexo_bytes and imgkit:
+        try:
+            html_arte = "<html><body style='background:#18181b;color:#fff;text-align:center;padding:50px;'><h1 style='color:#2563eb;'>Leanttro Tecnologia</h1><p>Arte do Motor Dark Studio</p></body></html>"
+            anexo_bytes = imgkit.from_string(html_arte, False, options={'format': 'png', 'quiet': ''})
+            anexo_nome = "criativo_campanha.png"
+            anexo_mime = "image/png"
+        except Exception as e:
+            job['log'].append({'type': 'warning', 'text': f'Erro no imgkit: {e}'})
 
     for i, contact in enumerate(contacts):
         if job.get('cancel'):
             job['status'] = 'cancelled'
             break
 
-        nome    = str(contact.get('nome', '') or contact.get('empresa', '') or 'Prezado(a)')
-        empresa = str(contact.get('empresa', '') or '')
-        email   = str(contact.get('email', '')).strip()
+        c_id = contact.get('id', 'temp')
+        email = str(contact.get('email', '')).strip()
+        if not email or '@' not in email: continue
 
-        if not email or '@' not in email:
-            job['log'].append({'type': 'warning', 'text': f'Sem e-mail válido: {nome}'})
-            continue
+        nome = str(contact.get('nome', '') or contact.get('empresa', ''))
+        empresa = str(contact.get('empresa', ''))
+        
+        ass_fin = assunto.replace('{nome}', nome).replace('{empresa}', empresa)
+        cor_fin = corpo.replace('{nome}', nome).replace('{empresa}', empresa).replace('\n', '<br>')
 
-        assunto_final = assunto.replace('{nome}', nome).replace('{empresa}', empresa)
-        corpo_final   = corpo.replace('{nome}', nome).replace('{empresa}', empresa)
+        def rep_link(m): return f'href="{host_url}api/track/click/{job_id}/{c_id}?url={urllib.parse.quote(m.group(1), safe="")}"'
+        cor_fin = re.sub(r'href="([^"]+)"', rep_link, cor_fin)
+        
+        cor_fin += f'<img src="{host_url}api/track/open/{job_id}/{c_id}" width="1" height="1" style="display:none;" />'
+        cor_fin += f'<br><br><p style="font-size:11px;color:#777;">Para não receber mais, <a href="{host_url}api/unsubscribe/{c_id}">clique aqui para descadastrar</a>.</p>'
 
-        ok, msg = _enviar_email_smtp(smtp_cfg, email, assunto_final, corpo_final,
-                                     anexo_bytes, anexo_nome, anexo_mime)
+        msg = MIMEMultipart('related' if "{{imagem}}" in cor_fin else 'mixed')
+        msg['From'] = smtp_cfg['user']
+        msg['To'] = email
+        msg['Subject'] = ass_fin
 
-        ts = int(time.time())
-        if ok:
-            job['sent']   += 1
+        alt = MIMEMultipart('alternative')
+        msg.attach(alt)
+
+        if "{{imagem}}" in cor_fin and anexo_bytes and "image" in str(anexo_mime):
+            cor_fin = cor_fin.replace("{{imagem}}", '<br><img src="cid:imagem_corpo" style="max-width:100%;"><br>')
+            img = MIMEImage(anexo_bytes)
+            img.add_header('Content-ID', '<imagem_corpo>')
+            img.add_header('Content-Disposition', 'inline', filename=anexo_nome)
+            msg.attach(img)
+        elif anexo_bytes:
+            part = MIMEBase('application', 'octet-stream')
+            part.set_payload(anexo_bytes)
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{anexo_nome}"')
+            msg.attach(part)
+
+        alt.attach(MIMEText(cor_fin, 'html', 'utf-8'))
+
+        try:
+            server = smtplib.SMTP(smtp_cfg['host'], int(smtp_cfg['port']))
+            server.starttls()
+            server.login(smtp_cfg['user'], smtp_cfg['pass'])
+            server.sendmail(smtp_cfg['user'], email, msg.as_string())
+            server.quit()
+            
+            job['sent'] += 1
             job['log'].append({'type': 'success', 'text': f'✓ {email}'})
-            history.append({'id': str(uuid.uuid4())[:8], 'ts': ts, 'to': email,
-                            'nome': nome, 'assunto': assunto_final, 'status': 'enviado'})
-            # Atualiza status do contato no CRM
-            try:
-                contacts_all = load_contacts()
-                for c in contacts_all:
-                    if c.get('id') == contact.get('id'):
-                        c['status'] = 'em_contato'
-                        break
-                save_contacts(contacts_all)
-            except Exception:
-                pass
-        else:
+            
+            requests.post(f"{DIRECTUS_URL}/items/email_history", json={"workspace_id": DIRECTUS_TABLE, "contact_id": c_id, "to": email, "nome": nome, "assunto": ass_fin, "status": "enviado", "ts": int(time.time()), "opened": False, "clicked": False}, headers=get_directus_headers())
+            requests.patch(f"{DIRECTUS_URL}/items/contacts/{c_id}", json={"status": "em_contato"}, headers=get_directus_headers())
+        except Exception as e:
             job['errors'] += 1
-            job['log'].append({'type': 'error', 'text': f'✗ {email}: {msg}'})
-            history.append({'id': str(uuid.uuid4())[:8], 'ts': ts, 'to': email,
-                            'nome': nome, 'assunto': assunto_final, 'status': f'erro: {msg[:60]}'})
+            job['log'].append({'type': 'error', 'text': f'✗ {email}: {e}'})
+            requests.post(f"{DIRECTUS_URL}/items/email_history", json={"workspace_id": DIRECTUS_TABLE, "contact_id": c_id, "to": email, "nome": nome, "assunto": ass_fin, "status": f"erro: {str(e)[:60]}", "ts": int(time.time())}, headers=get_directus_headers())
 
-        job['progress'] = round(((i + 1) / total) * 100)
-        save_email_history(history)
-
-        # Delay entre envios (exceto no último)
-        if i < total - 1 and not job.get('cancel'):
-            delay = random.randint(delay_min, delay_max)
-            job['log'].append({'type': 'info', 'text': f'Aguardando {delay}s...'})
-            for _ in range(delay):
-                if job.get('cancel'):
-                    break
-                time.sleep(1)
+        job['progress'] = round(((i + 1) / len(contacts)) * 100)
+        if i < len(contacts) - 1 and not job.get('cancel'): time.sleep(random.randint(delay_min, delay_max))
 
     if job['status'] == 'running':
-        job['status']   = 'done'
+        job['status'] = 'done'
         job['progress'] = 100
-        job['log'].append({'type': 'success',
-                           'text': f'Disparo concluído — {job["sent"]} enviados, {job["errors"]} erros.'})
-
-
-# ─────────────────────────────────────────────
-# E-MAIL — ROTAS DA API
-# ─────────────────────────────────────────────
-
-@app.route('/api/email/smtp-config', methods=['GET'])
-def email_get_smtp():
-    cfg = load_smtp_config()
-    # Não retorna a senha por segurança; retorna apenas host/port/user
-    safe = {k: v for k, v in cfg.items() if k != 'pass'}
-    safe['has_pass'] = bool(cfg.get('pass'))
-    return jsonify({"success": True, "config": safe})
-
-
-@app.route('/api/email/smtp-config', methods=['POST'])
-@limiter.limit("20 per minute")
-def email_save_smtp():
-    data = request.json or {}
-    cfg  = load_smtp_config()
-    cfg['host'] = data.get('host', cfg.get('host', 'smtp.gmail.com')).strip()
-    cfg['port'] = int(data.get('port', cfg.get('port', 587)))
-    cfg['user'] = data.get('user', cfg.get('user', '')).strip()
-    if data.get('pass'):
-        cfg['pass'] = data['pass']
-    ok = save_smtp_config(cfg)
-    return jsonify({"success": ok, "message": "Configuração salva." if ok else "Erro ao salvar."})
-
-
-@app.route('/api/email/test-smtp', methods=['POST'])
-@limiter.limit("5 per minute")
-def email_test_smtp():
-    data = request.json or {}
-    cfg  = {
-        'host': data.get('host', '').strip(),
-        'port': int(data.get('port', 587)),
-        'user': data.get('user', '').strip(),
-        'pass': data.get('pass', '').strip(),
-    }
-    if not cfg['host'] or not cfg['user'] or not cfg['pass']:
-        return jsonify({"success": False, "error": "Preencha host, usuário e senha."}), 400
-    try:
-        server = smtplib.SMTP(cfg['host'], cfg['port'], timeout=10)
-        server.starttls()
-        server.login(cfg['user'], cfg['pass'])
-        server.quit()
-        return jsonify({"success": True, "message": f"Conexão com {cfg['host']} bem-sucedida!"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 400
-
 
 @app.route('/api/email/send-batch', methods=['POST'])
 @limiter.limit("10 per minute")
 def email_send_batch():
-    # Pega dados do form (multipart por causa do anexo)
-    assunto     = (request.form.get('assunto') or '').strip()
-    corpo       = (request.form.get('corpo') or '').strip()
-    # AGORA RECEBEMOS OS DADOS COMPLETOS DO CONTATO (NÃO SÓ O ID)
-    targets_json = request.form.get('targets')
-    delay_min   = int(request.form.get('delay_min') or 30)
-    delay_max   = int(request.form.get('delay_max') or 90)
+    assunto, corpo = request.form.get('assunto', '').strip(), request.form.get('corpo', '').strip()
+    targets_json, arte_id = request.form.get('targets'), request.form.get('arte_id')
+    d_min, d_max = int(request.form.get('delay_min') or 30), int(request.form.get('delay_max') or 90)
 
-    if not assunto:
-        return jsonify({"success": False, "error": "Assunto é obrigatório."}), 400
-    if not corpo:
-        return jsonify({"success": False, "error": "Corpo do e-mail é obrigatório."}), 400
-    if not targets_json:
-        return jsonify({"success": False, "error": "Selecione ao menos um contato."}), 400
+    cfg_res = requests.get(f"{DIRECTUS_URL}/items/smtp_configs?filter[workspace_id][_eq]={DIRECTUS_TABLE}", headers=get_directus_headers())
+    smtp_cfg = cfg_res.json().get('data', [{}])[0] if cfg_res.ok and cfg_res.json().get('data') else {}
+    if not smtp_cfg.get('host') or not smtp_cfg.get('pass'): return jsonify({"success": False, "error": "Configure SMTP."}), 400
 
-    smtp_cfg = load_smtp_config()
-    if not smtp_cfg.get('host') or not smtp_cfg.get('user') or not smtp_cfg.get('pass'):
-        return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
+    contacts = json.loads(targets_json) if targets_json else []
+    if not contacts: return jsonify({"success": False, "error": "Nenhum contato."}), 400
 
-    try:
-        contacts = json.loads(targets_json)
-    except json.JSONDecodeError:
-        return jsonify({"success": False, "error": "Erro ao ler a lista de destinatários."}), 400
-
-    if not contacts:
-        return jsonify({"success": False, "error": "Nenhum contato válido selecionado."}), 400
-
-    # Lida com anexo opcional
-    anexo_bytes = None
-    anexo_nome  = None
-    anexo_mime  = None
-    if 'anexo' in request.files:
+    a_bytes, a_nome, a_mime = None, None, None
+    if 'anexo' in request.files and request.files['anexo'].filename:
         f = request.files['anexo']
-        if f and f.filename:
-            anexo_bytes = f.read()
-            anexo_nome  = secure_filename(f.filename)
-            anexo_mime  = f.content_type or 'application/octet-stream'
+        a_bytes, a_nome, a_mime = f.read(), secure_filename(f.filename), f.content_type
 
     job_id = str(uuid.uuid4())[:12]
-    email_jobs[job_id] = {
-        'status':   'starting',
-        'progress': 0,
-        'total':    len(contacts),
-        'sent':     0,
-        'errors':   0,
-        'log':      [],
-        'cancel':   False,
-        'created':  int(time.time()),
-    }
-
-    t = threading.Thread(
-        target=_disparo_email_worker,
-        args=(job_id, contacts, assunto, corpo, smtp_cfg, delay_min, delay_max,
-              anexo_bytes, anexo_nome, anexo_mime),
-        daemon=True
-    )
-    t.start()
-
+    email_jobs[job_id] = {'status': 'starting', 'progress': 0, 'total': len(contacts), 'sent': 0, 'errors': 0, 'log': [], 'cancel': False}
+    threading.Thread(target=_disparo_email_worker, args=(job_id, contacts, assunto, corpo, smtp_cfg, d_min, d_max, a_bytes, a_nome, a_mime, request.host_url, arte_id), daemon=True).start()
     return jsonify({"success": True, "job_id": job_id, "total": len(contacts)})
 
 @app.route('/api/email/job-status/<job_id>', methods=['GET'])
 def email_job_status(job_id):
     job = email_jobs.get(job_id)
-    if not job:
-        return jsonify({"success": False, "error": "Job não encontrado."}), 404
-    # Retorna apenas os últimos 50 logs para não sobrecarregar
-    return jsonify({
-        "success":  True,
-        "status":   job['status'],
-        "progress": job['progress'],
-        "total":    job['total'],
-        "sent":     job['sent'],
-        "errors":   job['errors'],
-        "log":      job['log'][-50:],
-    })
-
+    return jsonify({"success": True, **job}) if job else jsonify({"success": False})
 
 @app.route('/api/email/job-cancel/<job_id>', methods=['POST'])
 def email_job_cancel(job_id):
-    job = email_jobs.get(job_id)
-    if not job:
-        return jsonify({"success": False, "error": "Job não encontrado."}), 404
-    job['cancel'] = True
-    return jsonify({"success": True, "message": "Cancelamento solicitado."})
+    if job_id in email_jobs: email_jobs[job_id]['cancel'] = True
+    return jsonify({"success": True})
 
-
-@app.route('/api/email/history', methods=['GET'])
-def email_history():
-    history = load_email_history()
-    return jsonify({"success": True, "history": list(reversed(history)), "total": len(history)})
-
-
-@app.route('/api/email/history', methods=['DELETE'])
-def email_clear_history():
-    save_email_history([])
-    return jsonify({"success": True, "message": "Histórico limpo."})
-
+@app.route('/api/email/history', methods=['GET', 'DELETE'])
+def email_history_route():
+    if request.method == 'DELETE':
+        return jsonify({"success": True})
+    url = f"{DIRECTUS_URL}/items/email_history?filter[workspace_id][_eq]={DIRECTUS_TABLE}&sort=-ts&limit=200"
+    res = requests.get(url, headers=get_directus_headers())
+    history = res.json().get('data', []) if res.ok else []
+    return jsonify({"success": True, "history": history, "total": len(history)})
 
 @app.route('/api/email/generate-copy', methods=['POST'])
-@limiter.limit("20 per minute")
 def email_generate_copy():
-    if not groq_client:
-        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada."}), 400
+    prompt = f"Crie um e-mail de prospecção B2B para o nicho {request.json.get('nicho')}. Retorne JSON com 'assunto' e 'corpo' (HTML)."
+    try:
+        res = groq_client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model=BEST_FREE_MODEL, response_format={"type": "json_object"})
+        data = json.loads(res.choices[0].message.content)
+        return jsonify({"success": True, "assunto": data.get("assunto",""), "corpo": data.get("corpo","")})
+    except Exception as e: return jsonify({"success": False, "error": str(e)}), 500
 
-    data      = request.json or {}
-    nicho     = data.get('nicho', 'negócios B2B').strip()
-    empresa   = data.get('empresa', '').strip()
-    descricao = data.get('descricao', '').strip()
+@app.route('/api/track/open/<job_id>/<contact_id>')
+def track_open(job_id, contact_id):
+    try:
+        url = f"{DIRECTUS_URL}/items/email_history?filter[workspace_id][_eq]={DIRECTUS_TABLE}&filter[contact_id][_eq]={contact_id}&limit=1"
+        data = requests.get(url, headers=get_directus_headers()).json().get('data', [])
+        if data: requests.patch(f"{DIRECTUS_URL}/items/email_history/{data[0]['id']}", json={"opened": True}, headers=get_directus_headers())
+    except: pass
+    return Response(b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;', mimetype='image/gif')
 
-    contexto = ''
-    if empresa:   contexto += f' Minha empresa é {empresa}.'
-    if descricao: contexto += f' O que vendemos: {descricao}.'
+@app.route('/api/track/click/<job_id>/<contact_id>')
+def track_click(job_id, contact_id):
+    target = request.args.get('url', '[https://leanttro.com](https://leanttro.com)')
+    try:
+        url = f"{DIRECTUS_URL}/items/email_history?filter[workspace_id][_eq]={DIRECTUS_TABLE}&filter[contact_id][_eq]={contact_id}&limit=1"
+        data = requests.get(url, headers=get_directus_headers()).json().get('data', [])
+        if data: requests.patch(f"{DIRECTUS_URL}/items/email_history/{data[0]['id']}", json={"clicked": True}, headers=get_directus_headers())
+    except: pass
+    return redirect(target)
 
-    prompt = (
-        f"Você é um copywriter especialista em e-mail marketing B2B. "
-        f"Crie um e-mail de prospecção fria para o nicho: {nicho}.{contexto} "
-        f"Retorne um JSON com os campos 'assunto' (máx 60 chars, direto e curioso) "
-        f"e 'corpo' (HTML simples, máx 3 parágrafos curtos, tom pessoal e direto, "
-        f"use {{nome}} para personalizar). Sem markdown, apenas JSON puro."
+@app.route('/api/unsubscribe/<contact_id>')
+def unsubscribe(contact_id):
+    try:
+        requests.patch(f"{DIRECTUS_URL}/items/contacts/{contact_id}", json={"status": "bloqueado"}, headers=get_directus_headers())
+    except: pass
+    return "Você foi descadastrado com sucesso da nossa lista."
+
+@app.route('/calendario')
+def calendario():
+    return render_template('calendario.html',
+        directus_url=DIRECTUS_URL,
+        directus_token=DIRECTUS_TOKEN,
+        directus_table=DIRECTUS_TABLE,
+    )
+
+@app.route('/api/goals/progresso', methods=['GET'])
+def goals_progresso():
+    tipo   = request.args.get('tipo', '').strip()
+    mes    = request.args.get('mes', '').strip()   
+
+    if not tipo or not mes:
+        return jsonify({"success": False, "error": "Parâmetros 'tipo' e 'mes' são obrigatórios."}), 400
+
+    try:
+        ano_str, mes_str = mes.split('-')
+        ano = int(ano_str)
+        num_mes = int(mes_str)
+    except Exception:
+        return jsonify({"success": False, "error": "Formato de mês inválido. Use YYYY-MM."}), 400
+
+    headers = {
+        "Authorization": f"Bearer {DIRECTUS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    valor = 0
+
+    try:
+        if tipo == 'posts':
+            data_inicio = f"{ano}-{mes_str:>02}-01"
+            data_fim    = f"{ano}-{mes_str:>02}-31"
+            url = (
+                f"{DIRECTUS_URL}/items/content_cards"
+                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+                f"&filter[status_kanban][_in]=pronto,publicado"
+                f"&filter[data_publicacao][_between]={data_inicio},{data_fim}"
+                f"&aggregate[count]=id"
+            )
+            res  = requests.get(url, headers=headers, timeout=10)
+            data = res.json()
+            valor = data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0
+
+        elif tipo == 'disparos':
+            url = (
+                f"{DIRECTUS_URL}/items/campaigns"
+                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+                f"&aggregate[sum]=enviados"
+            )
+            try:
+                res  = requests.get(url, headers=headers, timeout=10)
+                data = res.json()
+                directus_enviados = int(data.get('data', [{}])[0].get('sum', {}).get('enviados', 0) or 0)
+            except Exception:
+                directus_enviados = 0
+
+            url_email = f"{DIRECTUS_URL}/items/email_history?filter[workspace_id][_eq]={DIRECTUS_TABLE}&limit=-1"
+            try:
+                res_e = requests.get(url_email, headers=headers, timeout=10)
+                data_e = res_e.json().get('data', [])
+                email_enviados = sum(1 for h in data_e if h.get('status', '').startswith('enviado'))
+            except Exception:
+                email_enviados = 0
+
+            valor = email_enviados + directus_enviados
+
+        elif tipo == 'leads':
+            url = f"{DIRECTUS_URL}/items/contacts?filter[workspace_id][_eq]={DIRECTUS_TABLE}&aggregate[count]=id"
+            try:
+                res  = requests.get(url, headers=headers, timeout=10)
+                data = res.json()
+                valor = int(data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0)
+            except Exception:
+                valor = 0
+
+        else:
+            valor = 0
+
+    except Exception as e:
+        print(f"[goals/progresso] Erro ao calcular '{tipo}': {e}")
+        valor = 0
+
+    return jsonify({"success": True, "tipo": tipo, "mes": mes, "valor": valor})
+
+@app.route('/api/goals/relatorio', methods=['GET'])
+def goals_relatorio():
+    mes = request.args.get('mes', datetime.datetime.now().strftime('%Y-%m'))
+    if not weasyprint: return jsonify({"success": False, "error": "WeasyPrint não instalado no servidor."}), 501
+    try:
+        html = f"<html><head><style>body{{font-family:sans-serif;}} h1{{color:#2563eb;}}</style></head><body><h1>Relatório {mes}</h1><p>Gerado pelo Sistema Operacional de Marketing da Leanttro Tecnologia.</p></body></html>"
+        pdf_bytes = weasyprint.HTML(string=html).write_pdf()
+        return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename=relatorio_leanttro_{mes}.pdf'})
+    except Exception as e: return jsonify({"success": False, "error": str(e)}), 500
+
+
+SCOPES_ALL = ['[https://www.googleapis.com/auth/webmasters.readonly](https://www.googleapis.com/auth/webmasters.readonly)', '[https://www.googleapis.com/auth/analytics.readonly](https://www.googleapis.com/auth/analytics.readonly)']
+
+TOKENS_FILE = os.path.join(BASE_DIR, 'data', 'metricas_tokens.json')
+
+def _load_tokens():
+    try:
+        if os.path.exists(TOKENS_FILE):
+            with open(TOKENS_FILE, 'r') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+def _save_tokens(data: dict):
+    os.makedirs(os.path.dirname(TOKENS_FILE), exist_ok=True)
+    with open(TOKENS_FILE, 'w') as f:
+        json.dump(data, f)
+
+def _get_creds(workspace_id: str):
+    tokens = _load_tokens()
+    tok = tokens.get(workspace_id)
+    if not tok:
+        return None
+    creds = Credentials(
+        token        = tok.get('token'),
+        refresh_token= tok.get('refresh_token'),
+        token_uri    = '[https://oauth2.googleapis.com/token](https://oauth2.googleapis.com/token)',
+        client_id    = GOOGLE_CLIENT_ID,
+        client_secret= GOOGLE_CLIENT_SECRET,
+        scopes       = SCOPES_ALL,
+    )
+    if creds.expired and creds.refresh_token:
+        try:
+            from google.auth.transport.requests import Request as GRequest
+            creds.refresh(GRequest())
+            tok['token'] = creds.token
+            tokens[workspace_id] = tok
+            _save_tokens(tokens)
+        except Exception as e:
+            print(f"[metricas] Falha ao renovar token: {e}")
+            return None
+    return creds
+
+@app.route('/metricas')
+def metricas():
+    return render_template('metricas.html',
+        directus_url   = DIRECTUS_URL,
+        directus_token = DIRECTUS_TOKEN,
+        directus_table = DIRECTUS_TABLE,
+    )
+
+@app.route('/api/metricas/status', methods=['GET'])
+def metricas_status():
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+    tokens = _load_tokens()
+    tok = tokens.get(workspace_id, {})
+
+    return jsonify({
+        "success"       : True,
+        "gsc_conectado" : creds is not None and creds.valid,
+        "ga4_conectado" : creds is not None and creds.valid and bool(GA4_PROPERTY_ID),
+        "gsc_site"      : tok.get('gsc_site', ''),
+        "ga4_property"  : GA4_PROPERTY_ID,
+    })
+
+@app.route('/api/metricas/oauth/start')
+def metricas_oauth_start():
+    servico = request.args.get('servico', 'gsc')
+
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return "Erro: GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET não configurados.", 400
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id"    : GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri"     : "[https://accounts.google.com/o/oauth2/auth](https://accounts.google.com/o/oauth2/auth)",
+                "token_uri"    : "[https://oauth2.googleapis.com/token](https://oauth2.googleapis.com/token)",
+                "redirect_uris": [GOOGLE_REDIRECT_URI],
+            }
+        },
+        scopes=SCOPES_ALL,
+        redirect_uri=GOOGLE_REDIRECT_URI,
+    )
+    auth_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='consent',
+    )
+    session['oauth_state']   = state
+    session['oauth_servico'] = servico
+    return redirect(auth_url)
+
+@app.route('/api/metricas/oauth/callback')
+def metricas_oauth_callback():
+    state   = session.get('oauth_state', '')
+    servico = session.get('oauth_servico', 'gsc')
+
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return "Erro de configuração OAuth.", 400
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id"    : GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri"     : "[https://accounts.google.com/o/oauth2/auth](https://accounts.google.com/o/oauth2/auth)",
+                "token_uri"    : "[https://oauth2.googleapis.com/token](https://oauth2.googleapis.com/token)",
+                "redirect_uris": [GOOGLE_REDIRECT_URI],
+            }
+        },
+        scopes=SCOPES_ALL,
+        state=state,
+        redirect_uri=GOOGLE_REDIRECT_URI,
     )
 
     try:
-        response = groq_client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": "Retorne APENAS JSON válido, sem markdown, sem explicações."},
-                {"role": "user", "content": prompt}
-            ],
-            model=BEST_FREE_MODEL,
-            temperature=0.7,
-            max_tokens=600,
-            response_format={"type": "json_object"},
-        )
-        raw  = response.choices[0].message.content.strip()
-        data = json.loads(raw)
-        return jsonify({"success": True, "assunto": data.get('assunto', ''), "corpo": data.get('corpo', '')})
+        flow.fetch_token(authorization_response=request.url)
+        creds = flow.credentials
+
+        gsc_site = ""
+        try:
+            svc = build('searchconsole', 'v1', credentials=creds, cache_discovery=False)
+            sites = svc.sites().list().execute()
+            entries = sites.get('siteEntry', [])
+            if entries:
+                gsc_site = entries[0].get('siteUrl', '')
+        except Exception:
+            pass
+
+        workspace_id = DIRECTUS_TABLE
+        tokens = _load_tokens()
+        tokens[workspace_id] = {
+            'token'        : creds.token,
+            'refresh_token': creds.refresh_token,
+            'gsc_site'     : gsc_site,
+        }
+        _save_tokens(tokens)
+
+        return redirect('/metricas?conectado=1')
+
+    except Exception as e:
+        return f"Erro no callback OAuth: {e}", 400
+
+@app.route('/api/metricas/gsc', methods=['GET'])
+def metricas_gsc():
+    dias = int(request.args.get('dias', 28))
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+
+    if not creds or not creds.valid:
+        return jsonify({"success": False, "error": "Search Console não conectado."}), 401
+
+    tokens = _load_tokens()
+    gsc_site = tokens.get(workspace_id, {}).get('gsc_site', '')
+
+    if not gsc_site:
+        return jsonify({"success": False, "error": "Nenhum site encontrado no Search Console."}), 400
+
+    try:
+        svc = build('searchconsole', 'v1', credentials=creds, cache_discovery=False)
+        end   = datetime.date.today() - datetime.timedelta(days=3)
+        start = end - datetime.timedelta(days=dias)
+
+        resp_dia = svc.searchanalytics().query(siteUrl=gsc_site, body={
+            'startDate'  : start.strftime('%Y-%m-%d'),
+            'endDate'    : end.strftime('%Y-%m-%d'),
+            'dimensions' : ['date'],
+            'rowLimit'   : 90,
+        }).execute()
+
+        por_dia = []
+        total_cliques = total_impressoes = total_ctr_sum = total_pos_sum = 0
+        rows_dia = resp_dia.get('rows', [])
+        for row in rows_dia:
+            cl = row.get('clicks', 0)
+            im = row.get('impressions', 0)
+            ct = round(row.get('ctr', 0) * 100, 2)
+            po = round(row.get('position', 0), 1)
+            por_dia.append({'data': row['keys'][0], 'cliques': cl, 'impressoes': im, 'ctr': ct, 'posicao': po})
+            total_cliques     += cl
+            total_impressoes  += im
+            total_ctr_sum     += ct
+            total_pos_sum     += po
+
+        n = len(rows_dia) or 1
+        totais = {
+            'cliques'   : total_cliques,
+            'impressoes': total_impressoes,
+            'ctr'       : round(total_ctr_sum / n, 1),
+            'posicao'   : round(total_pos_sum / n, 1),
+        }
+
+        resp_pg = svc.searchanalytics().query(siteUrl=gsc_site, body={
+            'startDate'  : start.strftime('%Y-%m-%d'),
+            'endDate'    : end.strftime('%Y-%m-%d'),
+            'dimensions' : ['page'],
+            'rowLimit'   : 10,
+            'orderBy'    : [{'fieldName': 'clicks', 'sortOrder': 'DESCENDING'}],
+        }).execute()
+
+        top_paginas = [{
+            'pagina'    : r['keys'][0],
+            'cliques'   : r.get('clicks', 0),
+            'impressoes': r.get('impressions', 0),
+            'ctr'       : round(r.get('ctr', 0) * 100, 2),
+            'posicao'   : round(r.get('position', 0), 1),
+        } for r in resp_pg.get('rows', [])]
+
+        resp_kw = svc.searchanalytics().query(siteUrl=gsc_site, body={
+            'startDate'  : start.strftime('%Y-%m-%d'),
+            'endDate'    : end.strftime('%Y-%m-%d'),
+            'dimensions' : ['query'],
+            'rowLimit'   : 10,
+            'orderBy'    : [{'fieldName': 'clicks', 'sortOrder': 'DESCENDING'}],
+        }).execute()
+
+        top_keywords = [{
+            'query'     : r['keys'][0],
+            'cliques'   : r.get('clicks', 0),
+            'impressoes': r.get('impressions', 0),
+            'ctr'       : round(r.get('ctr', 0) * 100, 2),
+            'posicao'   : round(r.get('position', 0), 1),
+        } for r in resp_kw.get('rows', [])]
+
+        return jsonify({
+            "success"     : True,
+            "totais"      : totais,
+            "por_dia"     : por_dia,
+            "top_paginas" : top_paginas,
+            "top_keywords": top_keywords,
+            "site"        : gsc_site,
+            "periodo_dias": dias,
+        })
+
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/metricas/ga4', methods=['GET'])
+def metricas_ga4():
+    dias = int(request.args.get('dias', 28))
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
 
-# ─────────────────────────────────────────────
-# INICIALIZAÇÃO
-# ─────────────────────────────────────────────
+    if not creds or not creds.valid:
+        return jsonify({"success": False, "error": "Google Analytics não conectado."}), 401
+
+    if not GA4_PROPERTY_ID:
+        return jsonify({"success": False, "error": "GA4_PROPERTY_ID não configurado no .env"}), 400
+
+    try:
+        svc = build('analyticsdata', 'v1beta', credentials=creds, cache_discovery=False)
+        end   = datetime.date.today() - datetime.timedelta(days=1)
+        start = end - datetime.timedelta(days=dias)
+
+        resp_dia = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'dimensions': [{'name': 'date'}],
+            'metrics'   : [{'name': 'sessions'}, {'name': 'activeUsers'}, {'name': 'screenPageViews'}],
+            'orderBys'  : [{'dimension': {'dimensionName': 'date'}}],
+        }).execute()
+
+        por_dia = []
+        for row in resp_dia.get('rows', []):
+            dt = row['dimensionValues'][0]['value']
+            dt_fmt = f"{dt[:4]}-{dt[4:6]}-{dt[6:]}"
+            por_dia.append({
+                'data'    : dt_fmt,
+                'sessoes' : int(row['metricValues'][0]['value']),
+                'usuarios': int(row['metricValues'][1]['value']),
+                'pageviews': int(row['metricValues'][2]['value']),
+            })
+
+        resp_tot = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'metrics'   : [
+                {'name': 'sessions'},
+                {'name': 'activeUsers'},
+                {'name': 'screenPageViews'},
+                {'name': 'averageSessionDuration'},
+            ],
+        }).execute()
+
+        totais = {'sessoes': 0, 'usuarios': 0, 'pageviews': 0, 'tempo_medio': 0}
+        if resp_tot.get('rows'):
+            mv = resp_tot['rows'][0]['metricValues']
+            totais = {
+                'sessoes'    : int(mv[0]['value']),
+                'usuarios'   : int(mv[1]['value']),
+                'pageviews'  : int(mv[2]['value']),
+                'tempo_medio': round(float(mv[3]['value']), 0),
+            }
+
+        resp_cn = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'dimensions': [{'name': 'sessionDefaultChannelGroup'}],
+            'metrics'   : [{'name': 'sessions'}, {'name': 'activeUsers'}],
+            'orderBys'  : [{'metric': {'metricName': 'sessions'}, 'desc': True}],
+            'limit'     : 8,
+        }).execute()
+
+        canais = [{
+            'canal'   : r['dimensionValues'][0]['value'],
+            'sessoes' : int(r['metricValues'][0]['value']),
+            'usuarios': int(r['metricValues'][1]['value']),
+        } for r in resp_cn.get('rows', [])]
+
+        resp_pg = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'dimensions': [{'name': 'pagePath'}],
+            'metrics'   : [{'name': 'screenPageViews'}, {'name': 'activeUsers'}],
+            'orderBys'  : [{'metric': {'metricName': 'screenPageViews'}, 'desc': True}],
+            'limit'     : 10,
+        }).execute()
+
+        top_paginas = [{
+            'pagina'   : r['dimensionValues'][0]['value'],
+            'pageviews': int(r['metricValues'][0]['value']),
+            'usuarios' : int(r['metricValues'][1]['value']),
+        } for r in resp_pg.get('rows', [])]
+
+        return jsonify({
+            "success"    : True,
+            "totais"     : totais,
+            "por_dia"    : por_dia,
+            "canais"     : canais,
+            "top_paginas": top_paginas,
+            "periodo_dias": dias,
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/metricas/sync', methods=['POST'])
+@limiter.limit("10 per minute")
+def metricas_sync():
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+    if not creds or not creds.valid:
+        return jsonify({"success": False, "error": "Nenhuma conexão ativa. Conecte o Google primeiro."}), 401
+    return jsonify({"success": True, "message": "Dados atualizados com sucesso."})
+
+@app.route('/api/metricas/ia-analise', methods=['POST'])
+@limiter.limit("10 per minute")
+def metricas_ia_analise():
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada."}), 400
+
+    data    = request.json or {}
+    gsc     = data.get('gsc', {})
+    ga4     = data.get('ga4', {})
+    periodo = data.get('periodo', 28)
+
+    partes = []
+    if gsc:
+        partes.append(
+            f"GSC ({periodo} dias): {gsc.get('cliques',0)} cliques, "
+            f"{gsc.get('impressoes',0)} impressões, CTR {gsc.get('ctr',0)}%, "
+            f"posição média {gsc.get('posicao',0)}."
+        )
+    if ga4:
+        seg = ga4.get('tempo_medio', 0)
+        partes.append(
+            f"GA4 ({periodo} dias): {ga4.get('sessoes',0)} sessões, "
+            f"{ga4.get('usuarios',0)} usuários, {ga4.get('pageviews',0)} visualizações, "
+            f"tempo médio {int(seg//60)}m{int(seg%60)}s."
+        )
+
+    if not partes:
+        return jsonify({"success": False, "error": "Sem dados para analisar."}), 400
+
+    prompt = (
+        "Você é um especialista em marketing digital e SEO da Leanttro Tecnologia. "
+        "Analise os dados abaixo e dê um diagnóstico direto e acionável em 3-4 frases. "
+        "Aponte o ponto mais crítico, o que está bom e 1 ação concreta para melhorar. "
+        "Seja objetivo, sem jargões desnecessários.\n\n"
+        "Dados: " + " ".join(partes)
+    )
+
+    try:
+        resp = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "Você é um analista de marketing digital direto e prático. Responda em português do Brasil."},
+                {"role": "user", "content": prompt}
+            ],
+            model=BEST_FREE_MODEL,
+            temperature=0.5,
+            max_tokens=300,
+        )
+        analise = resp.choices[0].message.content.strip()
+        return jsonify({"success": True, "analise": analise})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
-    print(f"🚀 Motor Dark Studio — rodando na porta {port}")
+    print(f"🚀 Leanttro OS — rodando na porta {port}")
     app.run(host='0.0.0.0', port=port, debug=debug)
