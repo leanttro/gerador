@@ -141,8 +141,11 @@ def index():
 
 @app.route('/home')
 def home():
-    return render_template('home.html')
-
+    return render_template('home.html',
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+    )
 @app.route('/conteudo')
 def conteudo():
     return render_template('conteudo.html')
