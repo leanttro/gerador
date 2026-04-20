@@ -1385,7 +1385,7 @@ email_jobs: dict = {}
 
 def _directus_smtp_table():
     """Retorna o nome da coleção SMTP no Directus, testando os dois formatos possíveis."""
-    candidates = ["Config_SMTP", "Config SMTP"]
+    candidates = ["config_smtp", "Config_SMTP", "Config SMTP", "Config_Smtp"]
     for name in candidates:
         try:
             import urllib.parse as _up
