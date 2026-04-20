@@ -1041,19 +1041,22 @@ function clearLog() {
 }
 
 
-async function loadKanbanArtes() {
+function loadKanbanArtes() {
+    const select = document.getElementById('arteKanbanSelect');
     try {
-        const url = `${CONFIG.DIRECTUS_URL}/items/kanban?filter[status][_eq]=Arte%20Finalizada&limit=-1`;
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
-        const data = await res.json();
-        const select = document.getElementById('arteKanbanSelect');
-        if (data.data && data.data.length > 0) {
-            data.data.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item.imagem || '';
-                opt.textContent = item.titulo || item.nome || `Arte #${item.id}`;
-                select.appendChild(opt);
-            });
+        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+        prontos.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.id;
+            opt.textContent = item.titulo || 'Arte #' + item.id;
+            select.appendChild(opt);
+        });
+
+        const activeDispatch = localStorage.getItem('wl_active_dispatch');
+        if (activeDispatch) {
+            select.value = activeDispatch;
+            loadSelectedArtImage();
+            localStorage.removeItem('wl_active_dispatch');
         }
     } catch (e) {
         console.warn('Não foi possível carregar artes do Kanban:', e);
@@ -1062,7 +1065,9 @@ async function loadKanbanArtes() {
 
 function loadSelectedArtImage() {
     const select = document.getElementById('arteKanbanSelect');
+    const msgInput = document.getElementById('msgInput');
     const value = select.value;
+    
     if (!value) {
         selectedImage = null;
         const prev = document.getElementById('uploadPreview');
@@ -1070,20 +1075,34 @@ function loadSelectedArtImage() {
         prev.innerHTML = '';
         return;
     }
-    const imageUrl = value.startsWith('http') ? value : `${CONFIG.DIRECTUS_URL}/assets/${value}`;
-    fetch(imageUrl)
-        .then(r => r.blob())
-        .then(blob => {
-            const reader = new FileReader();
-            reader.onload = e => {
-                selectedImage = e.target.result.split(',')[1];
-                const prev = document.getElementById('uploadPreview');
-                prev.style.display = 'block';
-                prev.innerHTML = `<img src="${e.target.result}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
-            };
-            reader.readAsDataURL(blob);
-        })
-        .catch(() => { console.warn('Erro ao carregar imagem do Kanban.'); });
+
+    try {
+        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
+        const card = prontos.find(c => c.id === value);
+        
+        if (card) {
+            if (card.copy) {
+                msgInput.value = card.copy;
+            }
+            
+            const thumbRef = card.thumb || card.id;
+            const imageUrl = thumbRef.startsWith('http') ? thumbRef : `${CONFIG.DIRECTUS_URL}/assets/${thumbRef}`;
+            
+            fetch(imageUrl)
+                .then(r => r.blob())
+                .then(blob => {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        selectedImage = e.target.result.split(',')[1];
+                        const prev = document.getElementById('uploadPreview');
+                        prev.style.display = 'block';
+                        prev.innerHTML = `<img src="${e.target.result}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
+                    };
+                    reader.readAsDataURL(blob);
+                })
+                .catch(() => { console.warn('Erro ao carregar imagem do Kanban.'); });
+        }
+    } catch(e) {}
 }
 
 updateCounters();
