@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-mail Marketing | Leanttro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-body:      #f4f4f5;
+    --bg-surface:   #ffffff;
+    --text-main:    #09090b;
+    --text-muted:   #71717a;
+    --border:       #e4e4e7;
+    --primary:      #18181b;
+    --primary-bg:   rgba(24,24,27,0.05);
+    --accent:       #2563eb;
+    --accent-dark:  #1d4ed8;
+    --accent-bg:    rgba(37,99,235,0.08);
+    --danger:       #ef4444;
+    --danger-bg:    rgba(239,68,68,0.08);
+    --success:      #10b981;
+    --success-bg:   rgba(16,185,129,0.08);
+    --warning:      #f59e0b;
+    --warning-bg:   rgba(245,158,11,0.08);
+    --radius:       6px;
+    --radius-lg:    10px;
+    --shadow:       0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.1);
+    --transition:   0.2s ease;
+}
+[data-theme="dark"] {
+    --bg-body:      #09090b;
+    --bg-surface:   #121214;
+    --text-main:    #fafafa;
+    --text-muted:   #a1a1aa;
+    --border:       #27272a;
+    --primary:      #fafafa;
+    --primary-bg:   rgba(250,250,250,0.05);
+    --accent-bg:    rgba(37,99,235,0.15);
+    --danger-bg:    rgba(239,68,68,0.15);
+    --success-bg:   rgba(16,185,129,0.15);
+    --warning-bg:   rgba(245,158,11,0.15);
+    --shadow:       0 4px 20px rgba(0,0,0,0.3);
+    --shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
+    display: flex;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: background-color var(--transition), color var(--transition);
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+    width: 260px; min-width: 260px;
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    transition: background-color var(--transition), border-color var(--transition);
+}
+.brand { padding: 24px 24px 20px; margin-bottom: 8px; }
+.brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
+[data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
+.brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 8px; display: block; }
+.nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
+.nav-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; color: var(--text-muted);
+    text-decoration: none; font-size: 13px; font-weight: 500;
+    border-radius: var(--radius); transition: all var(--transition);
+}
+.nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; flex-shrink: 0; }
+.nav-link:hover { color: var(--text-main); background: var(--bg-body); }
+.nav-link.active { background: var(--accent-bg); color: var(--accent-dark); font-weight: 600; }
+[data-theme="dark"] .nav-link.active { color: var(--accent); }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── TOPBAR ── */
+.topbar {
+    height: 64px; background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; flex-shrink: 0;
+    transition: background-color var(--transition), border-color var(--transition);
+}
+.topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.topbar-right { display: flex; align-items: center; gap: 20px; }
+.theme-toggle {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer; padding: 8px;
+    border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition);
+}
+.theme-toggle:hover { color: var(--text-main); border-color: var(--text-muted); }
+.theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+[data-theme="dark"] .icon-moon { display: none; }
+.icon-sun { display: none; }
+[data-theme="dark"] .icon-sun { display: block; }
+.user-profile {
+    display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500;
+    border-left: 1px solid var(--border); padding-left: 20px;
+}
+.avatar {
+    width: 32px; height: 32px; background: var(--text-main);
+    color: var(--bg-surface); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 12px;
+}
+
+/* ── PAGE BODY ── */
+.page-body { flex: 1; display: flex; overflow: hidden; }
+
+/* ── LEFT PANEL ── */
+.left-panel {
+    width: 340px; min-width: 340px;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-surface);
+    transition: background-color var(--transition), border-color var(--transition);
+}
+
+.panel-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; display: block;
+}
+
+/* Status SMTP */
+.smtp-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: var(--radius);
+    background: var(--bg-body); border: 1px solid var(--border); font-size: 12px;
+}
+.smtp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
+.smtp-dot.ok { background: var(--success); }
+.smtp-dot.err { background: var(--danger); }
+
+/* Contadores */
+.counters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.counter-card {
+    background: var(--bg-body); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px; text-align: center;
+}
+.counter-value { font-size: 20px; font-weight: 700; line-height: 1; }
+.counter-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.counter-value.blue  { color: var(--accent); }
+.counter-value.green { color: var(--success); }
+.counter-value.red   { color: var(--danger); }
+
+/* Filtros */
+.filter-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.filter-input, .filter-select {
+    flex: 1; padding: 8px 10px; background: var(--bg-body);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--text-main); font-family: inherit; font-size: 12px; outline: none;
+    transition: border-color var(--transition);
+}
+.filter-input:focus, .filter-select:focus { border-color: var(--accent); }
+.filter-select { appearance: none; cursor: pointer; }
+
+/* Select bar */
+.select-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px; border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted); flex-shrink: 0;
+}
+.select-bar button {
+    background: none; border: none; font-size: 11px; color: var(--accent);
+    cursor: pointer; font-family: inherit; font-weight: 500;
+}
+
+/* Lista de contatos */
+.contacts-list { flex: 1; overflow-y: auto; }
+.contact-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 20px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background var(--transition);
+}
+.contact-item:hover { background: var(--bg-body); }
+.contact-item.selected { background: var(--accent-bg); }
+.contact-check {
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-radius: 4px; flex-shrink: 0; display: flex; align-items: center;
+    justify-content: center; transition: all var(--transition);
+}
+.contact-item.selected .contact-check { background: var(--accent); border-color: var(--accent); }
+.contact-check svg { width: 10px; height: 10px; stroke: white; stroke-width: 2.5; fill: none; opacity: 0; }
+.contact-item.selected .contact-check svg { opacity: 1; }
+.contact-info { flex: 1; min-width: 0; }
+.contact-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-sub  { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-tag {
+    font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+    background: var(--primary-bg); color: var(--text-muted); flex-shrink: 0;
+}
+.contact-tag.novo { background: var(--accent-bg); color: var(--accent); }
+
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 12px; color: var(--text-muted); }
+.empty-state svg { width: 36px; height: 36px; stroke: var(--border); stroke-width: 1.5; fill: none; }
+.empty-state p { font-size: 12px; text-align: center; line-height: 1.5; }
+
+/* ── RIGHT PANEL ── */
+.right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-body); }
+
+/* Tabs */
+.tab-bar {
+    display: flex; background: var(--bg-surface);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+    padding: 0 24px;
+}
+.tab-btn {
+    padding: 14px 0; margin-right: 24px;
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--text-muted); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; letter-spacing: 0.3px;
+    text-transform: uppercase; transition: all var(--transition);
+    white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text-main); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-content { flex: 1; overflow-y: auto; padding: 24px; display: none; }
+.tab-content.active { display: block; }
+
+/* Blocos do formulário */
+.page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.page-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+.form-block { margin-bottom: 16px; }
+.form-label {
+    display: block; font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+}
+.form-input, .form-textarea, .form-select {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text-main);
+    font-family: inherit; font-size: 13px; outline: none;
+    transition: border-color var(--transition);
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); }
+.form-textarea { resize: vertical; min-height: 140px; line-height: 1.6; font-size: 12px; }
+.form-select { appearance: none; cursor: pointer; }
+.form-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.4; }
+
+/* Chips de variáveis */
+.vars-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.var-chip {
+    padding: 4px 10px; background: var(--accent-bg); color: var(--accent);
+    border: 1px solid rgba(37,99,235,0.2); border-radius: 20px;
+    font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all var(--transition);
+}
+.var-chip:hover { background: var(--accent); color: white; }
+
+/* Modo de disparo */
+.mode-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.mode-tab {
+    flex: 1; padding: 10px; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    color: var(--text-muted); transition: all var(--transition); text-align: center;
+}
+.mode-tab:hover { border-color: var(--accent); color: var(--accent); }
+.mode-tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Botão IA */
+.ai-btn {
+    width: 100%; padding: 11px; background: var(--primary-bg);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--text-main); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; display: flex; align-items: center;
+    justify-content: center; gap: 8px; transition: all var(--transition);
+}
+.ai-btn:hover { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.ai-btn svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+/* Botão de disparar */
+.send-btn {
+    width: 100%; padding: 13px; background: var(--accent);
+    border: none; border-radius: var(--radius-lg);
+    color: white; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; display: flex;
+    align-items: center; justify-content: center; gap: 8px;
+    transition: all var(--transition); margin-top: 8px;
+}
+.send-btn:hover:not(:disabled) { background: var(--accent-dark); transform: translateY(-1px); }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.send-btn svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+/* Upload zone */
+.upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 16px; text-align: center; cursor: pointer; position: relative;
+    transition: all var(--transition); background: var(--bg-surface);
+}
+.upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: var(--accent-bg); }
+.upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.upload-zone-text { font-size: 12px; color: var(--text-muted); }
+.upload-zone-text strong { color: var(--accent); }
+.file-info { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--success-bg); border: 1px solid rgba(16,185,129,0.2); border-radius: var(--radius); font-size: 12px; color: var(--success); margin-top: 8px; }
+.file-info button { background: none; border: none; cursor: pointer; color: var(--danger); font-size: 14px; margin-left: auto; }
+
+/* Progresso de disparo */
+.disparo-progress {
+    display: none; background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px; margin-top: 16px;
+}
+.disparo-progress.show { display: block; }
+.prog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.prog-title { font-size: 13px; font-weight: 600; }
+.prog-cancel { background: none; border: 1px solid var(--border); color: var(--danger); font-size: 11px; padding: 4px 10px; border-radius: var(--radius); cursor: pointer; font-family: inherit; }
+.prog-cancel:hover { background: var(--danger-bg); }
+.progress-bar-bg { height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.progress-bar-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.4s ease; width: 0%; }
+.prog-stats { display: flex; gap: 16px; font-size: 12px; margin-bottom: 12px; }
+.prog-stat { display: flex; flex-direction: column; gap: 2px; }
+.prog-stat-val { font-weight: 700; font-size: 16px; }
+.prog-stat-val.green { color: var(--success); }
+.prog-stat-val.red   { color: var(--danger); }
+.prog-log { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.log-line { font-size: 11px; padding: 2px 0; display: flex; align-items: flex-start; gap: 6px; font-family: 'Courier New', monospace; }
+.log-line.success { color: var(--success); }
+.log-line.error   { color: var(--danger); }
+.log-line.info    { color: var(--text-muted); }
+.log-line.warning { color: var(--warning); }
+
+/* Histórico */
+.history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.history-table th {
+    padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted);
+    border-bottom: 1px solid var(--border); background: var(--bg-body);
+    white-space: nowrap;
+}
+.history-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background: var(--bg-body); }
+.status-badge {
+    display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; white-space: nowrap;
+}
+.status-badge.enviado { background: var(--success-bg); color: var(--success); }
+.status-badge.erro    { background: var(--danger-bg);  color: var(--danger); }
+
+/* Config SMTP */
+.config-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
+}
+.config-card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.config-card-sub   { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.test-btn {
+    padding: 10px 20px; background: var(--bg-body); border: 1px solid var(--border);
+    border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; color: var(--text-main);
+    transition: all var(--transition); margin-right: 8px;
+}
+.test-btn:hover { border-color: var(--accent); color: var(--accent); }
+.save-btn {
+    padding: 10px 20px; background: var(--accent); border: none;
+    border-radius: var(--radius); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: inherit; color: white; transition: all var(--transition);
+}
+.save-btn:hover { background: var(--accent-dark); }
+.test-result {
+    margin-top: 12px; padding: 10px 12px; border-radius: var(--radius);
+    font-size: 12px; display: none;
+}
+.test-result.ok  { background: var(--success-bg); color: var(--success); border: 1px solid rgba(16,185,129,0.2); display: block; }
+.test-result.err { background: var(--danger-bg);  color: var(--danger);  border: 1px solid rgba(239,68,68,0.2);  display: block; }
+
+/* Spinner */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast {
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 12px 16px; min-width: 260px; max-width: 360px;
+    display: flex; align-items: flex-start; gap: 10px;
+    box-shadow: var(--shadow-hover); pointer-events: all; font-size: 13px;
+    animation: toast-in 0.3s ease;
+}
+@keyframes toast-in { from{opacity:0;transform:translateX(100%)} to{opacity:1;transform:translateX(0)} }
+.toast.removing { animation: toast-out 0.3s ease forwards; }
+@keyframes toast-out { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(100%)} }
+.toast-icon { font-size: 14px; flex-shrink: 0; }
+.toast-title { font-weight: 600; margin-bottom: 2px; font-size: 13px; }
+.toast-msg { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.toast.success { border-left: 3px solid var(--success); }
+.toast.error   { border-left: 3px solid var(--danger); }
+.toast.info    { border-left: 3px solid var(--accent); }
+.toast.warning { border-left: 3px solid var(--warning); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ════ SIDEBAR ════ -->
+<div class="sidebar">
+    <div class="brand">
+        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
+        <span class="brand-sub">Marketing OS</span>
+    </div>
+    <div class="nav-menu">
+        <a href="/home" class="nav-link">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Hub de Controle
+        </a>
+        <a href="/conteudo" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Conteúdo
+        </a>
+        <a href="/criacao" class="nav-link">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Criação
+        </a>
+        <a href="/prospeccao" class="nav-link">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Prospecção
+        </a>
+        <a href="/whatsapp" class="nav-link">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp
+        </a>
+        <a href="/email" class="nav-link active">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            E-mail
+        </a>
+        <a href="#" class="nav-link">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Métricas
+        </a>
+    </div>
+</div>
+
+<!-- ════ MAIN ════ -->
+<div class="main">
+
+    <div class="topbar">
+        <div class="topbar-title">E-MAIL MARKETING</div>
+        <div class="topbar-right">
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <div class="user-profile">
+                <span>Leanttro</span>
+                <div class="avatar">LT</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+
+        <!-- ════ LEFT PANEL ════ -->
+        <div class="left-panel">
+
+            <!-- Status SMTP -->
+            <div class="panel-section">
+                <span class="section-label">Servidor de E-mail</span>
+                <div class="smtp-status">
+                    <div class="smtp-dot" id="smtpDot"></div>
+                    <span id="smtpLabel">Verificando...</span>
+                </div>
+            </div>
+
+            <!-- Contadores -->
+            <div class="panel-section">
+                <span class="section-label">Progresso do Disparo</span>
+                <div class="counters">
+                    <div class="counter-card">
+                        <div class="counter-value blue" id="cntSelected">0</div>
+                        <div class="counter-label">Selecionados</div>
+                    </div>
+                    <div class="counter-card">
+                        <div class="counter-value green" id="cntSent">0</div>
+                        <div class="counter-label">Enviados</div>
+                    </div>
+                    <div class="counter-card">
+                        <div class="counter-value red" id="cntErrors">0</div>
+                        <div class="counter-label">Erros</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="panel-section" style="padding-bottom: 12px;">
+                <span class="section-label">Filtrar Contatos</span>
+                <div class="filter-row">
+                    <input class="filter-input" type="text" id="searchInput"
+                        placeholder="Buscar por nome ou empresa..." oninput="filterContacts()">
+                </div>
+                <div class="filter-row">
+                    <select class="filter-select" id="filterStatus" onchange="filterContacts()">
+                        <option value="">Todos os status</option>
+                        <option value="novo">Novo</option>
+                        <option value="em_contato">Em Contato</option>
+                        <option value="convertido">Convertido</option>
+                    </select>
+                    <select class="filter-select" id="filterOrigem" onchange="filterContacts()">
+                        <option value="">Todas as origens</option>
+                        <option value="maps">Google Maps</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="manual">Manual</option>
+                        <option value="csv">CSV</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Select bar -->
+            <div class="select-bar">
+                <span id="selectInfo">0 contatos com e-mail</span>
+                <button onclick="toggleSelectAll()">Selecionar todos</button>
+            </div>
+
+            <!-- Lista -->
+            <div class="contacts-list" id="contactsList">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <p>Carregando contatos...</p>
+                </div>
+            </div>
+
+        </div><!-- /left-panel -->
+
+        <!-- ════ RIGHT PANEL ════ -->
+        <div class="right-panel">
+
+            <!-- Tabs -->
+            <div class="tab-bar">
+                <button class="tab-btn active" onclick="switchTab('disparo')">📧 Disparo</button>
+                <button class="tab-btn" onclick="switchTab('historico')">📋 Histórico</button>
+                <button class="tab-btn" onclick="switchTab('config')">⚙ Configurações</button>
+            </div>
+
+            <!-- ── TAB DISPARO ── -->
+            <div class="tab-content active" id="tab-disparo">
+
+                <div class="page-title">Configurar Disparo</div>
+                <div class="page-sub">Selecione os contatos ao lado, configure a mensagem e dispare.</div>
+
+                <!-- Modo -->
+                <div class="form-block">
+                    <label class="form-label">Modo de Disparo</label>
+                    <div class="mode-tabs">
+                        <button class="mode-tab active" onclick="setMode('manual')" id="tabManual">
+                            Manual
+                        </button>
+                        <button class="mode-tab" onclick="setMode('lote10')" id="tabLote10">
+                            Lote 10 — Rápido
+                        </button>
+                        <button class="mode-tab" onclick="setMode('lote50')" id="tabLote50">
+                            Lote 50 — 4h
+                        </button>
+                    </div>
+                    <div class="form-hint" id="modeHint">
+                        Manual: selecione os contatos e dispare na hora que quiser.
+                    </div>
+                </div>
+
+                <!-- Gerar com IA -->
+                <div class="form-block">
+                    <button class="ai-btn" onclick="generateCopy()">
+                        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        Gerar assunto + corpo com IA (Groq)
+                    </button>
+                    <div class="form-hint" style="margin-top:6px;">Nicho (opcional):
+                        <input type="text" id="nichoInput" style="display:inline-block;width:auto;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-body);color:var(--text-main);font-family:inherit;font-size:11px;outline:none;margin-left:6px;" placeholder="Ex: clínica dental">
+                    </div>
+                </div>
+
+                <!-- Assunto -->
+                <div class="form-block">
+                    <label class="form-label">Assunto do E-mail</label>
+                    <input type="text" class="form-input" id="assuntoInput"
+                        placeholder="Ex: {nome}, tenho algo importante para sua empresa">
+                    <div class="form-hint">Use <strong>{nome}</strong> e <strong>{empresa}</strong> para personalizar.</div>
+                    <div class="vars-row">
+                        <button class="var-chip" onclick="insertVar('assunto','{nome}')">+ {nome}</button>
+                        <button class="var-chip" onclick="insertVar('assunto','{empresa}')">+ {empresa}</button>
+                    </div>
+                </div>
+
+                <!-- Corpo -->
+                <div class="form-block">
+                    <label class="form-label">Corpo do E-mail (HTML)</label>
+                    <textarea class="form-textarea" id="corpoInput" rows="8"
+                        placeholder="Olá {nome},&#10;&#10;Vi que a empresa {empresa} pode se beneficiar de...&#10;&#10;Use {{imagem}} para inserir imagem inline."></textarea>
+                    <div class="form-hint">Suporta HTML. Use <strong>{{imagem}}</strong> para imagem inline no corpo.</div>
+                    <div class="vars-row">
+                        <button class="var-chip" onclick="insertVar('corpo','{nome}')">+ {nome}</button>
+                        <button class="var-chip" onclick="insertVar('corpo','{empresa}')">+ {empresa}</button>
+                        <button class="var-chip" onclick="insertVar('corpo','{{imagem}}')">+ {{imagem}}</button>
+                    </div>
+                </div>
+
+                <!-- Anexo -->
+                <div class="form-block">
+                    <label class="form-label">Anexo (opcional)</label>
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="anexoInput" accept="image/*,.pdf,.doc,.docx"
+                            onchange="handleAnexo(this)">
+                        <div class="upload-zone-text">
+                            <strong>Clique</strong> para selecionar — Imagem, PDF ou Word
+                        </div>
+                    </div>
+                    <div class="file-info hidden" id="fileInfo">
+                        <span id="fileName">—</span>
+                        <button onclick="removeAnexo()">✕</button>
+                    </div>
+                </div>
+
+                <!-- Botão disparar -->
+                <button class="send-btn" id="sendBtn" onclick="iniciarDisparo()">
+                    <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Disparar E-mails
+                </button>
+
+                <!-- Progresso -->
+                <div class="disparo-progress" id="disparoProgress">
+                    <div class="prog-header">
+                        <span class="prog-title" id="progTitle">Disparando...</span>
+                        <button class="prog-cancel" onclick="cancelarDisparo()">⏹ Cancelar</button>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBar"></div>
+                    </div>
+                    <div class="prog-stats">
+                        <div class="prog-stat">
+                            <span class="prog-stat-val green" id="progSent">0</span>
+                            <span style="font-size:10px;color:var(--text-muted);">Enviados</span>
+                        </div>
+                        <div class="prog-stat">
+                            <span class="prog-stat-val red" id="progErrors">0</span>
+                            <span style="font-size:10px;color:var(--text-muted);">Erros</span>
+                        </div>
+                        <div class="prog-stat">
+                            <span class="prog-stat-val" id="progPercent">0%</span>
+                            <span style="font-size:10px;color:var(--text-muted);">Progresso</span>
+                        </div>
+                    </div>
+                    <div class="prog-log" id="progLog"></div>
+                </div>
+
+            </div><!-- /tab-disparo -->
+
+            <!-- ── TAB HISTÓRICO ── -->
+            <div class="tab-content" id="tab-historico">
+                <div class="page-title">Histórico de Envios</div>
+                <div class="page-sub">Registro de todos os e-mails disparados pelo sistema.</div>
+
+                <div style="display:flex; gap:10px; margin-bottom:16px; align-items:center;">
+                    <button class="test-btn" onclick="loadHistory()">↺ Atualizar</button>
+                    <button class="test-btn" style="color:var(--danger);" onclick="clearHistory()">🗑 Limpar histórico</button>
+                    <span id="histTotal" style="font-size:12px;color:var(--text-muted);margin-left:auto;"></span>
+                </div>
+
+                <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Destinatário</th>
+                                <th>Nome</th>
+                                <th>Assunto</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px;">Carregando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div><!-- /tab-historico -->
+
+            <!-- ── TAB CONFIG ── -->
+            <div class="tab-content" id="tab-config">
+                <div class="page-title">Configurações SMTP</div>
+                <div class="page-sub">Configure o servidor de e-mail para o disparo. Recomendamos Gmail com Senha de App.</div>
+
+                <div class="config-card">
+                    <div class="config-card-title">📧 Servidor SMTP</div>
+                    <div class="config-card-sub">Para Gmail: use smtp.gmail.com porta 587 com uma <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--accent);">Senha de App</a>.</div>
+
+                    <div class="form-grid-2" style="margin-bottom:12px;">
+                        <div>
+                            <label class="form-label">SMTP Host</label>
+                            <input type="text" class="form-input" id="smtpHost" placeholder="smtp.gmail.com">
+                        </div>
+                        <div>
+                            <label class="form-label">Porta</label>
+                            <input type="number" class="form-input" id="smtpPort" value="587">
+                        </div>
+                    </div>
+                    <div class="form-grid-2" style="margin-bottom:16px;">
+                        <div>
+                            <label class="form-label">Usuário (seu e-mail)</label>
+                            <input type="email" class="form-input" id="smtpUser" placeholder="voce@gmail.com">
+                        </div>
+                        <div>
+                            <label class="form-label">Senha de App</label>
+                            <input type="password" class="form-input" id="smtpPass" placeholder="••••••••••••••••">
+                        </div>
+                    </div>
+                    <div>
+                        <button class="test-btn" onclick="testSmtp()">🔌 Testar conexão</button>
+                        <button class="save-btn" onclick="saveSmtp()">💾 Salvar configuração</button>
+                    </div>
+                    <div id="testResult" class="test-result"></div>
+                </div>
+
+                <div class="config-card">
+                    <div class="config-card-title">⏱ Delay entre Envios</div>
+                    <div class="config-card-sub">Intervalo mínimo e máximo entre cada e-mail para evitar bloqueios.</div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label class="form-label">Mínimo (segundos)</label>
+                            <input type="number" class="form-input" id="delayMin" value="30" min="5" max="600">
+                        </div>
+                        <div>
+                            <label class="form-label">Máximo (segundos)</label>
+                            <input type="number" class="form-input" id="delayMax" value="90" min="10" max="900">
+                        </div>
+                    </div>
+                    <div class="form-hint" style="margin-top:8px;">Lote 50 em 4h usa delay fixo de ~288s independente desta config.</div>
+                </div>
+
+            </div><!-- /tab-config -->
+
+        </div><!-- /right-panel -->
+
+    </div><!-- /page-body -->
+
+</div><!-- /main -->
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ════════════════════════════════════════════
+   ESTADO
+════════════════════════════════════════════ */
+let allContacts   = [];
+let filteredList  = [];
+let selectedIds   = new Set();
+let currentMode   = 'manual';
+let currentJobId  = null;
+let pollingTimer  = null;
+let anexoFile     = null;
+let lastLogCount  = 0;
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+function init() {
+    const t = localStorage.getItem('wl_theme');
+    if (t) document.body.setAttribute('data-theme', t);
+    checkSmtpStatus();
+    loadContacts();
+
+    // Drag-drop na zona de upload
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) handleAnexo({ files: e.dataTransfer.files });
+    });
+}
+
+/* ════════════════════════════════════════════
+   TEMA
+════════════════════════════════════════════ */
+function toggleTheme() {
+    const t = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.body.setAttribute('data-theme', t);
+    localStorage.setItem('wl_theme', t);
+}
+
+/* ════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════ */
+function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', ['disparo','historico','config'][i] === name);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'historico') loadHistory();
+    if (name === 'config')    loadSmtpConfig();
+}
+
+/* ════════════════════════════════════════════
+   SMTP STATUS
+════════════════════════════════════════════ */
+async function checkSmtpStatus() {
+    try {
+        const r = await fetch('/api/email/smtp-config');
+        const d = await r.json();
+        const dot = document.getElementById('smtpDot');
+        const lbl = document.getElementById('smtpLabel');
+        if (d.config && d.config.host && d.config.user && d.config.has_pass) {
+            dot.className = 'smtp-dot ok';
+            lbl.textContent = `Configurado — ${d.config.user}`;
+        } else {
+            dot.className = 'smtp-dot err';
+            lbl.textContent = 'SMTP não configurado — vá em Configurações';
+        }
+    } catch {
+        document.getElementById('smtpDot').className = 'smtp-dot err';
+        document.getElementById('smtpLabel').textContent = 'Erro ao verificar SMTP';
+    }
+}
+
+/* ════════════════════════════════════════════
+   CONTATOS
+════════════════════════════════════════════ */
+async function loadContacts() {
+    try {
+        const r = await fetch('/api/crm/contacts');
+        const d = await r.json();
+        // Filtra apenas quem tem e-mail
+        allContacts = (d.contacts || []).filter(c => c.email && c.email.includes('@'));
+        filterContacts();
+        updateCounters();
+    } catch {
+        document.getElementById('contactsList').innerHTML =
+            '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Erro ao carregar contatos.</p></div>';
+    }
+}
+
+function filterContacts() {
+    const q      = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('filterStatus').value.toLowerCase();
+    const origem = document.getElementById('filterOrigem').value.toLowerCase();
+
+    filteredList = allContacts.filter(c => {
+        const nome    = (c.nome    || '').toLowerCase();
+        const empresa = (c.empresa || '').toLowerCase();
+        const mQ = !q || nome.includes(q) || empresa.includes(q);
+        const mS = !status || (c.status || '').toLowerCase() === status;
+        const mO = !origem || (c.origem || '').toLowerCase() === origem;
+        return mQ && mS && mO;
+    });
+
+    renderContacts();
+    updateCounters();
+}
+
+function renderContacts() {
+    const list = document.getElementById('contactsList');
+    const info = document.getElementById('selectInfo');
+    info.textContent = `${filteredList.length} contato${filteredList.length !== 1 ? 's' : ''} com e-mail`;
+
+    if (!filteredList.length) {
+        list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><p>Nenhum contato com e-mail encontrado.<br>Adicione e-mails no CRM de Prospecção.</p></div>';
+        return;
+    }
+
+    list.innerHTML = filteredList.map(c => {
+        const sel     = selectedIds.has(c.id);
+        const nome    = c.nome || c.empresa || c.email;
+        const sub     = c.email + (c.origem ? ` · ${c.origem}` : '');
+        const status  = (c.status || 'novo').toLowerCase();
+        return `<div class="contact-item ${sel ? 'selected' : ''}" onclick="toggleContact('${c.id}')">
+            <div class="contact-check">
+                <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </div>
+            <div class="contact-info">
+                <div class="contact-name">${esc(nome)}</div>
+                <div class="contact-sub">${esc(sub)}</div>
+            </div>
+            <span class="contact-tag ${status === 'novo' ? 'novo' : ''}">${status}</span>
+        </div>`;
+    }).join('');
+}
+
+function toggleContact(id) {
+    selectedIds.has(id) ? selectedIds.delete(id) : selectedIds.add(id);
+    renderContacts();
+    updateCounters();
+}
+
+function toggleSelectAll() {
+    const allIds   = filteredList.map(c => c.id);
+    const allSel   = allIds.every(id => selectedIds.has(id));
+    allIds.forEach(id => allSel ? selectedIds.delete(id) : selectedIds.add(id));
+    renderContacts();
+    updateCounters();
+}
+
+function updateCounters() {
+    document.getElementById('cntSelected').textContent = selectedIds.size;
+    // Modo lote: pré-seleciona automaticamente
+    if (currentMode === 'lote10') autoSelectLote(10);
+    if (currentMode === 'lote50') autoSelectLote(50);
+}
+
+function autoSelectLote(n) {
+    selectedIds.clear();
+    const novos = filteredList.filter(c => (c.status || '').toLowerCase() === 'novo');
+    const alvo  = novos.length >= n ? novos : filteredList;
+    alvo.slice(0, n).forEach(c => selectedIds.add(c.id));
+    renderContacts();
+    document.getElementById('cntSelected').textContent = selectedIds.size;
+}
+
+/* ════════════════════════════════════════════
+   MODO
+════════════════════════════════════════════ */
+function setMode(m) {
+    currentMode = m;
+    ['manual','lote10','lote50'].forEach(k => {
+        document.getElementById('tab' + k.charAt(0).toUpperCase() + k.slice(1)).classList.toggle('active', k === m);
+    });
+    const hints = {
+        manual:  'Manual: selecione os contatos e dispare na hora que quiser.',
+        lote10:  'Lote 10: seleciona automaticamente os 10 primeiros "Novos". Delay rápido (30–90s).',
+        lote50:  'Lote 50 em 4h: seleciona os 50 primeiros "Novos". Delay de ~288s entre envios.',
+    };
+    document.getElementById('modeHint').textContent = hints[m];
+
+    if (m !== 'manual') autoSelectLote(m === 'lote10' ? 10 : 50);
+    else { selectedIds.clear(); renderContacts(); document.getElementById('cntSelected').textContent = 0; }
+}
+
+/* ════════════════════════════════════════════
+   VARIÁVEIS E ANEXO
+════════════════════════════════════════════ */
+function insertVar(field, v) {
+    const id  = field === 'assunto' ? 'assuntoInput' : 'corpoInput';
+    const el  = document.getElementById(id);
+    const pos = el.selectionStart;
+    const val = el.value;
+    el.value  = val.slice(0, pos) + v + val.slice(pos);
+    el.setSelectionRange(pos + v.length, pos + v.length);
+    el.focus();
+}
+
+function handleAnexo(input) {
+    const file = input.files ? input.files[0] : input;
+    if (!file) return;
+    anexoFile = file;
+    document.getElementById('fileName').textContent = `${file.name} (${(file.size/1024).toFixed(0)}KB)`;
+    document.getElementById('fileInfo').classList.remove('hidden');
+    document.getElementById('uploadZone').style.display = 'none';
+}
+
+function removeAnexo() {
+    anexoFile = null;
+    document.getElementById('fileInfo').classList.add('hidden');
+    document.getElementById('uploadZone').style.display = '';
+    document.getElementById('anexoInput').value = '';
+}
+
+/* ════════════════════════════════════════════
+   GERAR COPY COM IA
+════════════════════════════════════════════ */
+async function generateCopy() {
+    const btn   = document.querySelector('.ai-btn');
+    const nicho = document.getElementById('nichoInput').value.trim();
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Gerando...';
+
+    try {
+        const r = await fetch('/api/email/generate-copy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nicho: nicho || 'negócios B2B' })
+        });
+        const d = await r.json();
+        if (d.success) {
+            document.getElementById('assuntoInput').value = d.assunto || '';
+            document.getElementById('corpoInput').value   = d.corpo   || '';
+            showToast('success', 'Copy gerado!', 'Assunto e corpo preenchidos pela IA.');
+        } else {
+            showToast('error', 'Erro na IA', d.error || 'Tente novamente.');
+        }
+    } catch(e) {
+        showToast('error', 'Erro de conexão', String(e));
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Gerar assunto + corpo com IA (Groq)';
+    }
+}
+
+/* ════════════════════════════════════════════
+   DISPARAR
+════════════════════════════════════════════ */
+async function iniciarDisparo() {
+    const assunto = document.getElementById('assuntoInput').value.trim();
+    const corpo   = document.getElementById('corpoInput').value.trim();
+
+    if (!assunto) { showToast('warning', 'Atenção', 'Preencha o assunto.'); return; }
+    if (!corpo)   { showToast('warning', 'Atenção', 'Preencha o corpo do e-mail.'); return; }
+    if (!selectedIds.size) { showToast('warning', 'Atenção', 'Selecione ao menos um contato.'); return; }
+
+    const delayMin = parseInt(document.getElementById('delayMin').value) || 30;
+    const delayMax = currentMode === 'lote50' ? 288 : (parseInt(document.getElementById('delayMax').value) || 90);
+
+    const fd = new FormData();
+    fd.append('assunto',     assunto);
+    fd.append('corpo',       corpo);
+    fd.append('contact_ids', JSON.stringify([...selectedIds]));
+    fd.append('delay_min',   delayMin);
+    fd.append('delay_max',   delayMax);
+    if (anexoFile) fd.append('anexo', anexoFile);
+
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+        const r = await fetch('/api/email/send-batch', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (d.success) {
+            currentJobId = d.job_id;
+            lastLogCount = 0;
+            showProgress(true);
+            startPolling();
+            showToast('info', 'Disparo iniciado!', `${d.total} e-mails na fila.`);
+        } else {
+            showToast('error', 'Erro', d.error || 'Não foi possível iniciar o disparo.');
+            document.getElementById('sendBtn').disabled = false;
+        }
+    } catch(e) {
+        showToast('error', 'Erro de conexão', String(e));
+        document.getElementById('sendBtn').disabled = false;
+    }
+}
+
+function startPolling() {
+    clearInterval(pollingTimer);
+    pollingTimer = setInterval(pollJobStatus, 2000);
+}
+
+async function pollJobStatus() {
+    if (!currentJobId) return;
+    try {
+        const r = await fetch(`/api/email/job-status/${currentJobId}`);
+        const d = await r.json();
+        if (!d.success) return;
+
+        // Atualiza UI
+        document.getElementById('progressBar').style.width  = d.progress + '%';
+        document.getElementById('progPercent').textContent  = d.progress + '%';
+        document.getElementById('progSent').textContent     = d.sent;
+        document.getElementById('progErrors').textContent   = d.errors;
+        document.getElementById('cntSent').textContent      = d.sent;
+        document.getElementById('cntErrors').textContent    = d.errors;
+
+        // Adiciona novos logs
+        const logEl = document.getElementById('progLog');
+        const newLogs = d.log.slice(lastLogCount);
+        lastLogCount  = d.log.length;
+        newLogs.forEach(l => {
+            const line = document.createElement('div');
+            line.className = `log-line ${l.type}`;
+            line.textContent = l.text;
+            logEl.appendChild(line);
+            logEl.scrollTop = logEl.scrollHeight;
+        });
+
+        // Status final
+        if (d.status === 'done' || d.status === 'cancelled') {
+            clearInterval(pollingTimer);
+            pollingTimer = null;
+            document.getElementById('progTitle').textContent =
+                d.status === 'done' ? '✓ Disparo concluído!' : '⏹ Disparo cancelado';
+            document.getElementById('sendBtn').disabled = false;
+            document.querySelector('.prog-cancel').disabled = true;
+
+            if (d.status === 'done') {
+                showToast('success', 'Concluído!', `${d.sent} enviados, ${d.errors} erros.`);
+                loadContacts(); // Recarrega para atualizar status
+            }
+        }
+    } catch(e) {
+        console.error('Polling error:', e);
+    }
+}
+
+async function cancelarDisparo() {
+    if (!currentJobId) return;
+    await fetch(`/api/email/job-cancel/${currentJobId}`, { method: 'POST' });
+    showToast('info', 'Cancelamento solicitado', 'Aguardando o envio atual terminar...');
+}
+
+function showProgress(show) {
+    const el = document.getElementById('disparoProgress');
+    el.classList.toggle('show', show);
+    if (show) {
+        document.getElementById('progTitle').textContent = 'Disparando...';
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progSent').textContent   = '0';
+        document.getElementById('progErrors').textContent = '0';
+        document.getElementById('progPercent').textContent = '0%';
+        document.getElementById('progLog').innerHTML = '';
+        document.querySelector('.prog-cancel').disabled = false;
+        lastLogCount = 0;
+    }
+}
+
+/* ════════════════════════════════════════════
+   HISTÓRICO
+════════════════════════════════════════════ */
+async function loadHistory() {
+    try {
+        const r = await fetch('/api/email/history');
+        const d = await r.json();
+        const body = document.getElementById('historyBody');
+        document.getElementById('histTotal').textContent = `${d.total} registro(s)`;
+
+        if (!d.history || !d.history.length) {
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px;">Nenhum envio registrado.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = d.history.slice(0, 200).map(h => {
+            const date  = new Date(h.ts * 1000).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+            const isOk  = h.status === 'enviado';
+            const badge = `<span class="status-badge ${isOk ? 'enviado' : 'erro'}">${esc(h.status)}</span>`;
+            return `<tr>
+                <td style="color:var(--text-muted);font-size:11px;white-space:nowrap;">${date}</td>
+                <td style="font-size:12px;">${esc(h.to || '—')}</td>
+                <td style="font-size:12px;">${esc(h.nome || '—')}</td>
+                <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(h.assunto || '—')}</td>
+                <td>${badge}</td>
+            </tr>`;
+        }).join('');
+    } catch(e) {
+        document.getElementById('historyBody').innerHTML =
+            `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--danger);font-size:12px;">Erro ao carregar histórico.</td></tr>`;
+    }
+}
+
+async function clearHistory() {
+    if (!confirm('Limpar todo o histórico de envios?')) return;
+    await fetch('/api/email/history', { method: 'DELETE' });
+    showToast('info', 'Histórico limpo', '');
+    loadHistory();
+}
+
+/* ════════════════════════════════════════════
+   CONFIG SMTP
+════════════════════════════════════════════ */
+async function loadSmtpConfig() {
+    try {
+        const r = await fetch('/api/email/smtp-config');
+        const d = await r.json();
+        if (d.config) {
+            document.getElementById('smtpHost').value = d.config.host || 'smtp.gmail.com';
+            document.getElementById('smtpPort').value = d.config.port || 587;
+            document.getElementById('smtpUser').value = d.config.user || '';
+            // Não carrega a senha por segurança
+        }
+    } catch(e) {}
+}
+
+async function saveSmtp() {
+    const cfg = {
+        host: document.getElementById('smtpHost').value.trim(),
+        port: parseInt(document.getElementById('smtpPort').value) || 587,
+        user: document.getElementById('smtpUser').value.trim(),
+        pass: document.getElementById('smtpPass').value,
+    };
+    if (!cfg.host || !cfg.user) { showToast('warning', 'Atenção', 'Preencha host e usuário.'); return; }
+
+    try {
+        const r = await fetch('/api/email/smtp-config', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg)
+        });
+        const d = await r.json();
+        if (d.success) {
+            showToast('success', 'Salvo!', 'Configuração SMTP salva.');
+            checkSmtpStatus();
+        } else {
+            showToast('error', 'Erro', d.message || 'Não foi possível salvar.');
+        }
+    } catch(e) { showToast('error', 'Erro de conexão', String(e)); }
+}
+
+async function testSmtp() {
+    const cfg = {
+        host: document.getElementById('smtpHost').value.trim(),
+        port: parseInt(document.getElementById('smtpPort').value) || 587,
+        user: document.getElementById('smtpUser').value.trim(),
+        pass: document.getElementById('smtpPass').value,
+    };
+    const resultEl = document.getElementById('testResult');
+    resultEl.className = 'test-result';
+    resultEl.textContent = 'Testando conexão...';
+    resultEl.style.display = 'block';
+
+    try {
+        const r = await fetch('/api/email/test-smtp', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg)
+        });
+        const d = await r.json();
+        resultEl.className = `test-result ${d.success ? 'ok' : 'err'}`;
+        resultEl.textContent = d.success ? `✓ ${d.message}` : `✗ ${d.error}`;
+    } catch(e) {
+        resultEl.className = 'test-result err';
+        resultEl.textContent = `✗ Erro de conexão: ${e}`;
+    }
+}
+
+/* ════════════════════════════════════════════
+   UTILITÁRIOS
+════════════════════════════════════════════ */
+function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+const TOAST_ICONS = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+function showToast(type, title, msg, dur = 4500) {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span class="toast-icon">${TOAST_ICONS[type]}</span><div><div class="toast-title">${title}</div>${msg ? `<div class="toast-msg">${msg}</div>` : ''}</div>`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => { t.classList.add('removing'); t.addEventListener('animationend', () => t.remove()); }, dur);
+}
+
+init();
+</script>
+</body>
+</html>
