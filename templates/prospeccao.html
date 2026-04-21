@@ -784,6 +784,25 @@ let csvData = [];
 let csvHeaders = [];
 let pendingDisparoCard = null;
 
+/* ════════════════════════════════════════════
+   FUNÇÕES DE DISPARO — abrem as abas corretas
+════════════════════════════════════════════ */
+function abrirModalDisparo(card, tipo) {
+    pendingDisparoCard = card;
+    confirmarDisparo(tipo);
+}
+
+function confirmarDisparo(tipo) {
+    if (!pendingDisparoCard) return;
+    localStorage.setItem('wl_active_dispatch', JSON.stringify(pendingDisparoCard));
+    if (tipo === 'wpp') {
+        window.open('/whatsapp', '_blank');
+    } else {
+        window.open('/email', '_blank');
+    }
+    pendingDisparoCard = null;
+}
+
 const STATUS_OPTIONS = ['Novo','Quente','Cliente','Enviado em Massa'];
 
 /* ════════════════════════════════════════════
