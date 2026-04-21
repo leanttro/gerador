@@ -1345,7 +1345,7 @@ async function salvarNoKanban() {
 
             localStorage.setItem('wl_card_done', JSON.stringify({
                 cardId: state.pendingCardId,
-                status: 'pronto',
+                status: 'pronto_render',
                 thumb: thumbUrl
             }));
             localStorage.removeItem('wl_pending_creation');
