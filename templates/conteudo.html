@@ -458,6 +458,28 @@
     </div>
 </div>
 
+<div id="modalImagemIA" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span>Gerar / Buscar Imagem com IA</span>
+            <button class="theme-toggle" onclick="fecharModalIA()" style="border:none"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="iaTargetInputId">
+            <div class="input-group">
+                <label>O que você quer na imagem?</label>
+                <input type="text" id="iaImagePrompt" class="input-control" placeholder="Ex: Um escritório moderno, cyberpunk, etc.">
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button class="btn btn-secondary" onclick="buscarPixabay()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;margin-right:6px;vertical-align:-2px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Buscar Pixabay (Grátis)</button>
+                <button class="btn btn-primary" onclick="gerarLeonardo()">✨ Criar com Leonardo.ai</button>
+            </div>
+            <div id="iaImageResults" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:16px; max-height:300px; overflow-y:auto;">
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.appTemplates = [];
     let currentEditCard = null;
@@ -976,6 +998,136 @@
         }
     }
 
+    async function uploadImagemChave(input, chave) {
+        if (!input.files || input.files.length === 0) return;
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        const btn = input.previousElementSibling.previousElementSibling;
+        const originalText = btn.innerText;
+        btn.innerText = 'Enviando...';
+        try {
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('panel_' + chave).value = data.url;
+                currentChaves[chave] = data.url;
+                btn.innerText = 'Upload OK';
+            } else {
+                alert(data.error);
+                btn.innerText = originalText;
+            }
+        } catch(e) {
+            alert('Erro no upload');
+            btn.innerText = originalText;
+        }
+    }
+
+    async function uploadImagemChaveEdit(input, chave) {
+        if (!input.files || input.files.length === 0) return;
+        const formData = new FormData();
+        formData.append('file', input.files[0]);
+        const btn = input.previousElementSibling.previousElementSibling;
+        const originalText = btn.innerText;
+        btn.innerText = 'Enviando...';
+        try {
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('edit_' + chave).value = data.url;
+                btn.innerText = 'Upload OK';
+            } else {
+                alert(data.error);
+                btn.innerText = originalText;
+            }
+        } catch(e) {
+            alert('Erro no upload');
+            btn.innerText = originalText;
+        }
+    }
+
+    function abrirModalIA(targetInputId) {
+        document.getElementById('iaTargetInputId').value = targetInputId;
+        document.getElementById('iaImagePrompt').value = '';
+        document.getElementById('iaImageResults').innerHTML = '';
+        document.getElementById('modalImagemIA').classList.add('active');
+    }
+
+    function fecharModalIA() {
+        document.getElementById('modalImagemIA').classList.remove('active');
+    }
+
+    function selecionarImagemIA(url) {
+        const targetId = document.getElementById('iaTargetInputId').value;
+        const input = document.getElementById(targetId);
+        if (input) {
+            input.value = url;
+            if (targetId.startsWith('panel_')) {
+                const chave = targetId.replace('panel_', '');
+                currentChaves[chave] = url;
+            }
+            input.dispatchEvent(new Event('change'));
+        }
+        fecharModalIA();
+    }
+
+    async function buscarPixabay() {
+        const query = document.getElementById('iaImagePrompt').value.trim();
+        if (!query) { alert('Digite algo para buscar!'); return; }
+        const resDiv = document.getElementById('iaImageResults');
+        resDiv.innerHTML = '<div style="grid-column: span 2; text-align:center; padding:20px; font-size:12px;">Buscando no Pixabay...</div>';
+        
+        try {
+            const res = await fetch('/api/pixabay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+            const data = await res.json();
+            if (data.success && data.images && data.images.length > 0) {
+                resDiv.innerHTML = '';
+                data.images.forEach(img => {
+                    resDiv.innerHTML += `
+                        <div style="cursor:pointer; border:1px solid var(--border); border-radius:4px; overflow:hidden;" onclick="selecionarImagemIA('${img.url}')">
+                            <img src="${img.preview}" style="width:100%; height:100px; object-fit:cover; display:block;">
+                        </div>
+                    `;
+                });
+            } else {
+                resDiv.innerHTML = '<div style="grid-column: span 2; text-align:center; padding:20px; font-size:12px;">Nenhuma imagem encontrada.</div>';
+            }
+        } catch(e) {
+            resDiv.innerHTML = '<div style="grid-column: span 2; text-align:center; padding:20px; font-size:12px; color:var(--danger)">Erro na busca.</div>';
+        }
+    }
+
+    async function gerarLeonardo() {
+        const prompt = document.getElementById('iaImagePrompt').value.trim();
+        if (!prompt) { alert('Digite como quer a imagem!'); return; }
+        const resDiv = document.getElementById('iaImageResults');
+        resDiv.innerHTML = '<div style="grid-column: span 2; text-align:center; padding:20px; font-size:12px;">Gerando com Leonardo.ai (Pode levar até 30s)...</div>';
+        
+        try {
+            const res = await fetch('/api/leonardo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await res.json();
+            if (data.success && data.url) {
+                resDiv.innerHTML = `
+                    <div style="grid-column: span 2; cursor:pointer; border:2px solid var(--accent); border-radius:4px; overflow:hidden;" onclick="selecionarImagemIA('${data.url}')">
+                        <img src="${data.url}" style="width:100%; height:auto; display:block;">
+                        <div style="padding:8px; text-align:center; font-size:11px; font-weight:600; background:var(--accent); color:#fff;">Usar esta Imagem</div>
+                    </div>
+                `;
+            } else {
+                resDiv.innerHTML = `<div style="grid-column: span 2; text-align:center; padding:20px; font-size:12px; color:var(--danger)">Erro: ${data.error}</div>`;
+            }
+        } catch(e) {
+            resDiv.innerHTML = '<div style="grid-column: span 2; text-align:center; padding:20px; font-size:12px; color:var(--danger)">Erro ao conectar com Leonardo.ai.</div>';
+        }
+    }
+
     async function gerarComIA() {
         const titulo = document.getElementById('draftTitle').value.trim();
         const copyPre = document.getElementById('draftCopy').value.trim();
@@ -1109,7 +1261,16 @@
         grid.innerHTML = '';
         for (const [k, v] of Object.entries(currentChaves)) {
             const isColor = k.includes('COR');
+            const isImg = k.includes('IMG') || k.includes('FOTO') || k.includes('IMAGEM') || k.includes('LOGO') || k.includes('BACKGROUND');
             let val = v || '';
+            let imgButtons = isImg ? `
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="document.getElementById('uploadImg_${k}').click()">Upload</button>
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="abrirModalIA('panel_${k}')">✨ IA (Pixabay/Leonardo)</button>
+                    <input type="file" id="uploadImg_${k}" accept="image/*" style="display:none" onchange="uploadImagemChave(this, '${k}')">
+                </div>
+            ` : '';
+
             let html = `
                 <div class="input-group" style="margin-bottom:8px;">
                     <label style="font-size:10px; margin-bottom:4px; color:var(--text-muted); font-weight:700;">${k}</label>
@@ -1117,6 +1278,7 @@
                         ${isColor ? `<input type="color" id="panelColor_${k}" value="${val.startsWith('#') && val.length <= 9 ? val.slice(0,7) : '#000000'}" style="width:36px; height:36px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="document.getElementById('panel_${k}').value=this.value; currentChaves['${k}']=this.value;">` : ''}
                         <input type="text" id="panel_${k}" class="input-control" value="${val}" style="padding:8px 10px;" onchange="currentChaves['${k}']=this.value; ${isColor ? `try{document.getElementById('panelColor_${k}').value=this.value.slice(0,7);}catch(e){}` : ''}">
                     </div>
+                    ${imgButtons}
                 </div>
             `;
             grid.innerHTML += html;
@@ -1287,7 +1449,17 @@
         
         for (const [k, v] of Object.entries(chaves)) {
             const isColor = k.includes('COR');
+            const isImg = k.includes('IMG') || k.includes('FOTO') || k.includes('IMAGEM') || k.includes('LOGO') || k.includes('BACKGROUND');
             let val = v || '';
+
+            let imgButtons = isImg ? `
+                <div style="display:flex; gap:4px; margin-top:4px;">
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="document.getElementById('editUploadImg_${k}').click()">Upload</button>
+                    <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="abrirModalIA('edit_${k}')">✨ IA</button>
+                    <input type="file" id="editUploadImg_${k}" accept="image/*" style="display:none" onchange="uploadImagemChaveEdit(this, '${k}')">
+                </div>
+            ` : '';
+
             html += `
                 <div class="input-group" style="margin-bottom:8px;">
                     <label style="font-size:10px; margin-bottom:2px;">${k}</label>
@@ -1295,6 +1467,7 @@
                         ${isColor ? `<input type="color" id="editColor_${k}" value="${val.startsWith('#') && val.length <= 9 ? val.slice(0,7) : '#000000'}" style="width:36px; height:36px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="document.getElementById('edit_${k}').value=this.value">` : ''}
                         <input type="text" id="edit_${k}" class="input-control" value="${val}" style="padding:6px 10px;">
                     </div>
+                    ${imgButtons}
                 </div>
             `;
         }
