@@ -613,7 +613,7 @@ textarea.input-control {
                     </div>
                 </div>
                 <div class="toolbar-right">
-                    <button class="btn btn-save-kanban hidden" id="btnSalvarKanban" onclick="salvarNoKanban()">
+                    <button class="btn btn-save-kanban" id="btnSalvarKanban" onclick="salvarNoKanban()" style="display:none;">
                         💾 Salvar no Kanban
                     </button>
                     <button class="btn btn-outline" onclick="openFullscreen()">⛶</button>
@@ -1016,6 +1016,7 @@ function renderIframe(html) {
 function showPreview() {
     document.getElementById('emptyState').classList.add('hidden');
     document.getElementById('previewWrapper').style.display = '';
+    document.getElementById('btnSalvarKanban').style.display = '';
 }
 
 function changeZoom(d) { state.zoomLevel = Math.min(200, Math.max(25, state.zoomLevel + d)); applyZoom(state.zoomLevel); }
@@ -1318,12 +1319,14 @@ async function recordScreen() {
    SALVAR NO KANBAN COM MINIATURA AUTOMÁTICA
 ════════════════════════════════════════════ */
 async function salvarNoKanban() {
-    if (!state.pendingCardId) {
-        showToast('warning', 'Atenção', 'Nenhum card associado a esta criação.');
-        return;
-    }
     if (!state.currentHTML) {
         showToast('warning', 'Atenção', 'Gere uma animação primeiro.');
+        return;
+    }
+
+    if (!state.pendingCardId) {
+        // Sem card associado: apenas salva o HTML localmente e avisa
+        showToast('info', 'Salvo localmente', 'Nenhum card associado. Use "Baixar HTML" para exportar.');
         return;
     }
 
