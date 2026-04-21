@@ -610,7 +610,31 @@ function toggleView(view) {
 }
 
 const socket = io('https://wpp.leanttro.com');
-let chatHistory = {};
+
+/* ── Persistência do chatHistory por dia ── */
+const _chatToday = new Date().toISOString().slice(0, 10); // "2026-04-20"
+const _chatKey   = 'wpp_chat_history_' + _chatToday;
+
+function _loadChatHistory() {
+    try {
+        const raw = localStorage.getItem(_chatKey);
+        return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+}
+
+function _saveChatHistory() {
+    try {
+        localStorage.setItem(_chatKey, JSON.stringify(chatHistory));
+        /* limpa dias anteriores para não acumular lixo */
+        Object.keys(localStorage).forEach(k => {
+            if (k.startsWith('wpp_chat_history_') && k !== _chatKey) {
+                localStorage.removeItem(k);
+            }
+        });
+    } catch(e) {}
+}
+
+let chatHistory = _loadChatHistory();
 let activeJid = null;
 
 socket.on('connect', () => {
@@ -621,6 +645,7 @@ socket.on('nova_mensagem', (data) => {
     const jid = data.remoteJid;
     if(!chatHistory[jid]) chatHistory[jid] = [];
     chatHistory[jid].push(data);
+    _saveChatHistory();
     
     if(document.getElementById('viewChat').style.display === 'flex') {
         renderChatContacts();
@@ -698,6 +723,13 @@ function sendReply() {
     if(!text || !activeJid) return;
 
     socket.emit('enviar_resposta', { jid: activeJid, text: text });
+
+    /* registra localmente para persistir a resposta enviada */
+    if(!chatHistory[activeJid]) chatHistory[activeJid] = [];
+    chatHistory[activeJid].push({ remoteJid: activeJid, text: text, fromMe: true });
+    _saveChatHistory();
+    renderMessages();
+
     input.value = '';
 }
 
