@@ -498,7 +498,29 @@
             try {
                 const { cardId, status, thumb } = JSON.parse(cardDoneRaw);
                 const card = document.getElementById(cardId);
-                if (card && status === 'pronto') {
+                if (card && status === 'pronto_render') {
+                    const colCriacao = document.getElementById('col-criacao');
+                    if (colCriacao) colCriacao.appendChild(card);
+
+                    const existingBadge = card.querySelector('.badge-pronto');
+                    if (!existingBadge) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge-pronto';
+                        badge.style.cssText = 'font-size:9px;font-weight:700;color:#10b981;margin-top:4px;display:block;';
+                        badge.textContent = '✓ Arte criada';
+                        card.appendChild(badge);
+                    }
+
+                    if (thumb && !card.querySelector('.card-render-thumb')) {
+                        const img = document.createElement('img');
+                        img.className = 'card-render-thumb';
+                        img.src = thumb;
+                        img.style.cssText = 'width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid var(--border);';
+                        card.insertBefore(img, card.querySelector('.k-card-title'));
+                    }
+
+                    atualizarContadores();
+                } else if (card && status === 'pronto') {
                     const colPronto = document.getElementById('col-pronto');
                     if (colPronto) colPronto.appendChild(card);
                     
