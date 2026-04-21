@@ -688,7 +688,12 @@ function renderChatContacts() {
 
     list.innerHTML = jids.map(jid => {
         const history = chatHistory[jid];
-        const lastMsg = history[history.length - 1].text || 'Mídia';
+        const lastRaw = history[history.length - 1];
+        const lastMsg = lastRaw.text
+            || (lastRaw.mediaType === 'image' ? '📷 Imagem'
+              : lastRaw.mediaType === 'video' ? '🎥 Vídeo'
+              : lastRaw.mediaType === 'audio' ? '🎵 Áudio'
+              : '📎 Mídia');
         const isActive = jid === activeJid ? 'background: var(--accent-bg);' : '';
         const displayName = getContactDisplayName(jid, history);
 
@@ -710,8 +715,24 @@ function renderMessages() {
     }
 
     area.innerHTML = chatHistory[activeJid].map(msg => {
-        const align = msg.fromMe ? 'align-self: flex-end; background: var(--accent); color: white;' : 'align-self: flex-start; background: var(--bg-surface); border: 1px solid var(--border);';
-        return `<div style="max-width: 70%; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.4; ${align}">${msg.text || 'Mensagem multimídia'}</div>`;
+        const align = msg.fromMe
+            ? 'align-self: flex-end; background: var(--accent); color: white;'
+            : 'align-self: flex-start; background: var(--bg-surface); border: 1px solid var(--border);';
+
+        let inner = '';
+        if (msg.mediaType === 'image' && msg.mediaBase64) {
+            inner = `<img src="${msg.mediaBase64}" style="max-width:100%; border-radius:6px; display:block;" />`;
+            if (msg.caption) inner += `<div style="margin-top:6px; font-size:12px;">${msg.caption}</div>`;
+        } else if (msg.mediaType === 'video' && msg.mediaBase64) {
+            inner = `<video controls style="max-width:100%; border-radius:6px; display:block;" src="${msg.mediaBase64}"></video>`;
+            if (msg.caption) inner += `<div style="margin-top:6px; font-size:12px;">${msg.caption}</div>`;
+        } else if (msg.mediaType === 'audio' && msg.mediaBase64) {
+            inner = `<audio controls style="width:100%;" src="${msg.mediaBase64}"></audio>`;
+        } else {
+            inner = msg.text || '📎 Mídia';
+        }
+
+        return `<div style="max-width: 70%; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.4; ${align}">${inner}</div>`;
     }).join('');
     
     area.scrollTop = area.scrollHeight;
