@@ -59,6 +59,7 @@ limiter = Limiter(
 # CHAVES DE API
 # ─────────────────────────────────────────────
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
@@ -187,45 +188,52 @@ def serve_html_templates(filename):
 @app.route('/api/upload', methods=['POST'])
 @limiter.limit("60 per minute")
 def api_upload():
-    if 'file' not in request.files:
+    if 'file' not in request.files and 'files' not in request.files:
         return jsonify({"success": False, "error": "Nenhum arquivo enviado"}), 400
 
-    file = request.files['file']
-
-    if file.filename == '':
-        return jsonify({"success": False, "error": "Nome de arquivo vazio"}), 400
-
-    if not allowed_file(file.filename):
-        return jsonify({
-            "success": False,
-            "error": f"Tipo não permitido. Use: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
-        }), 400
+    uploaded_urls = []
+    files = request.files.getlist('files')
+    
+    if not files and 'file' in request.files:
+        files = [request.files['file']]
 
     try:
-        safe_name = secure_filename(file.filename)
-        unique_name = f"{int(time.time())}_{uuid.uuid4().hex[:8]}_{safe_name}"
-        filepath = os.path.join(UPLOAD_FOLDER, unique_name)
-        file.save(filepath)
+        for file in files:
+            if file.filename == '':
+                continue
+            if not allowed_file(file.filename):
+                continue
 
-        file_size = os.path.getsize(filepath)
-        if file_size > MAX_FILE_SIZE:
-            os.remove(filepath)
-            return jsonify({
-                "success": False,
-                "error": f"Arquivo muito grande. Máximo: {MAX_FILE_SIZE_MB}MB"
-            }), 400
+            safe_name = secure_filename(file.filename)
+            unique_name = f"{int(time.time())}_{uuid.uuid4().hex[:8]}_{safe_name}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_name)
+            file.save(filepath)
+
+            file_size = os.path.getsize(filepath)
+            if file_size > MAX_FILE_SIZE:
+                os.remove(filepath)
+                continue
+
+            media_type = get_media_type(unique_name)
+            uploaded_urls.append({
+                "url": f"/media/{unique_name}",
+                "filename": unique_name,
+                "type": media_type,
+                "size_kb": round(file_size / 1024, 1)
+            })
 
         cleanup_old_uploads()
 
-        media_type = get_media_type(unique_name)
-        file_url = f"/media/{unique_name}"
+        if not uploaded_urls:
+            return jsonify({"success": False, "error": "Nenhum arquivo válido enviado"}), 400
 
         return jsonify({
             "success": True,
-            "url": file_url,
-            "filename": unique_name,
-            "type": media_type,
-            "size_kb": round(file_size / 1024, 1)
+            "url": uploaded_urls[0]["url"],
+            "filename": uploaded_urls[0]["filename"],
+            "type": uploaded_urls[0]["type"],
+            "size_kb": uploaded_urls[0]["size_kb"],
+            "urls": uploaded_urls
         })
 
     except Exception as e:
@@ -260,6 +268,56 @@ def api_pixabay():
             })
             
         return jsonify({"success": True, "images": images})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+@app.route('/api/leonardo', methods=['POST'])
+@limiter.limit("15 per minute")
+def api_leonardo():
+    if not LEONARDO_API_KEY:
+        return jsonify({"success": False, "error": "LEONARDO_API_KEY não configurada"}), 400
+    
+    data = request.json or {}
+    prompt = data.get('prompt', '').strip()
+    
+    if not prompt:
+        return jsonify({"success": False, "error": "Busca vazia"}), 400
+
+    try:
+        url_gen = "https://cloud.leonardo.ai/api/rest/v1/generations"
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "authorization": f"Bearer {LEONARDO_API_KEY}"
+        }
+        payload = {
+            "height": 1024,
+            "width": 1024,
+            "modelId": "6bef9f1b-29cb-40c7-b9df-32b51c1f67d3",
+            "prompt": prompt,
+            "num_images": 1
+        }
+        
+        res_gen = requests.post(url_gen, json=payload, headers=headers).json()
+        gen_id = res_gen.get("sdGenerationJob", {}).get("generationId")
+
+        if not gen_id:
+            return jsonify({"success": False, "error": "Falha na API do Leonardo"}), 500
+
+        url_get = f"https://cloud.leonardo.ai/api/rest/v1/generations/{gen_id}"
+        
+        for _ in range(15):
+            time.sleep(2)
+            res_img = requests.get(url_get, headers=headers).json()
+            status = res_img.get("generations_by_pk", {}).get("status")
+            
+            if status == "COMPLETE":
+                imgs = res_img.get("generations_by_pk", {}).get("generated_images", [])
+                if imgs:
+                    return jsonify({"success": True, "url": imgs[0]["url"]})
+                break
+                
+        return jsonify({"success": False, "error": "Timeout gerando imagem"}), 408
+        
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
