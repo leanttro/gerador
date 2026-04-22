@@ -81,12 +81,7 @@
             display: block;
         }
 
-        /* Esconde o logo se a chave não for preenchida */
-        .cliente-logo[src="CHAVE_LOGO"],
-        .cliente-logo[src=""],
-        .cliente-logo:not([src]) {
-            display: none;
-        }
+        /* Logo sempre visível; onerror cuida de imagem quebrada */
 
         .header-badge {
             font-size: 9px;
@@ -190,12 +185,7 @@
             display: block;
         }
 
-        /* Esconde a imagem se a chave não for preenchida */
-        .product-image[src="CHAVE_IMAGEM"],
-        .product-image[src=""],
-        .product-image:not([src]) {
-            visibility: hidden;
-        }
+        /* Imagem sempre visível; onerror cuida de imagem quebrada */
 
         /* Overlay sutil sobre a tela para simular reflexo de tela */
         .screen-overlay {
@@ -361,7 +351,6 @@
                 alt="Logo"
                 class="cliente-logo"
                 onerror="this.style.display='none'"
-                onload="if(this.getAttribute('src')==='CHAVE_LOGO'||this.getAttribute('src')==='')this.style.display='none'"
             >
             <span class="header-badge" id="header-badge-text">Apresentação Comercial</span>
         </header>
@@ -382,7 +371,6 @@
                                 class="product-image"
                                 alt="Produto"
                                 onerror="this.style.visibility='hidden'"
-                                onload="if(this.getAttribute('src')==='CHAVE_IMAGEM'||this.getAttribute('src')==='')this.style.visibility='hidden'"
                             >
                             <div class="screen-overlay"></div>
                         </div>
