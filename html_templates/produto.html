@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Apresentação Comercial</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,14 +12,10 @@
             --cor-texto-principal: CHAVE_COR_TEXTO;
             --cor-destaque: CHAVE_COR_DESTAQUE;
             --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
-            --fonte-principal: 'Figtree', 'Inter', sans-serif;
+            --fonte-principal: 'Figtree', sans-serif;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background-color: var(--cor-fundo);
@@ -33,149 +28,113 @@
             overflow: hidden;
         }
 
-        /* ==============================
-           CONTAINER PRINCIPAL
-           Suporta 9:16 e 4:5 via CSS
-           ============================== */
+        /* ============================================
+           CONTAINER — 400x500px FIXO
+           Tudo dentro usa position:absolute com px
+           para o html2canvas calcular corretamente
+           ============================================ */
         .template-container {
-            /* Formato 4:5 padrão: 400×500 */
             width: 400px;
             height: 500px;
             background-color: var(--cor-fundo);
             position: relative;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            padding: 18px 20px 16px 20px;
-            /* Subtle depth — cores fixas para compatibilidade com html2canvas */
-            background-image:
-                radial-gradient(ellipse at 80% 10%, rgba(0,87,255,0.04) 0%, transparent 55%),
+        }
+
+        /* Gradiente decorativo — cores fixas, sem var() no background-image */
+        .bg-deco {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 80% 10%, rgba(0,87,255,0.05) 0%, transparent 50%),
                 radial-gradient(ellipse at 10% 90%, rgba(0,87,255,0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }
 
-        /* Formato 9:16 responsivo */
-        @media (max-aspect-ratio: 9/16) {
-            .template-container {
-                width: 100vw;
-                height: 177.78vw; /* 16/9 ratio */
-                padding: 4.5vw 5vw 4vw 5vw;
-            }
-        }
-
-        /* ==============================
-           HEADER — LOGO PEQUENO NO CANTO
-           ============================== */
+        /* ============================================
+           HEADER — top:0, height:42px
+           ============================================ */
         .template-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 42px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-            margin-bottom: 14px;
-            flex-shrink: 0;
+            padding: 0 18px;
+            z-index: 10;
         }
 
         .cliente-logo {
             max-width: 90px;
-            max-height: 28px;
+            max-height: 26px;
             object-fit: contain;
             display: block;
         }
 
-        /* Logo sempre visível; onerror cuida de imagem quebrada */
-
         .header-badge {
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 1.2px;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.3px;
             text-transform: uppercase;
             color: var(--cor-destaque);
-            background: rgba(0,87,255,0.07);
-            border: 1px solid rgba(0,87,255,0.15);
+            border: 1px solid var(--cor-destaque);
             border-radius: 20px;
-            padding: 3px 10px;
+            padding: 3px 9px;
+            opacity: 0.7;
         }
 
-        /* ==============================
-           MACBOOK MOCKUP — ÁREA PRINCIPAL
-           ============================== */
-        .notebook-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        /* Efeito de reflexo/brilho sutil atrás do notebook */
-        .notebook-wrapper::before {
-            content: '';
+        /* ============================================
+           NOTEBOOK — top:46px, height:268px
+           ============================================ */
+        .notebook-area {
             position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 85%;
-            height: 18px;
-            background: radial-gradient(ellipse, rgba(0,87,255,0.12) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: 0;
+            top: 46px;
+            left: 18px; right: 18px;
+            height: 268px;
+            z-index: 5;
         }
 
-        .macbook-screen-wrapper {
-            position: relative;
-            width: 100%;
-            z-index: 1;
-        }
-
-        /* Tela do MacBook — proporção 4:3 para a área de tela */
-        .macbook-body {
-            width: 100%;
-            background: #1a1a1f;
+        /* Tampa/tela — ocupa quase tudo */
+        .macbook-lid {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 252px;
+            background: #1c1c20;
             border-radius: 10px 10px 0 0;
-            padding: 5px 5px 0 5px;
+            padding: 8px 6px 0 6px;
             box-shadow:
-                0 2px 0 #3a3a40 inset,
-                0 -1px 0 #111 inset,
-                0 0 0 1px #2a2a30,
-                0 8px 32px rgba(0,0,0,0.22),
-                0 2px 8px rgba(0,0,0,0.14);
-            position: relative;
+                inset 0 2px 0 #3c3c44,
+                inset 0 -1px 0 #111,
+                0 0 0 1px #2c2c34,
+                0 12px 40px rgba(0,0,0,0.30),
+                0 3px 10px rgba(0,0,0,0.18);
         }
 
-        /* Câmera */
         .macbook-camera {
             width: 100%;
             height: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 3px;
+            margin-bottom: 4px;
         }
-
         .macbook-camera-dot {
-            width: 5px;
-            height: 5px;
+            width: 5px; height: 5px;
             border-radius: 50%;
-            background: #2e2e34;
-            box-shadow: 0 0 0 1px #232328;
+            background: #2a2a30;
+            box-shadow: 0 0 0 1px #1e1e24;
         }
 
-        /* Tela interna — onde a imagem aparece */
-        .macbook-display {
+        /* Tela interna: lid(252) - padding-top(8) - camera(14) = 230px */
+        .macbook-screen {
             width: 100%;
-            /* Proporção 4:3 aproximada para tela de notebook */
-            padding-top: 66.6%;
+            height: 230px;
+            border-radius: 3px;
+            overflow: hidden;
+            background: #06060e;
             position: relative;
-            border-radius: 3px;
-            overflow: hidden;
-            background: #0d0d10;
-        }
-
-        .macbook-display-inner {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            border-radius: 3px;
         }
 
         .product-image {
@@ -185,260 +144,210 @@
             display: block;
         }
 
-        /* Imagem sempre visível; onerror cuida de imagem quebrada */
-
-        /* Overlay sutil sobre a tela para simular reflexo de tela */
-        .screen-overlay {
+        .screen-glare {
             position: absolute;
             inset: 0;
             background: linear-gradient(
-                135deg,
-                rgba(255,255,255,0.04) 0%,
-                transparent 40%,
-                rgba(0,0,0,0.05) 100%
+                130deg,
+                rgba(255,255,255,0.05) 0%,
+                transparent 45%,
+                rgba(0,0,0,0.04) 100%
             );
             pointer-events: none;
-            border-radius: 3px;
         }
 
-        /* Base do MacBook */
+        /* Base */
         .macbook-base {
-            width: 100%;
+            position: absolute;
+            top: 252px; left: 0; right: 0;
             height: 9px;
-            background: linear-gradient(to bottom, #b0b0b8, #c8c8d0);
+            background: linear-gradient(to bottom, #b8b8c0, #d0d0d8);
             border-radius: 0 0 3px 3px;
-            position: relative;
             box-shadow: 0 2px 6px rgba(0,0,0,0.18);
         }
-
-        /* Entalhe / notch da base */
         .macbook-base::after {
             content: '';
             position: absolute;
-            bottom: 0;
-            left: 50%;
+            bottom: 0; left: 50%;
             transform: translateX(-50%);
-            width: 28%;
-            height: 3px;
-            background: #9a9aa2;
+            width: 26%; height: 3px;
+            background: #a0a0a8;
             border-radius: 2px 2px 0 0;
         }
 
-        /* Superfície inferior / mesa */
+        /* Pé */
         .macbook-foot {
-            width: 102%;
-            margin-left: -1%;
-            height: 3px;
-            background: linear-gradient(to bottom, #888890, #a0a0a8);
+            position: absolute;
+            top: 261px; left: -1%; right: -1%;
+            height: 7px;
+            background: linear-gradient(to bottom, #909098, #b0b0b8);
             border-radius: 0 0 4px 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.14);
         }
 
-        /* ==============================
-           ÁREA DE TEXTO ABAIXO DO NOTEBOOK
-           ============================== */
-        .text-section {
-            width: 100%;
-            flex-shrink: 0;
-            padding-top: 12px;
+        /* Reflexo embaixo */
+        .notebook-glow {
+            position: absolute;
+            top: 255px; left: 10%; right: 10%;
+            height: 12px;
+            background: radial-gradient(ellipse, rgba(0,87,255,0.10) 0%, transparent 70%);
+            border-radius: 50%;
         }
 
-        /* Título */
+        /* ============================================
+           TEXTO — top: 322px (46+268+8)
+           ============================================ */
+        .text-area {
+            position: absolute;
+            top: 322px;
+            left: 18px; right: 18px;
+            z-index: 10;
+        }
+
         .dish-title {
-            font-family: var(--fonte-principal);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 800;
             color: var(--cor-texto-principal);
-            letter-spacing: -0.4px;
+            letter-spacing: -0.3px;
             line-height: 1.2;
             margin-bottom: 5px;
         }
 
-        /* Esconde se chave não preenchida */
-        .dish-title:empty,
-        .dish-title[data-empty="true"] {
-            display: none;
-        }
-
-        /* Ingredientes / descrição */
         .ingredients-list {
-            font-family: var(--fonte-principal);
             font-size: 11px;
             font-weight: 400;
             color: var(--cor-destaque-secundaria);
-            line-height: 1.55;
-            margin-bottom: 9px;
+            line-height: 1.5;
+            margin-bottom: 8px;
         }
 
-        .ingredients-list:empty {
-            display: none;
-        }
-
-        /* Tags de macros */
         .macros-info {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .macros-info:empty {
-            display: none;
         }
 
         .macro-tag {
-            font-family: var(--fonte-principal);
-            font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 0.6px;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.7px;
             text-transform: uppercase;
             color: var(--cor-destaque);
-            background: rgba(0,87,255,0.07);
-            border: 1px solid rgba(0,87,255,0.2);
-            padding: 3px 9px;
+            border: 1px solid var(--cor-destaque);
+            padding: 2px 8px;
             border-radius: 20px;
+            opacity: 0.75;
         }
 
-        /* Divisor */
+        /* ============================================
+           DIVISOR + FOOTER — bottom fixo
+           ============================================ */
         .divider {
-            width: 100%;
+            position: absolute;
+            bottom: 28px;
+            left: 18px; right: 18px;
             height: 1px;
-            background: linear-gradient(to right, rgba(0,87,255,0.15), transparent);
-            margin-bottom: 10px;
+            background: linear-gradient(to right, rgba(0,87,255,0.20), transparent);
+            z-index: 10;
         }
 
-        /* ==============================
-           FOOTER
-           ============================== */
         .template-footer {
+            position: absolute;
+            bottom: 10px;
+            left: 18px; right: 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
+            z-index: 10;
         }
 
         .cta-text {
-            font-family: var(--fonte-principal);
             font-size: 10px;
             font-weight: 500;
             color: var(--cor-destaque-secundaria);
             letter-spacing: 0.2px;
         }
 
-        .cta-text:empty {
-            display: none;
-        }
-
         .footer-dot {
-            width: 5px;
-            height: 5px;
+            width: 5px; height: 5px;
             border-radius: 50%;
             background: var(--cor-destaque);
-            opacity: 0.35;
-            flex-shrink: 0;
+            opacity: 0.4;
         }
 
     </style>
 </head>
 <body>
 
-    <div class="template-container">
+<div class="template-container">
 
-        <!-- HEADER -->
-        <header class="template-header">
-            <img
-                src="CHAVE_LOGO"
-                alt="Logo"
-                class="cliente-logo"
-                crossorigin="anonymous"
-                onerror="this.style.display='none'"
-            >
-            <span class="header-badge" id="header-badge-text">White Label Marketing</span>
-        </header>
+    <!-- decoração de fundo -->
+    <div class="bg-deco"></div>
 
-        <!-- NOTEBOOK MOCKUP -->
-        <div class="notebook-wrapper">
-            <div class="macbook-screen-wrapper">
+    <!-- HEADER -->
+    <header class="template-header">
+        <img
+            src="CHAVE_LOGO"
+            alt="Logo"
+            class="cliente-logo"
+            crossorigin="anonymous"
+            onerror="this.style.display='none'"
+        >
+        <span class="header-badge">White Label Marketing</span>
+    </header>
 
-                <!-- Tela -->
-                <div class="macbook-body">
-                    <div class="macbook-camera">
-                        <div class="macbook-camera-dot"></div>
-                    </div>
-                    <div class="macbook-display">
-                        <div class="macbook-display-inner">
-                            <img
-                                src="CHAVE_IMAGEM"
-                                class="product-image"
-                                alt="Produto"
-                                crossorigin="anonymous"
-                                onerror="this.style.visibility='hidden'"
-                            >
-                            <div class="screen-overlay"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Base -->
-                <div class="macbook-base"></div>
-                <div class="macbook-foot"></div>
-
+    <!-- NOTEBOOK -->
+    <div class="notebook-area">
+        <div class="macbook-lid">
+            <div class="macbook-camera">
+                <div class="macbook-camera-dot"></div>
+            </div>
+            <div class="macbook-screen">
+                <img
+                    src="CHAVE_IMAGEM"
+                    class="product-image"
+                    alt="Produto"
+                    crossorigin="anonymous"
+                    onerror="this.style.visibility='hidden'"
+                >
+                <div class="screen-glare"></div>
             </div>
         </div>
-
-        <!-- TEXTOS -->
-        <div class="text-section">
-
-            <h1 class="dish-title" id="dish-title-text">CHAVE_TITULO</h1>
-
-            <p class="ingredients-list" id="ingredients-list-text">CHAVE_INGREDIENTES</p>
-
-            <div class="macros-info" id="macros-info-tags">
-                CHAVE_MACROS
-            </div>
-
-            <div class="divider"></div>
-
-        </div>
-
-        <!-- FOOTER -->
-        <footer class="template-footer">
-            <span class="cta-text" id="cta-footer-text">CHAVE_CTA</span>
-            <div class="footer-dot"></div>
-        </footer>
-
+        <div class="macbook-base"></div>
+        <div class="macbook-foot"></div>
+        <div class="notebook-glow"></div>
     </div>
 
-    <script>
-        /*
-         * O backend (Flask / app.py) substitui as CHAVES via string replace.
-         * Este JS apenas garante que elementos com chaves não substituídas
-         * (caso algo falhe no replace) fiquem ocultos em vez de mostrar a chave crua.
-         */
-        (function hideMissingKeys() {
-            const CHAVE_PATTERN = /^CHAVE_/;
+    <!-- TEXTOS -->
+    <div class="text-area">
+        <h1 class="dish-title" id="dish-title-text">CHAVE_TITULO</h1>
+        <p class="ingredients-list" id="ingredients-list-text">CHAVE_INGREDIENTES</p>
+        <div class="macros-info" id="macros-info-tags">CHAVE_MACROS</div>
+    </div>
 
-            // Textos simples
-            ['dish-title-text', 'ingredients-list-text', 'cta-footer-text'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el && CHAVE_PATTERN.test(el.textContent.trim())) {
-                    el.style.display = 'none';
-                }
-            });
+    <!-- DIVISOR -->
+    <div class="divider"></div>
 
-            // Macros: esconde o container se só tiver chave
-            var macros = document.getElementById('macros-info-tags');
-            if (macros && CHAVE_PATTERN.test(macros.innerHTML.trim())) {
-                macros.style.display = 'none';
-            }
+    <!-- FOOTER -->
+    <footer class="template-footer">
+        <span class="cta-text" id="cta-footer-text">CHAVE_CTA</span>
+        <div class="footer-dot"></div>
+    </footer>
 
-            // Badge header (opcional)
-            var badge = document.getElementById('header-badge-text');
-            if (badge && CHAVE_PATTERN.test(badge.textContent.trim())) {
-                badge.style.display = 'none';
-            }
-        })();
-    </script>
+</div>
+
+<script>
+    /* Esconde elementos com chave crua não substituída pelo Flask */
+    (function() {
+        var chave = /^CHAVE_/;
+        ['dish-title-text','ingredients-list-text','cta-footer-text'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el && chave.test(el.textContent.trim())) el.style.display = 'none';
+        });
+        var m = document.getElementById('macros-info-tags');
+        if (m && chave.test(m.innerHTML.trim())) m.style.display = 'none';
+    })();
+</script>
 
 </body>
 </html>
