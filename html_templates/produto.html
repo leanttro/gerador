@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Template Apresentação Comercial</title>
+    <title>Template Leanttro Mockup 4:3</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --cor-fundo: CHAVE_COR_FUNDO;
             --cor-texto-principal: CHAVE_COR_TEXTO;
             --cor-destaque: CHAVE_COR_DESTAQUE;
             --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
-            --fonte-principal: 'Figtree', 'Inter', sans-serif;
+            --fonte-principal: 'Montserrat', sans-serif;
         }
 
         * {
@@ -24,383 +23,230 @@
 
         body {
             background-color: var(--cor-fundo);
-            color: var(--cor-texto-principal);
-            font-family: var(--fonte-principal);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
+            font-family: var(--fonte-principal);
         }
 
-        /* ==============================
-           CONTAINER PRINCIPAL
-           Suporta 9:16 e 4:5 via CSS
-           ============================== */
         .template-container {
-            /* Formato 4:5 padrão: 400×500 */
-            width: 400px;
-            height: 500px;
+            width: 420px;
+            min-height: 520px;
             background-color: var(--cor-fundo);
-            position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            padding: 18px 20px 16px 20px;
-            /* Subtle noise texture para dar profundidade */
-            background-image:
-                radial-gradient(ellipse at 80% 10%, rgba(0,87,255,0.04) 0%, transparent 55%),
-                radial-gradient(ellipse at 10% 90%, rgba(0,87,255,0.03) 0%, transparent 50%);
+            position: relative;
+            overflow: hidden;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
         }
 
-        /* Formato 9:16 responsivo */
-        @media (max-aspect-ratio: 9/16) {
-            .template-container {
-                width: 100vw;
-                height: 177.78vw; /* 16/9 ratio */
-                padding: 4.5vw 5vw 4vw 5vw;
-            }
-        }
-
-        /* ==============================
-           HEADER — LOGO PEQUENO NO CANTO
-           ============================== */
         .template-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-            margin-bottom: 14px;
-            flex-shrink: 0;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
         }
 
         .cliente-logo {
-            max-width: 90px;
-            max-height: 28px;
+            max-height: 16px;
             object-fit: contain;
-            display: block;
         }
 
-        /* Logo sempre visível; onerror cuida de imagem quebrada */
-
-        .header-badge {
+        .badge-comercial {
             font-size: 9px;
             font-weight: 600;
-            letter-spacing: 1.2px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
             color: var(--cor-destaque);
-            background: rgba(0,87,255,0.07);
-            border: 1px solid rgba(0,87,255,0.15);
+            border: 1px solid var(--cor-destaque);
+            background-color: transparent;
+            padding: 6px 12px;
             border-radius: 20px;
-            padding: 3px 10px;
         }
 
-        /* ==============================
-           MACBOOK MOCKUP — ÁREA PRINCIPAL
-           ============================== */
-        .notebook-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        .laptop-wrapper {
             position: relative;
+            width: 90%;
+            margin: 0 auto 35px auto;
+            z-index: 5;
+            animation: float 4s ease-in-out infinite;
         }
 
-        /* Efeito de reflexo/brilho sutil atrás do notebook */
-        .notebook-wrapper::before {
+        .laptop-wrapper::before {
             content: '';
             position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 85%;
-            height: 18px;
-            background: radial-gradient(ellipse, rgba(0,87,255,0.12) 0%, transparent 70%);
+            width: 100%;
+            height: 100%;
+            background: var(--cor-destaque);
+            filter: blur(45px);
+            opacity: 0.15;
+            top: 10%;
+            left: 0;
+            z-index: -1;
             border-radius: 50%;
-            z-index: 0;
         }
 
-        .macbook-screen-wrapper {
-            position: relative;
-            width: 100%;
-            z-index: 1;
-        }
-
-        /* Tela do MacBook — proporção 4:3 para a área de tela */
-        .macbook-body {
-            width: 100%;
-            background: #1a1a1f;
+        .laptop-frame {
+            background-color: #1a1a1a;
             border-radius: 10px 10px 0 0;
-            padding: 5px 5px 0 5px;
-            box-shadow:
-                0 2px 0 #3a3a40 inset,
-                0 -1px 0 #111 inset,
-                0 0 0 1px #2a2a30,
-                0 8px 32px rgba(0,0,0,0.22),
-                0 2px 8px rgba(0,0,0,0.14);
+            padding: 4% 4% 5% 4%;
+            box-shadow: inset 0 0 0 1px #333;
             position: relative;
         }
 
-        /* Câmera */
-        .macbook-camera {
-            width: 100%;
-            height: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 3px;
-        }
-
-        .macbook-camera-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #2e2e34;
-            box-shadow: 0 0 0 1px #232328;
-        }
-
-        /* Tela interna — onde a imagem aparece */
-        .macbook-display {
-            width: 100%;
-            /* Proporção 4:3 aproximada para tela de notebook */
-            padding-top: 66.6%;
+        .laptop-screen {
+            background-color: #ffffff;
+            aspect-ratio: 4 / 3;
+            border-radius: 2px;
+            overflow: hidden;
             position: relative;
-            border-radius: 3px;
-            overflow: hidden;
-            background: #0d0d10;
         }
 
-        .macbook-display-inner {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-            border-radius: 3px;
-        }
-
-        .product-image {
+        .main-product-video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: top;
             display: block;
         }
 
-        /* Imagem sempre visível; onerror cuida de imagem quebrada */
-
-        /* Overlay sutil sobre a tela para simular reflexo de tela */
-        .screen-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                135deg,
-                rgba(255,255,255,0.04) 0%,
-                transparent 40%,
-                rgba(0,0,0,0.05) 100%
-            );
-            pointer-events: none;
-            border-radius: 3px;
-        }
-
-        /* Base do MacBook */
-        .macbook-base {
-            width: 100%;
-            height: 9px;
-            background: linear-gradient(to bottom, #b0b0b8, #c8c8d0);
-            border-radius: 0 0 3px 3px;
+        .laptop-base {
+            width: 114%;
+            height: 8px;
+            background: linear-gradient(to bottom, #d6d6d6 0%, #b3b3b3 100%);
+            margin-left: -7%;
+            border-radius: 0 0 8px 8px;
             position: relative;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
         }
 
-        /* Entalhe / notch da base */
-        .macbook-base::after {
+        .laptop-base::after {
             content: '';
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 28%;
+            width: 18%;
             height: 3px;
-            background: #9a9aa2;
-            border-radius: 2px 2px 0 0;
-        }
-
-        /* Superfície inferior / mesa */
-        .macbook-foot {
-            width: 102%;
-            margin-left: -1%;
-            height: 3px;
-            background: linear-gradient(to bottom, #888890, #a0a0a8);
+            background-color: #999;
             border-radius: 0 0 4px 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        /* ==============================
-           ÁREA DE TEXTO ABAIXO DO NOTEBOOK
-           ============================== */
-        .text-section {
-            width: 100%;
-            flex-shrink: 0;
-            padding-top: 12px;
+        .text-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        /* Título */
         .dish-title {
-            font-family: var(--fonte-principal);
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 800;
             color: var(--cor-texto-principal);
-            letter-spacing: -0.4px;
+            letter-spacing: -0.5px;
             line-height: 1.2;
-            margin-bottom: 5px;
         }
 
-        /* Esconde se chave não preenchida */
-        .dish-title:empty,
-        .dish-title[data-empty="true"] {
-            display: none;
-        }
-
-        /* Ingredientes / descrição */
         .ingredients-list {
-            font-family: var(--fonte-principal);
-            font-size: 11px;
-            font-weight: 400;
+            font-size: 12px;
+            font-weight: 500;
             color: var(--cor-destaque-secundaria);
-            line-height: 1.55;
-            margin-bottom: 9px;
+            line-height: 1.5;
         }
 
-        .ingredients-list:empty {
-            display: none;
-        }
-
-        /* Tags de macros */
         .macros-info {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .macros-info:empty {
-            display: none;
+            margin-top: 5px;
         }
 
         .macro-tag {
-            font-family: var(--fonte-principal);
             font-size: 9px;
-            font-weight: 600;
-            letter-spacing: 0.6px;
-            text-transform: uppercase;
+            font-weight: 700;
             color: var(--cor-destaque);
-            background: rgba(0,87,255,0.07);
-            border: 1px solid rgba(0,87,255,0.2);
-            padding: 3px 9px;
+            border: 1px solid rgba(0,0,0,0.08); /* Ajustado para simular o azul clarinho caso a key traga apenas texto, mas herda cor */
+            background-color: transparent;
+            border-color: var(--cor-destaque);
+            padding: 6px 14px;
             border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* Divisor */
         .divider {
             width: 100%;
             height: 1px;
-            background: linear-gradient(to right, rgba(0,87,255,0.15), transparent);
-            margin-bottom: 10px;
+            background-color: var(--cor-destaque-secundaria);
+            opacity: 0.2;
+            margin: auto 0 16px 0;
         }
 
-        /* ==============================
-           FOOTER
-           ============================== */
         .template-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
+            padding-bottom: 4px;
         }
 
         .cta-text {
-            font-family: var(--fonte-principal);
-            font-size: 10px;
-            font-weight: 500;
+            font-size: 11px;
+            font-weight: 600;
             color: var(--cor-destaque-secundaria);
-            letter-spacing: 0.2px;
-        }
-
-        .cta-text:empty {
-            display: none;
         }
 
         .footer-dot {
             width: 5px;
             height: 5px;
+            background-color: var(--cor-destaque);
             border-radius: 50%;
-            background: var(--cor-destaque);
-            opacity: 0.35;
-            flex-shrink: 0;
+            opacity: 0.6;
         }
 
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0px); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="template-container">
-
-        <!-- HEADER -->
-        <header class="template-header">
-            <img
-                src="CHAVE_LOGO"
-                alt="Logo"
-                class="cliente-logo"
-                onerror="this.style.display='none'"
-            >
-            <span class="header-badge" id="header-badge-text">Apresentação Comercial</span>
+    <div class="template-container" id="fit-marmita-app">
+        
+        <header class="template-header" id="logo-container">
+            <img src="CHAVE_LOGO" alt="Logo Leanttro" class="cliente-logo" id="client-logo-img">
+            <div class="badge-comercial">Apresentação Comercial</div>
         </header>
 
-        <!-- NOTEBOOK MOCKUP -->
-        <div class="notebook-wrapper">
-            <div class="macbook-screen-wrapper">
-
-                <!-- Tela -->
-                <div class="macbook-body">
-                    <div class="macbook-camera">
-                        <div class="macbook-camera-dot"></div>
-                    </div>
-                    <div class="macbook-display">
-                        <div class="macbook-display-inner">
-                            <img
-                                src="CHAVE_IMAGEM"
-                                class="product-image"
-                                alt="Produto"
-                                onerror="this.style.visibility='hidden'"
-                            >
-                            <div class="screen-overlay"></div>
-                        </div>
-                    </div>
+        <div class="laptop-wrapper">
+            <div class="laptop-frame">
+                <div class="laptop-screen" id="video-scene">
+                    <img src="CHAVE_IMAGEM" id="main-product-video" class="main-product-video" alt="Produto">
                 </div>
-
-                <!-- Base -->
-                <div class="macbook-base"></div>
-                <div class="macbook-foot"></div>
-
             </div>
+            <div class="laptop-base"></div>
         </div>
 
-        <!-- TEXTOS -->
-        <div class="text-section">
-
+        <div class="text-details" id="text-details-container">
             <h1 class="dish-title" id="dish-title-text">CHAVE_TITULO</h1>
-
-            <p class="ingredients-list" id="ingredients-list-text">CHAVE_INGREDIENTES</p>
+            
+            <p class="ingredients-list" id="ingredients-list-text">
+                CHAVE_INGREDIENTES
+            </p>
 
             <div class="macros-info" id="macros-info-tags">
                 CHAVE_MACROS
             </div>
-
-            <div class="divider"></div>
-
         </div>
 
-        <!-- FOOTER -->
-        <footer class="template-footer">
+        <div class="divider"></div>
+
+        <footer class="template-footer" id="footer-container">
             <span class="cta-text" id="cta-footer-text">CHAVE_CTA</span>
             <div class="footer-dot"></div>
         </footer>
@@ -408,34 +254,7 @@
     </div>
 
     <script>
-        /*
-         * O backend (Flask / app.py) substitui as CHAVES via string replace.
-         * Este JS apenas garante que elementos com chaves não substituídas
-         * (caso algo falhe no replace) fiquem ocultos em vez de mostrar a chave crua.
-         */
-        (function hideMissingKeys() {
-            const CHAVE_PATTERN = /^CHAVE_/;
-
-            // Textos simples
-            ['dish-title-text', 'ingredients-list-text', 'cta-footer-text'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el && CHAVE_PATTERN.test(el.textContent.trim())) {
-                    el.style.display = 'none';
-                }
-            });
-
-            // Macros: esconde o container se só tiver chave
-            var macros = document.getElementById('macros-info-tags');
-            if (macros && CHAVE_PATTERN.test(macros.innerHTML.trim())) {
-                macros.style.display = 'none';
-            }
-
-            // Badge header (opcional)
-            var badge = document.getElementById('header-badge-text');
-            if (badge && CHAVE_PATTERN.test(badge.textContent.trim())) {
-                badge.style.display = 'none';
-            }
-        })();
+        // Mantido limpo para a injeção via backend Leanttro
     </script>
 
 </body>
