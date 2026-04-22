@@ -47,7 +47,7 @@
             display: flex;
             flex-direction: column;
             padding: 18px 20px 16px 20px;
-            /* Subtle noise texture para dar profundidade */
+            /* Subtle depth — cores fixas para compatibilidade com html2canvas */
             background-image:
                 radial-gradient(ellipse at 80% 10%, rgba(0,87,255,0.04) 0%, transparent 55%),
                 radial-gradient(ellipse at 10% 90%, rgba(0,87,255,0.03) 0%, transparent 50%);
@@ -350,6 +350,7 @@
                 src="CHAVE_LOGO"
                 alt="Logo"
                 class="cliente-logo"
+                crossorigin="anonymous"
                 onerror="this.style.display='none'"
             >
             <span class="header-badge" id="header-badge-text">White Label Marketing</span>
@@ -370,6 +371,7 @@
                                 src="CHAVE_IMAGEM"
                                 class="product-image"
                                 alt="Produto"
+                                crossorigin="anonymous"
                                 onerror="this.style.visibility='hidden'"
                             >
                             <div class="screen-overlay"></div>
