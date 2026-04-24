@@ -8,18 +8,17 @@
     <style>
         :root {
             --cor-fundo: CHAVE_COR_FUNDO;
-            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-texto: CHAVE_COR_TEXTO;
             --cor-destaque: CHAVE_COR_DESTAQUE;
-            --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
-            --cor-overlay-titulo: CHAVE_COR_OVERLAY;
-            --fonte-principal: 'Figtree', sans-serif;
+            --cor-secundaria: CHAVE_COR_SECUNDARIA;
+            --cor-overlay: CHAVE_COR_OVERLAY;
+            --cor-cta-fundo: CHAVE_COR_CTA_FUNDO;
+            --cor-cta-texto: CHAVE_COR_CTA_TEXTO;
+            --cor-rodape-fundo: CHAVE_COR_RODAPE_FUNDO;
+            --cor-rodape-texto: CHAVE_COR_RODAPE_TEXTO;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: #1a1a1a;
@@ -27,45 +26,39 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            font-family: var(--fonte-principal);
+            font-family: 'Figtree', sans-serif;
         }
 
-        /* =============================================
-           CONTAINER PRINCIPAL — suporta 9:16 e 4:5
-           ============================================= */
-        .template-container {
-            /* Padrão: 4:5 → 400×500 */
+        /* ─── CONTAINER ─── */
+        .card {
             width: 400px;
             height: 500px;
+            background: var(--cor-fundo);
             position: relative;
             overflow: hidden;
-            background-color: var(--cor-fundo);
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Modo 9:16 via classe JS */
-        .template-container.modo-916 {
+        /* Modo 9:16 */
+        .card.modo-916 {
             width: 400px;
-            height: 711px; /* 400 × 16/9 */
+            height: 711px;
         }
 
-        /* =============================================
-           IMAGEM DE FUNDO (ocupa topo ~55% do card)
-           ============================================= */
-        .foto-wrapper {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* ─── BLOCO FOTO (topo, ~60% do card) ─── */
+        .foto-bloco {
+            position: relative;
             width: 100%;
-            /* 4:5 default */
-            height: 57%;
+            flex: 0 0 60%;
             overflow: hidden;
         }
 
-        .modo-916 .foto-wrapper {
-            height: 62%;
+        .card.modo-916 .foto-bloco {
+            flex: 0 0 63%;
         }
 
-        .foto-produto {
+        .foto-principal {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -73,137 +66,92 @@
             display: block;
         }
 
-        /* Gradiente de transição foto → fundo */
-        .foto-fade {
+        /* ─── ORNAMENTO CIRCULAR (canto sup direito) ─── */
+        .ornamento {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 60%;
-            background: linear-gradient(to bottom,
-                transparent 0%,
-                var(--cor-fundo) 100%
-            );
-            pointer-events: none;
-        }
-
-        /* =============================================
-           ORNAMENTO CIRCULAR DOURADO (canto sup dir)
-           ============================================= */
-        .ornamento-circulo {
-            position: absolute;
-            top: -40px;
-            right: -40px;
-            width: 140px;
-            height: 140px;
+            top: -28px;
+            right: -28px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
             background: var(--cor-destaque);
-            opacity: 0.92;
             z-index: 3;
-        }
-
-        .ornamento-folha {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 128px;
-            height: 128px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.15);
-            z-index: 4;
-            overflow: hidden;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: flex-end;
+            justify-content: flex-start;
+            padding: 18px 0 0 18px;
         }
 
-        /* SVG decorativo de folhas dentro do círculo */
-        .ornamento-folha svg {
-            width: 90px;
-            height: 90px;
-            opacity: 0.55;
-            fill: rgba(255,255,255,0.7);
+        .ornamento svg {
+            width: 42px;
+            height: 42px;
+            opacity: 0.45;
         }
 
-        /* =============================================
-           BLOCO DE TÍTULO (sobreposição esquerda)
-           ============================================= */
+        /* ─── BLOCO TÍTULO (sobreposição canto ESQ sobre a foto) ─── */
         .bloco-titulo {
             position: absolute;
-            top: 28%;
-            left: 16px;
-            width: 54%;
-            z-index: 5;
-            background: var(--cor-overlay-titulo);
-            border-radius: 10px;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            width: 60%;
+            background: var(--cor-overlay);
             padding: 14px 16px;
+            z-index: 4;
         }
 
-        .titulo-principal {
-            font-size: 17px;
+        .titulo {
+            font-size: 15px;
             font-weight: 400;
-            color: var(--cor-texto-principal);
+            color: var(--cor-texto);
             line-height: 1.35;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
         }
 
-        .titulo-principal em {
+        .titulo em {
             font-style: italic;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         .subtitulo {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 400;
-            color: rgba(255,255,255,0.75);
+            color: var(--cor-secundaria);
             line-height: 1.5;
         }
 
-        /* =============================================
-           ÁREA DE CONTEÚDO INFERIOR
-           ============================================= */
-        .conteudo-inferior {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 0 16px 14px 16px;
-            z-index: 5;
-            /* 4:5 */
-            top: 56%;
+        /* ─── BLOCO CONTEÚDO (parte baixa do card) ─── */
+        .conteudo-baixo {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--cor-fundo);
+            padding: 14px 16px 0 16px;
         }
 
-        .modo-916 .conteudo-inferior {
-            top: 60%;
-        }
-
-        /* =============================================
-           BULLETS / DIFERENCIAIS
-           ============================================= */
-        .diferenciais-lista {
+        /* ─── BULLETS ─── */
+        .bullets {
             list-style: none;
-            margin-bottom: 10px;
+            flex: 1;
         }
 
-        .diferenciais-lista li {
+        .bullets li {
             display: flex;
             align-items: flex-start;
-            gap: 7px;
-            margin-bottom: 5px;
+            gap: 8px;
             font-size: 10.5px;
             font-weight: 500;
-            color: var(--cor-texto-principal);
+            color: var(--cor-texto);
             line-height: 1.4;
+            margin-bottom: 8px;
         }
 
-        .diferenciais-lista li:empty {
-            display: none;
-        }
+        .bullets li:empty { display: none; }
 
-        .bullet-check {
+        .check-icon {
             flex-shrink: 0;
-            width: 15px;
-            height: 15px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: var(--cor-destaque);
             display: flex;
@@ -212,271 +160,146 @@
             margin-top: 1px;
         }
 
-        .bullet-check svg {
+        .check-icon svg {
             width: 8px;
             height: 8px;
             stroke: #fff;
             stroke-width: 2.5;
             fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
-        /* =============================================
-           FAIXA CTA
-           ============================================= */
+        /* ─── FAIXA CTA ─── */
         .faixa-cta {
             width: calc(100% + 32px);
             margin-left: -16px;
-            background: var(--cor-destaque);
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            margin-bottom: 10px;
+            background: var(--cor-cta-fundo);
+            padding: 9px 16px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .faixa-cta p {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--cor-cta-texto);
+            line-height: 1.4;
         }
 
         .faixa-cta:empty,
-        .faixa-cta[data-empty="true"] {
-            display: none;
-        }
+        .faixa-cta[data-vazio] { display: none; }
 
-        .cta-label {
-            font-size: 11.5px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            color: #fff;
-            text-align: center;
-        }
-
-        /* =============================================
-           FOOTER — LOGO + REDE SOCIAL
-           ============================================= */
-        .template-footer {
+        /* ─── RODAPÉ ─── */
+        .rodape {
+            background: var(--cor-rodape-fundo);
+            padding: 10px 16px;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .logo-marca {
-            max-height: 32px;
-            max-width: 130px;
-            object-fit: contain;
-            display: block;
-        }
-
-        .rede-social-badge {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 20px;
-            padding: 4px 10px;
-        }
-
-        .rede-social-badge svg {
-            width: 12px;
-            height: 12px;
-            fill: var(--cor-destaque);
             flex-shrink: 0;
         }
 
-        .rede-social-texto {
-            font-size: 9.5px;
+        .rodape-logo {
+            max-height: 30px;
+            max-width: 120px;
+            object-fit: contain;
+        }
+
+        .rodape-social {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .rodape-social svg {
+            width: 13px;
+            height: 13px;
+            fill: var(--cor-rodape-texto);
+            flex-shrink: 0;
+        }
+
+        .rodape-social span {
+            font-size: 10px;
             font-weight: 600;
-            color: var(--cor-texto-principal);
+            color: var(--cor-rodape-texto);
             letter-spacing: 0.2px;
-            white-space: nowrap;
-        }
-
-        .rede-social-texto:empty,
-        [data-empty="true"] .rede-social-texto {
-            display: none;
-        }
-
-        /* =============================================
-           BADGE CONTADOR (canto dir da foto)
-           ============================================= */
-        .badge-contador {
-            position: absolute;
-            right: 16px;
-            z-index: 6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            /* 4:5 */
-            top: 36%;
-        }
-
-        .modo-916 .badge-contador {
-            top: 40%;
-        }
-
-        .badge-numero {
-            width: 38px;
-            height: 38px;
-            background: rgba(255,255,255,0.93);
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-        }
-
-        .badge-numero span {
-            font-size: 13px;
-            font-weight: 800;
-            color: var(--cor-destaque);
-            line-height: 1;
-        }
-
-        .badge-numero small {
-            font-size: 6px;
-            font-weight: 600;
-            color: #888;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-            line-height: 1;
-        }
-
-        .badge-icone-wrapper {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .badge-icone {
-            width: 28px;
-            height: 28px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .badge-icone svg {
-            width: 14px;
-            height: 14px;
-            fill: rgba(255,255,255,0.7);
-        }
-
-        /* =============================================
-           OCULTAR ELEMENTOS VAZIOS (chaves não trocadas)
-           ============================================= */
-        [data-chave]:not([data-filled]) {
-            display: none;
         }
 
     </style>
 </head>
 <body>
 
-<div class="template-container" id="template">
+<div class="card" id="card">
 
-    <!-- FOTO PRINCIPAL (9:16 inside) -->
-    <div class="foto-wrapper">
+    <!-- BLOCO FOTO -->
+    <div class="foto-bloco">
+
         <img
             src="CHAVE_IMAGEM"
-            class="foto-produto"
+            class="foto-principal"
             alt="Foto"
             onerror="this.style.visibility='hidden'"
         >
-        <div class="foto-fade"></div>
-    </div>
 
-    <!-- ORNAMENTO CIRCULAR CANTO SUPERIOR DIREITO -->
-    <div class="ornamento-circulo"></div>
-    <div class="ornamento-folha">
-        <!-- Ícone decorativo de folhas/natureza -->
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="50" cy="50" rx="18" ry="38" transform="rotate(-30 50 50)" opacity="0.6"/>
-            <ellipse cx="50" cy="50" rx="18" ry="38" transform="rotate(30 50 50)" opacity="0.6"/>
-            <ellipse cx="50" cy="50" rx="18" ry="38" transform="rotate(90 50 50)" opacity="0.4"/>
-            <line x1="50" y1="15" x2="50" y2="85" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-        </svg>
-    </div>
-
-    <!-- BLOCO TÍTULO (sobreposição sobre a foto) -->
-    <div class="bloco-titulo" id="bloco-titulo">
-        <h1 class="titulo-principal" id="titulo-text">CHAVE_TITULO</h1>
-        <p class="subtitulo" id="subtitulo-text">CHAVE_SUBTITULO</p>
-    </div>
-
-    <!-- BADGE LATERAL DIREITO -->
-    <div class="badge-contador" id="badge-contador">
-        <div class="badge-numero">
-            <span id="badge-numero-valor">CHAVE_BADGE_NUMERO</span>
-            <small id="badge-numero-label">CHAVE_BADGE_LABEL</small>
+        <!-- ORNAMENTO CIRCULAR CANTO SUP DIREITO -->
+        <div class="ornamento">
+            <svg viewBox="0 0 60 60" fill="rgba(255,255,255,0.6)" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="30" cy="30" rx="12" ry="26" transform="rotate(-30 30 30)"/>
+                <ellipse cx="30" cy="30" rx="12" ry="26" transform="rotate(30 30 30)"/>
+                <ellipse cx="30" cy="30" rx="12" ry="26" transform="rotate(90 30 30)" opacity="0.4"/>
+            </svg>
         </div>
-        <div class="badge-icone-wrapper">
-            <!-- Coração -->
-            <div class="badge-icone">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-            </div>
-            <!-- Compartilhar -->
-            <div class="badge-icone">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
-                </svg>
-            </div>
+
+        <!-- BLOCO TÍTULO SOBRE A FOTO -->
+        <div class="bloco-titulo" id="bloco-titulo">
+            <h1 class="titulo" id="titulo-el">CHAVE_TITULO</h1>
+            <p class="subtitulo" id="subtitulo-el">CHAVE_SUBTITULO</p>
         </div>
+
     </div>
 
     <!-- CONTEÚDO INFERIOR -->
-    <div class="conteudo-inferior">
+    <div class="conteudo-baixo">
 
-        <!-- BULLETS DE DIFERENCIAIS -->
-        <ul class="diferenciais-lista" id="diferenciais-lista">
+        <ul class="bullets" id="bullets">
             <li id="item1">
-                <span class="bullet-check">
-                    <svg viewBox="0 0 10 10"><polyline points="2,5 4,8 8,2"/></svg>
-                </span>
-                <span id="item1-texto">CHAVE_ITEM1</span>
+                <span class="check-icon"><svg viewBox="0 0 10 10"><polyline points="2,5 4.5,8 8,2"/></svg></span>
+                <span id="item1-txt">CHAVE_ITEM1</span>
             </li>
             <li id="item2">
-                <span class="bullet-check">
-                    <svg viewBox="0 0 10 10"><polyline points="2,5 4,8 8,2"/></svg>
-                </span>
-                <span id="item2-texto">CHAVE_ITEM2</span>
+                <span class="check-icon"><svg viewBox="0 0 10 10"><polyline points="2,5 4.5,8 8,2"/></svg></span>
+                <span id="item2-txt">CHAVE_ITEM2</span>
             </li>
             <li id="item3">
-                <span class="bullet-check">
-                    <svg viewBox="0 0 10 10"><polyline points="2,5 4,8 8,2"/></svg>
-                </span>
-                <span id="item3-texto">CHAVE_ITEM3</span>
+                <span class="check-icon"><svg viewBox="0 0 10 10"><polyline points="2,5 4.5,8 8,2"/></svg></span>
+                <span id="item3-txt">CHAVE_ITEM3</span>
             </li>
         </ul>
 
         <!-- FAIXA CTA -->
         <div class="faixa-cta" id="faixa-cta">
-            <span class="cta-label" id="cta-label-text">CHAVE_CTA</span>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="template-footer">
-            <img
-                src="CHAVE_LOGO"
-                class="logo-marca"
-                alt="Logo"
-                onerror="this.style.display='none'"
-            >
-            <div class="rede-social-badge" id="rede-social-badge">
-                <!-- Ícone Instagram -->
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
-                <span class="rede-social-texto" id="rede-social-texto">CHAVE_REDE_SOCIAL</span>
-            </div>
+            <p id="cta-txt">CHAVE_CTA</p>
         </div>
 
     </div>
+
+    <!-- RODAPÉ -->
+    <footer class="rodape">
+        <img
+            src="CHAVE_LOGO"
+            class="rodape-logo"
+            alt="Logo"
+            onerror="this.style.display='none'"
+        >
+        <div class="rodape-social" id="rodape-social">
+            <!-- Instagram icon -->
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+            <span id="social-txt">CHAVE_REDE_SOCIAL</span>
+        </div>
+    </footer>
 
 </div>
 
@@ -484,74 +307,57 @@
     /*
      * CHAVES DISPONÍVEIS:
      *
-     * CSS vars (substituídas no :root):
-     *   CHAVE_COR_FUNDO           → cor de fundo do card       ex: #1c1c1c
-     *   CHAVE_COR_TEXTO           → cor do texto principal      ex: #ffffff
-     *   CHAVE_COR_DESTAQUE        → cor de destaque (dourado)   ex: #c9a227
-     *   CHAVE_COR_SECUNDARIA      → cor de texto secundário     ex: rgba(255,255,255,0.7)
-     *   CHAVE_COR_OVERLAY         → cor do bloco título         ex: rgba(30,50,80,0.88)
+     * -- CORES (substituídas no :root) --
+     * CHAVE_COR_FUNDO          fundo do card                ex: #f5f5f5
+     * CHAVE_COR_TEXTO          texto principal              ex: #111111
+     * CHAVE_COR_DESTAQUE       cor dos bullets/ornamento    ex: #c9a227
+     * CHAVE_COR_SECUNDARIA     subtítulo / textos suaves    ex: rgba(255,255,255,0.75)
+     * CHAVE_COR_OVERLAY        fundo do bloco título        ex: rgba(20,40,60,0.85)
+     * CHAVE_COR_CTA_FUNDO      fundo da faixa CTA           ex: #c9a227
+     * CHAVE_COR_CTA_TEXTO      texto da faixa CTA           ex: #ffffff
+     * CHAVE_COR_RODAPE_FUNDO   fundo do rodapé              ex: #f0f0f0
+     * CHAVE_COR_RODAPE_TEXTO   texto/ícone do rodapé        ex: #333333
      *
-     * Conteúdo:
-     *   CHAVE_IMAGEM              → URL da foto principal (9:16 ideal)
-     *   CHAVE_LOGO                → URL do logo da marca
-     *   CHAVE_TITULO              → Título principal (aceita <em> para itálico)
-     *   CHAVE_SUBTITULO           → Subtítulo abaixo do título
-     *   CHAVE_ITEM1               → Diferencial 1
-     *   CHAVE_ITEM2               → Diferencial 2
-     *   CHAVE_ITEM3               → Diferencial 3
-     *   CHAVE_CTA                 → Texto da faixa CTA (ex: Alugue sua sala: (83)99176-0110)
-     *   CHAVE_REDE_SOCIAL         → Handle da rede social       ex: @habitlclinica
-     *   CHAVE_BADGE_NUMERO        → Número do badge lateral     ex: 30
-     *   CHAVE_BADGE_LABEL         → Label do badge              ex: vagas
+     * -- CONTEÚDO --
+     * CHAVE_IMAGEM             URL da foto principal (9:16 ideal)
+     * CHAVE_LOGO               URL do logo (PNG transparente)
+     * CHAVE_TITULO             Título — aceita <em> para itálico/negrito
+     * CHAVE_SUBTITULO          Subtítulo abaixo do título
+     * CHAVE_ITEM1              Bullet 1
+     * CHAVE_ITEM2              Bullet 2
+     * CHAVE_ITEM3              Bullet 3
+     * CHAVE_CTA                Texto da faixa dourada
+     * CHAVE_REDE_SOCIAL        Handle ex: @habitlclinica
      *
-     * FORMATO:
-     *   Para ativar modo 9:16, adicione a classe "modo-916" ao #template via JS ou backend.
+     * -- FORMATO --
+     * Adicione ?formato=916 na URL ou window.FORMATO_916 = true para 9:16
      */
-
     (function() {
-        var CHAVE = /^CHAVE_/;
+        var C = /^CHAVE_/;
 
-        // Oculta elementos de texto que ainda têm chave não substituída
-        var textos = [
-            'titulo-text', 'subtitulo-text', 'item1-texto', 'item2-texto',
-            'item3-texto', 'cta-label-text', 'rede-social-texto',
-            'badge-numero-valor', 'badge-numero-label'
-        ];
+        var ids = {
+            'titulo-el':   null,
+            'subtitulo-el': null,
+            'item1-txt':   'item1',
+            'item2-txt':   'item2',
+            'item3-txt':   'item3',
+            'cta-txt':     'faixa-cta',
+            'social-txt':  'rodape-social'
+        };
 
-        textos.forEach(function(id) {
+        Object.keys(ids).forEach(function(id) {
             var el = document.getElementById(id);
             if (!el) return;
-            var txt = el.textContent.trim();
-            if (CHAVE.test(txt)) {
-                // Oculta o li pai se for item de lista
-                var li = el.closest('li');
-                if (li) li.style.display = 'none';
-                else el.style.display = 'none';
+            if (C.test(el.textContent.trim())) {
+                var parentId = ids[id];
+                var hide = parentId ? document.getElementById(parentId) : el;
+                if (hide) hide.style.display = 'none';
             }
         });
 
-        // Oculta faixa CTA se vazia
-        var cta = document.getElementById('cta-label-text');
-        if (cta && CHAVE.test(cta.textContent.trim())) {
-            document.getElementById('faixa-cta').style.display = 'none';
-        }
-
-        // Oculta badge se número não preenchido
-        var badgeNum = document.getElementById('badge-numero-valor');
-        if (badgeNum && CHAVE.test(badgeNum.textContent.trim())) {
-            document.getElementById('badge-contador').style.display = 'none';
-        }
-
-        // Oculta rede social se vazia
-        var rede = document.getElementById('rede-social-texto');
-        if (rede && CHAVE.test(rede.textContent.trim())) {
-            document.getElementById('rede-social-badge').style.display = 'none';
-        }
-
-        // Modo 9:16: adicionar ?formato=916 na URL ou setar window.FORMATO_916 = true
         var params = new URLSearchParams(window.location.search);
         if (params.get('formato') === '916' || window.FORMATO_916) {
-            document.getElementById('template').classList.add('modo-916');
+            document.getElementById('card').classList.add('modo-916');
         }
     })();
 </script>
