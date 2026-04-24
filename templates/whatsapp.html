@@ -431,6 +431,14 @@ textarea { min-height: 110px; }
                         <option value="Manual">Manual</option>
                     </select>
                 </div>
+                <div class="filter-row" style="margin-top:8px;">
+                    <select class="filter-select" id="filterRamo" onchange="filterContacts()">
+                        <option value="">Todos os ramos</option>
+                    </select>
+                    <select class="filter-select" id="filterCidade" onchange="filterContacts()">
+                        <option value="">Todas as cidades</option>
+                    </select>
+                </div>
             </div>
 
             <div class="select-bar">
@@ -856,8 +864,26 @@ async function loadContacts() {
                 whatsapp: c.telefone || '',
                 email: c.email || '',
                 origem: c.origem || 'Manual',
-                status: c.status || 'Novo'
+                status: c.status || 'Novo',
+                ramo: c.ramo || c.nicho || '',
+                cidade: c.cidade || (() => {
+                    const obs = c.observacoes || c.endereco || '';
+                    const m = obs.match(/[-–]\s*([A-Z]{2})\s*,/);
+                    if (m) {
+                        const cidadeMatch = obs.match(/,\s*([^,\-]+)\s*[-–]\s*[A-Z]{2}/);
+                        return cidadeMatch ? cidadeMatch[1].trim() : '';
+                    }
+                    return '';
+                })()
             })).filter(c => c.whatsapp && c.whatsapp.trim() !== '');
+
+            /* Populando filtros de ramo e cidade dinamicamente */
+            const ramos  = [...new Set(allContacts.map(c => c.ramo).filter(Boolean))].sort();
+            const cidades = [...new Set(allContacts.map(c => c.cidade).filter(Boolean))].sort();
+            const selRamo  = document.getElementById('filterRamo');
+            const selCidade = document.getElementById('filterCidade');
+            selRamo.innerHTML  = '<option value="">Todos os ramos</option>'  + ramos.map(r  => `<option value="${r}">${r}</option>`).join('');
+            selCidade.innerHTML = '<option value="">Todas as cidades</option>' + cidades.map(ci => `<option value="${ci}">${ci}</option>`).join('');
 
             try {
                 const pre = localStorage.getItem('wpp_pre_selected');
@@ -880,6 +906,8 @@ function filterContacts() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const status = document.getElementById('filterStatus').value.toLowerCase();
     const origem = document.getElementById('filterOrigem').value.toLowerCase();
+    const ramo   = document.getElementById('filterRamo').value.toLowerCase();
+    const cidade = document.getElementById('filterCidade').value.toLowerCase();
 
     filteredList = allContacts.filter(c => {
         const nome    = (c.nome    || '').toLowerCase();
@@ -887,7 +915,9 @@ function filterContacts() {
         const matchSearch = !search || nome.includes(search) || empresa.includes(search);
         const matchStatus = !status || (c.status || '').toLowerCase() === status;
         const matchOrigem = !origem || (c.origem || '').toLowerCase() === origem;
-        return matchSearch && matchStatus && matchOrigem;
+        const matchRamo   = !ramo   || (c.ramo   || '').toLowerCase() === ramo;
+        const matchCidade = !cidade || (c.cidade || '').toLowerCase() === cidade;
+        return matchSearch && matchStatus && matchOrigem && matchRamo && matchCidade;
     });
 
     renderContacts();
