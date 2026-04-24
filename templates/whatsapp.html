@@ -1,1290 +1,2655 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WhatsApp Hub | Leanttro</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://wpp.leanttro.com/socket.io/socket.io.js"></script>
-<style>
-:root {
-    --bg-body:      #f4f4f5;
-    --bg-surface:   #ffffff;
-    --text-main:    #09090b;
-    --text-muted:   #71717a;
-    --border:       #e4e4e7;
-    --primary:      #18181b;
-    --primary-bg:   rgba(24,24,27,0.05);
-    --accent:       #25D366;
-    --accent-dark:  #128C7E;
-    --accent-bg:    rgba(37,211,102,0.08);
-    --danger:       #ef4444;
-    --warning:      #f59e0b;
-    --radius:       6px;
-    --radius-lg:    10px;
-    --shadow:       0 1px 3px rgba(0,0,0,0.06);
-    --transition:   0.2s ease;
-}
-[data-theme="dark"] {
-    --bg-body:      #09090b;
-    --bg-surface:   #121214;
-    --text-main:    #fafafa;
-    --text-muted:   #a1a1aa;
-    --border:       #27272a;
-    --primary:      #fafafa;
-    --primary-bg:   rgba(250,250,250,0.05);
-    --accent-bg:    rgba(37,211,102,0.1);
-    --shadow:       0 4px 20px rgba(0,0,0,0.3);
-}
+import os
+import time
+import uuid
+import json
+import random
+import threading
+import smtplib
+import requests
+import urllib.parse
+import re
+import csv
+import io
+import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
+from email import encoders
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response, redirect, flash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from groq import Groq
+from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash, generate_password_hash
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg-body);
-    color: var(--text-main);
-    display: flex;
-    transition: background-color var(--transition), color var(--transition);
-}
+try:
+    import imgkit
+except ImportError:
+    imgkit = None
 
-.sidebar {
-    width: 260px;
-    min-width: 260px;
-    background: var(--bg-surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    transition: background-color var(--transition), border-color var(--transition);
-}
-.brand { padding: 24px 24px 20px; margin-bottom: 8px; }
-.brand-logo { width: 130px; height: auto; display: block; filter: brightness(0); transition: filter var(--transition); }
-[data-theme="dark"] .brand-logo { filter: brightness(0) invert(1); }
-.brand-sub { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 8px; display: block; }
-.nav-menu { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; flex: 1; }
-.nav-link {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px; color: var(--text-muted);
-    text-decoration: none; font-size: 13px; font-weight: 500;
-    border-radius: var(--radius); transition: all var(--transition);
-    cursor: pointer;
-}
-.nav-link svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; fill: none; }
-.nav-link:hover { color: var(--text-main); background: var(--bg-body); }
-    .nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:#8b5cf6;text-transform:uppercase;}
-    .nav-link.active { background: var(--accent-bg); color: var(--accent-dark); font-weight: 600; }
-[data-theme="dark"]     .nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:#8b5cf6;text-transform:uppercase;}
-    .nav-link.active { color: var(--accent); }
+try:
+    import weasyprint
+except ImportError:
+    weasyprint = None
 
-.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.topbar {
-    height: 64px; background: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 32px; flex-shrink: 0;
-    transition: background-color var(--transition), border-color var(--transition);
-}
-.topbar-title { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-.topbar-right { display: flex; align-items: center; gap: 20px; }
-.theme-toggle {
-    background: none; border: 1px solid var(--border);
-    color: var(--text-muted); cursor: pointer; padding: 8px;
-    border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
-    transition: all var(--transition);
-}
-.theme-toggle:hover { color: var(--text-main); border-color: var(--text-muted); }
-.theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
-[data-theme="dark"] .icon-moon { display: none; }
-.icon-sun { display: none; }
-[data-theme="dark"] .icon-sun { display: block; }
-.user-profile {
-    display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500;
-    border-left: 1px solid var(--border); padding-left: 20px;
-}
-.avatar {
-    width: 32px; height: 32px; background: var(--text-main);
-    color: var(--bg-surface); border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: 12px;
-}
+# ─────────────────────────────────────────────
+# CONFIGURAÇÕES BASE
+# ─────────────────────────────────────────────
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+HTML_TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'html_templates')
 
-.page-body { flex: 1; display: flex; overflow: hidden; }
-.left-panel {
-    width: 420px; min-width: 420px;
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    overflow: hidden;
-    background: var(--bg-surface);
-}
-.right-panel { flex: 1; overflow-y: auto; padding: 32px; background: var(--bg-body); }
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'svg', 'avif'}
+MAX_FILE_SIZE_MB = 20
+MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
 
-.panel-section { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-.panel-section:last-child { border-bottom: none; }
-.section-label {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1px; color: var(--text-muted); margin-bottom: 14px;
-}
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "marketing-os-chave-fixa-troque-em-producao")
 
-.chip-status {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 14px; border-radius: var(--radius-lg);
-    border: 1px solid var(--border); background: var(--bg-body);
-    font-size: 13px; font-weight: 500;
-}
-.chip-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--text-muted); flex-shrink: 0;
-}
-.chip-dot.connected { background: var(--accent); box-shadow: 0 0 6px rgba(37,211,102,0.5); }
-.chip-dot.disconnected { background: var(--danger); }
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["1000 per day", "200 per hour"]
+)
 
-.counters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.counter-card {
-    background: var(--bg-body); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px; text-align: center;
-}
-.counter-value { font-size: 22px; font-weight: 700; }
-.counter-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+# ─────────────────────────────────────────────
+# CHAVES DE API
+# ─────────────────────────────────────────────
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+LEONARDO_API_KEY = os.environ.get("LEONARDO_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
+PIXABAY_API_KEY = os.environ.get("PIXABAY_API_KEY")
+SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 
-.filter-row { display: flex; gap: 8px; }
-.filter-select, .filter-input {
-    flex: 1; padding: 8px 10px; font-size: 12px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg-body); color: var(--text-main);
-    font-family: 'Inter', sans-serif; outline: none;
-    transition: border-color var(--transition);
-}
-.filter-select:focus, .filter-input:focus { border-color: var(--accent); }
+BEST_FREE_MODEL = "llama-3.3-70b-versatile"
 
-.contacts-list { flex: 1; overflow-y: auto; }
-.contact-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 24px; border-bottom: 1px solid var(--border);
-    cursor: pointer; transition: background var(--transition);
-}
-.contact-item:hover { background: var(--bg-body); }
-.contact-item.selected { background: var(--accent-bg); }
-.contact-check {
-    width: 16px; height: 16px; border: 1.5px solid var(--border);
-    border-radius: 4px; flex-shrink: 0; display: flex;
-    align-items: center; justify-content: center;
-    transition: all var(--transition); background: var(--bg-surface);
-}
-.contact-item.selected .contact-check {
-    background: var(--accent); border-color: var(--accent);
-}
-.contact-check svg { width: 10px; height: 10px; stroke: white; stroke-width: 3; fill: none; display: none; }
-.contact-item.selected .contact-check svg { display: block; }
-.contact-info { flex: 1; min-width: 0; }
-.contact-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.contact-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-.contact-tag {
-    font-size: 10px; padding: 2px 7px; border-radius: 4px;
-    background: var(--primary-bg); color: var(--text-muted);
-    font-weight: 600; border: 1px solid var(--border); white-space: nowrap;
-}
-.contact-tag.quente { background: rgba(239,68,68,0.08); color: var(--danger); border-color: rgba(239,68,68,0.2); }
-.contact-tag.novo { background: var(--accent-bg); color: var(--accent-dark); border-color: rgba(37,211,102,0.2); }
-[data-theme="dark"] .contact-tag.novo { color: var(--accent); }
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
+else:
+    groq_client = None
 
-.select-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 24px; background: var(--bg-body);
-    border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted);
-}
-.select-bar button {
-    font-size: 11px; font-weight: 600; background: none; border: none;
-    cursor: pointer; color: var(--accent-dark); padding: 0;
-    font-family: 'Inter', sans-serif;
-}
-[data-theme="dark"] .select-bar button { color: var(--accent); }
+# Histórico de versões em memória (por session_id)
+version_history: dict[str, list[dict]] = {}
 
-.empty-state { padding: 40px 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
-.empty-state svg { width: 32px; height: 32px; stroke: var(--text-muted); margin-bottom: 12px; }
+# ─────────────────────────────────────────────
+# CONFIGURAÇÃO DO BAILEYS (WhatsApp)
+# ─────────────────────────────────────────────
+BAILEYS_URL = os.environ.get("BAILEYS_URL", "http://213.199.56.207:3000")
+# ─────────────────────────────────────────────
+# VARIÁVEIS DIRECTUS E GOOGLE (extras)
+# ─────────────────────────────────────────────
+DIRECTUS_URL = os.environ.get("DIRECTUS_URL", "")
+DIRECTUS_TOKEN = os.environ.get("DIRECTUS_TOKEN", "")
+DIRECTUS_TABLE = os.environ.get("DIRECTUS_TABLE", "")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI", "https://seuapp.com/api/metricas/oauth/callback")
+GA4_PROPERTY_ID = os.environ.get("GA4_PROPERTY_ID", "")
 
-.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
-.page-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
-
-.form-block { margin-bottom: 24px; }
-.form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
-textarea, input[type="text"], input[type="number"] {
-    width: 100%; padding: 10px 12px; font-size: 13px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg-surface); color: var(--text-main);
-    font-family: 'Inter', sans-serif; outline: none; resize: vertical;
-    transition: border-color var(--transition);
-}
-textarea:focus, input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent); }
-textarea { min-height: 110px; }
-
-.form-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-
-.vars-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.var-chip {
-    font-size: 11px; padding: 3px 8px; border-radius: 4px;
-    background: var(--accent-bg); color: var(--accent-dark);
-    border: 1px solid rgba(37,211,102,0.3);
-    cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif;
-    transition: all var(--transition);
-}
-[data-theme="dark"] .var-chip { color: var(--accent); }
-.var-chip:hover { background: var(--accent); color: white; }
-
-.interval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-.upload-area {
-    border: 1.5px dashed var(--border); border-radius: var(--radius-lg);
-    padding: 24px; text-align: center; cursor: pointer;
-    transition: all var(--transition); position: relative;
-}
-.upload-area:hover, .upload-area.drag-over { border-color: var(--accent); background: var(--accent-bg); }
-.upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-.upload-area svg { width: 28px; height: 28px; stroke: var(--text-muted); margin-bottom: 8px; }
-.upload-area p { font-size: 12px; color: var(--text-muted); }
-.upload-preview { margin-top: 10px; }
-.upload-preview img { max-height: 80px; border-radius: var(--radius); border: 1px solid var(--border); }
-
-.ai-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 16px; border-radius: var(--radius);
-    border: 1px solid var(--border); background: var(--bg-surface);
-    color: var(--text-main); font-size: 12px; font-weight: 600;
-    cursor: pointer; transition: all var(--transition); font-family: 'Inter', sans-serif;
-}
-.ai-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
-[data-theme="dark"] .ai-btn:hover { color: var(--accent); }
-.ai-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
-
-.dispatch-btn {
-    width: 100%; padding: 14px; border-radius: var(--radius-lg);
-    background: var(--accent); color: white; border: none;
-    font-size: 15px; font-weight: 700; cursor: pointer;
-    font-family: 'Inter', sans-serif; letter-spacing: 0.3px;
-    transition: all var(--transition); display: flex;
-    align-items: center; justify-content: center; gap: 10px;
-}
-.dispatch-btn:hover { background: var(--accent-dark); }
-.dispatch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.dispatch-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; }
-
-.log-section { margin-top: 24px; }
-.log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.log-title { font-size: 13px; font-weight: 600; }
-.log-clear { font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; }
-.log-box {
-    background: var(--bg-surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); overflow: hidden; max-height: 280px; overflow-y: auto;
-}
-.log-entry {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px; border-bottom: 1px solid var(--border);
-    font-size: 12px;
-}
-.log-entry:last-child { border-bottom: none; }
-.log-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.log-dot.ok { background: var(--accent); }
-.log-dot.err { background: var(--danger); }
-.log-dot.wait { background: var(--warning); }
-.log-num { color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.log-msg { flex: 1; }
-.log-time { color: var(--text-muted); flex-shrink: 0; }
-
-.progress-wrap { margin-bottom: 20px; display: none; }
-.progress-wrap.active { display: block; }
-.progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-.progress-track { background: var(--border); border-radius: 99px; height: 6px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--accent); width: 0%; border-radius: 99px; transition: width 0.4s ease; }
-
-.timer-badge {
-    display: none; align-items: center; gap: 8px;
-    padding: 8px 14px; border-radius: var(--radius);
-    background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);
-    color: var(--warning); font-size: 12px; font-weight: 600; margin-bottom: 12px;
-}
-.timer-badge.active { display: flex; }
-.timer-badge svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
-
-.mode-tabs { display: flex; gap: 4px; padding: 4px; background: var(--bg-body); border-radius: var(--radius-lg); border: 1px solid var(--border); margin-bottom: 20px; }
-.mode-tab {
-    flex: 1; padding: 8px; text-align: center; font-size: 12px; font-weight: 600;
-    border-radius: var(--radius); cursor: pointer; border: none;
-    background: transparent; color: var(--text-muted); font-family: 'Inter', sans-serif;
-    transition: all var(--transition);
-}
-.mode-tab.active { background: var(--bg-surface); color: var(--text-main); box-shadow: var(--shadow); }
-
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-</style>
-</head>
-<body data-theme="light">
-
-<div class="sidebar">
-    <div class="brand">
-        <img src="https://res.cloudinary.com/dzcaxmbjn/image/upload/v1773591878/presentes_180_x_50_px_720_x_200_px_1440_x_264_px_1_azuhgq.png" alt="Leanttro" class="brand-logo">
-        <span class="brand-sub">Marketing OS</span>
-    </div>
-    <div class="nav-menu">
-        <a href="/home" class="nav-link">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Hub de Controle
-        </a>
-        <a href="/conteudo" class="nav-link">
-            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Conteúdo
-        </a>
-        <a href="/criacao" class="nav-link">
-            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Criação
-        </a>
-        <a href="/prospeccao" class="nav-link">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-            Prospecção
-        </a>
-        <a class="nav-link active" id="navDispatch" onclick="toggleView('dispatch')">
-            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-            Disparo
-        </a>
-        <a class="nav-link" id="navChat" onclick="toggleView('chat')">
-            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Caixa de Entrada
-        </a>
-        <a href="/email" class="nav-link">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            E-mail
-        </a>
-        <a href="/calendario" class="nav-link">
-            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Objetivos
-        </a>
-        <a href="/metricas" class="nav-link">
-            <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Métricas
-            <span class="nav-badge">NOVO</span>
-        </a>
-    </div>
-</div>
-
-<div class="main">
-
-    <div class="topbar">
-        <div class="topbar-title" id="topbarTitle">DISPARO WHATSAPP</div>
-        <div class="topbar-right">
-            <button class="theme-toggle" onclick="toggleTheme()">
-                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            </button>
-            <div class="user-profile">
-                <span id="userName">Sistema</span>
-                <div class="avatar">LT</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="page-body" id="viewDispatch">
-        <div class="left-panel">
-            <div class="panel-section">
-                <div class="section-label">Chip de Prospecção</div>
-                <div class="chip-status">
-                    <div class="chip-dot" id="chipDot"></div>
-                    <span id="chipLabel">Verificando...</span>
-                </div>
-            </div>
-
-            <div class="panel-section">
-                <div class="section-label">Progresso do Dia</div>
-                <div class="counters">
-                    <div class="counter-card">
-                        <div class="counter-value" id="cntSent">0</div>
-                        <div class="counter-label">Enviados</div>
-                    </div>
-                    <div class="counter-card">
-                        <div class="counter-value" id="cntSelected">0</div>
-                        <div class="counter-label">Selecionados</div>
-                    </div>
-                    <div class="counter-card">
-                        <div class="counter-value" id="cntLimit">50</div>
-                        <div class="counter-label">Limite/dia</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="panel-section" style="padding-bottom:12px;">
-                <div class="section-label">Filtrar Contatos</div>
-                <div class="filter-row" style="margin-bottom:8px;">
-                    <input class="filter-input" type="text" id="searchInput" placeholder="Buscar por nome ou empresa..." oninput="filterContacts()">
-                </div>
-                <div class="filter-row">
-                    <select class="filter-select" id="filterStatus" onchange="filterContacts()">
-                        <option value="">Todos os status</option>
-                        <option value="Novo">Novo</option>
-                        <option value="Quente">Quente</option>
-                        <option value="Cliente">Cliente</option>
-                        <option value="Enviado em Massa">Enviado</option>
-                    </select>
-                    <select class="filter-select" id="filterOrigem" onchange="filterContacts()">
-                        <option value="">Todas as origens</option>
-                        <option value="Google Maps">Google Maps</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="LinkedIn">LinkedIn</option>
-                        <option value="CSV">CSV</option>
-                        <option value="Manual">Manual</option>
-                    </select>
-                </div>
-                <div class="filter-row" style="margin-top:8px;">
-                    <select class="filter-select" id="filterRamo" onchange="filterContacts()">
-                        <option value="">Todos os ramos</option>
-                    </select>
-                    <select class="filter-select" id="filterCidade" onchange="filterContacts()">
-                        <option value="">Todas as cidades</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="select-bar">
-                <span id="selectInfo">0 contatos com WhatsApp</span>
-                <button onclick="toggleSelectAll()">Selecionar todos</button>
-            </div>
-
-            <div class="contacts-list" id="contactsList">
-                <div class="empty-state">
-                    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                    <p>Carregando contatos...</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="right-panel">
-            <h1 class="page-title">Configurar Disparo</h1>
-            <p class="page-sub">Selecione os contatos na lista ao lado e configure a mensagem abaixo.</p>
-
-            <div class="mode-tabs">
-                <button class="mode-tab active" onclick="setMode('manual')" id="tabManual">Manual (1 a 1)</button>
-                <button class="mode-tab" onclick="setMode('lote10')" id="tabLote10">Lote 10 rápido</button>
-                <button class="mode-tab" onclick="setMode('lote50')" id="tabLote50">Lote 50 / 4h</button>
-            </div>
-
-            <div class="form-block">
-                <label class="form-label">Arte Finalizada Kanban</label>
-                <select class="filter-select" id="arteKanbanSelect" style="width: 100%; margin-bottom: 12px; display: block;" onchange="loadSelectedArtImage()">
-                    <option value="">Não usar arte do Kanban</option>
-                </select>
-            </div>
-
-            <div class="form-block">
-                <label class="form-label">Mensagem</label>
-                <textarea id="msgInput" placeholder="Opa {nome}, tudo bem? Vi que sua empresa {empresa} pode se interessar por..."></textarea>
-                <p class="form-hint">Personalize com variáveis dinâmicas:</p>
-                <div class="vars-row">
-                    <button class="var-chip" onclick="insertVar('{nome}')">+ {nome}</button>
-                    <button class="var-chip" onclick="insertVar('{empresa}')">+ {empresa}</button>
-                    <button class="var-chip" onclick="insertVar('{numero}')">+ {numero}</button>
-                </div>
-            </div>
-
-            <div class="form-block">
-                <button class="ai-btn" onclick="generateCopy()">
-                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-                    Gerar mensagem com IA (Groq)
-                </button>
-            </div>
-
-            <div class="form-block">
-                <label class="form-label">Imagem (opcional)</label>
-                <div class="upload-area" id="uploadArea" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
-                    <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp" onchange="handleFileSelect(event)">
-                    <svg viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <p>Clique ou arraste uma imagem aqui<br><span style="font-size:10px;">PNG, JPG, WEBP — máx. 5MB</span></p>
-                    <div class="upload-preview" id="uploadPreview" style="display:none;"></div>
-                </div>
-            </div>
-
-            <div class="form-block">
-                <label class="form-label">Intervalo entre mensagens (seg.)</label>
-                <div class="interval-grid">
-                    <div>
-                        <label class="form-hint" style="margin-bottom:4px; display:block;">Mínimo</label>
-                        <input type="number" id="delayMin" value="15" min="5" max="120">
-                    </div>
-                    <div>
-                        <label class="form-hint" style="margin-bottom:4px; display:block;">Máximo</label>
-                        <input type="number" id="delayMax" value="40" min="10" max="300">
-                    </div>
-                </div>
-                <p class="form-hint" style="margin-top:8px;">Intervalo aleatório entre min e máx para proteção anti-ban.</p>
-            </div>
-
-            <div class="form-block">
-                <label class="form-label">URL de vídeo (opcional)</label>
-                <input type="text" id="videoUrl" placeholder="https://... (Cloudinary ou MP4 direto)">
-            </div>
-
-            <div class="progress-wrap" id="progressWrap">
-                <div class="progress-label">
-                    <span id="progressText">Enviando...</span>
-                    <span id="progressPct">0%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-            </div>
-
-            <div class="timer-badge" id="timerBadge">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <span id="timerText">Aguardando próximo envio...</span>
-            </div>
-
-            <button class="dispatch-btn" id="dispatchBtn" onclick="startDispatch()">
-                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                Iniciar Disparo
-            </button>
-
-            <div class="log-section" id="logSection" style="display:none;">
-                <div class="log-header">
-                    <span class="log-title">Log de Envios</span>
-                    <button class="log-clear" onclick="clearLog()">Limpar</button>
-                </div>
-                <div class="log-box" id="logBox"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="page-body" id="viewChat" style="display:none; flex-direction: row; background: var(--bg-body);">
-        <div class="left-panel" style="width: 320px;">
-            <div class="panel-section">
-                <div class="section-label">Conversas Ativas</div>
-            </div>
-            <div class="contacts-list" id="chatContactList">
-                <div class="empty-state"><p>Aguardando mensagens ou histórico de envio</p></div>
-            </div>
-        </div>
-        <div class="right-panel" style="display: flex; flex-direction: column; padding: 0;">
-            <div class="topbar" style="border-bottom: 1px solid var(--border); height: 60px; padding: 0 24px; flex-shrink: 0; background: transparent;">
-                <div class="topbar-title" id="currentChatTitle">Selecione uma conversa</div>
-            </div>
-            <div id="chatMessageArea" style="flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
-            </div>
-            <div style="border-top: 1px solid var(--border); background: var(--bg-surface); flex-shrink: 0;">
-                <div id="chatImagePreview" style="display:none; padding: 10px 24px 0; position: relative;">
-                    <img id="chatImageThumb" style="max-height: 80px; border-radius: 6px; border: 1px solid var(--border);" />
-                    <button onclick="clearChatImage()" style="position:absolute; top:6px; right:20px; background:rgba(0,0,0,0.6); border:none; color:#fff; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;">✕</button>
-                </div>
-                <div style="padding: 12px 24px; display: flex; gap: 10px; align-items: center;">
-                    <label style="cursor:pointer; color:var(--text-muted); display:flex; align-items:center; padding:8px;" title="Enviar imagem">
-                        <input type="file" id="chatImageInput" accept="image/*,video/*" style="display:none;" onchange="handleChatImageSelect(event)" />
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-                    </label>
-                    <input type="text" id="chatReplyInput" placeholder="Digite sua resposta e aperte Enter..." style="flex: 1;" onkeypress="if(event.key==='Enter') sendReply()">
-                    <button class="dispatch-btn" style="width: auto; padding: 10px 20px;" onclick="sendReply()">Enviar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script>
-const CONFIG = {
-    DIRECTUS_URL: "{{ directus_url }}",
-    DIRECTUS_TOKEN: "{{ directus_token }}",
-    DIRECTUS_TABLE: "{{ directus_table }}"
-};
-
-let allContacts    = [];
-let filteredList   = [];
-let selectedIds    = new Set();
-let sentToday      = parseInt(localStorage.getItem('wpp_sent_today') || '0');
-let sentDate       = localStorage.getItem('wpp_sent_date') || '';
-let currentMode    = 'manual';
-let isDispatching  = false;
-let selectedImage  = null;
-let cancelDispatch = false;
-
-const today = new Date().toISOString().split('T')[0];
-if (sentDate !== today) { sentToday = 0; sentDate = today; localStorage.setItem('wpp_sent_date', today); localStorage.setItem('wpp_sent_today', '0'); }
-
-function toggleTheme() {
-    const body = document.body;
-    const t = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    body.setAttribute('data-theme', t);
-    localStorage.setItem('wl_theme', t);
-}
-const savedTheme = localStorage.getItem('wl_theme');
-if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
-
-function toggleView(view) {
-    if(view === 'dispatch') {
-        document.getElementById('viewDispatch').style.display = 'flex';
-        document.getElementById('viewChat').style.display = 'none';
-        document.getElementById('navDispatch').classList.add('active');
-        document.getElementById('navChat').classList.remove('active');
-        document.getElementById('topbarTitle').textContent = 'DISPARO WHATSAPP';
-    } else {
-        document.getElementById('viewDispatch').style.display = 'none';
-        document.getElementById('viewChat').style.display = 'flex';
-        document.getElementById('navDispatch').classList.remove('active');
-        document.getElementById('navChat').classList.add('active');
-        document.getElementById('topbarTitle').textContent = 'CAIXA DE ENTRADA';
-        renderChatContacts();
-    }
-}
-
-const socket = io('https://wpp.leanttro.com');
-
-/* ── Persistência do chatHistory por dia ── */
-const _chatToday = new Date().toISOString().slice(0, 10); // "2026-04-20"
-const _chatKey   = 'wpp_chat_history_' + _chatToday;
-
-function _loadChatHistory() {
-    try {
-        const raw = localStorage.getItem(_chatKey);
-        return raw ? JSON.parse(raw) : {};
-    } catch(e) { return {}; }
-}
-
-function _saveChatHistory() {
-    try {
-        localStorage.setItem(_chatKey, JSON.stringify(chatHistory));
-        /* limpa dias anteriores para não acumular lixo */
-        Object.keys(localStorage).forEach(k => {
-            if (k.startsWith('wpp_chat_history_') && k !== _chatKey) {
-                localStorage.removeItem(k);
-            }
-        });
-    } catch(e) {}
-}
-
-let chatHistory = _loadChatHistory();
-let activeJid = null;
-
-socket.on('connect', () => {
-    console.log('Conectado ao Node.js Websocket');
-});
-
-socket.on('nova_mensagem', (data) => {
-    const jid = data.remoteJid;
-    if(!chatHistory[jid]) chatHistory[jid] = [];
-
-    if (data.fromMe && data.text && !data.mediaType) {
-        const hasMedia = chatHistory[jid].some(m => m.caption === data.text && m.mediaType);
-        if (hasMedia) return;
+def get_directus_headers():
+    return {
+        "Authorization": f"Bearer {DIRECTUS_TOKEN}",
+        "Content-Type": "application/json"
     }
 
-    chatHistory[jid].push(data);
-    _saveChatHistory();
+
+# ─────────────────────────────────────────────
+# UTILITÁRIOS
+# ─────────────────────────────────────────────
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+if not os.path.exists(HTML_TEMPLATES_FOLDER):
+    os.makedirs(HTML_TEMPLATES_FOLDER)
+
+
+def allowed_file(filename: str) -> bool:
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def get_media_type(filename: str) -> str:
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    return 'video' if ext in {'mp4', 'webm'} else 'image'
+
+
+def cleanup_old_uploads(max_age_hours: int = 24):
+    try:
+        now = time.time()
+        for fname in os.listdir(UPLOAD_FOLDER):
+            fpath = os.path.join(UPLOAD_FOLDER, fname)
+            if os.path.isfile(fpath):
+                age_hours = (now - os.path.getmtime(fpath)) / 3600
+                if age_hours > max_age_hours:
+                    os.remove(fpath)
+    except Exception as e:
+        print(f"[cleanup] Erro: {e}")
+
+
+def get_session_id(req) -> str:
+    return req.headers.get('X-Session-ID', 'default')
+
+
+# ─────────────────────────────────────────────
+# ROTAS PRINCIPAIS
+# ─────────────────────────────────────────────
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/home')
+@login_marketing_required
+def home():
+    return render_template('home.html',
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+    )
+@app.route('/conteudo')
+@login_marketing_required
+def conteudo():
+    return render_template('conteudo.html')
+
+@app.route('/criacao')
+@login_marketing_required
+def criacao():
+    return render_template('criacao.html')
+
+@app.route('/prospeccao')
+@login_marketing_required
+def prospeccao():
+    return render_template('prospeccao.html', 
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", ""),
+        serper_api_key=os.environ.get("SERPER_API_KEY", "")
+    )
+
+@app.route('/whatsapp')
+@login_marketing_required
+def whatsapp():
+    return render_template('whatsapp.html',
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+    )
+
+@app.route('/media/<path:filename>')
+def serve_media(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+
+@app.route('/html_templates/<path:filename>')
+def serve_html_templates(filename):
+    return send_from_directory(HTML_TEMPLATES_FOLDER, filename)
+
+
+# ─────────────────────────────────────────────
+# UPLOAD DE ASSETS
+# ─────────────────────────────────────────────
+@app.route('/api/upload', methods=['POST'])
+@limiter.limit("60 per minute")
+def api_upload():
+    if 'file' not in request.files and 'files' not in request.files:
+        return jsonify({"success": False, "error": "Nenhum arquivo enviado"}), 400
+
+    uploaded_urls = []
+    files = request.files.getlist('files')
     
-    if(document.getElementById('viewChat').style.display === 'flex') {
-        renderChatContacts();
-        if(activeJid === jid) renderMessages();
-    }
-});
+    if not files and 'file' in request.files:
+        files = [request.files['file']]
 
-function getContactDisplayName(jid, history) {
-    const numLimpo = jid.split('@')[0];
+    try:
+        for file in files:
+            if file.filename == '':
+                continue
+            if not allowed_file(file.filename):
+                continue
 
-    const crmContact = allContacts.find(c => c.whatsapp === numLimpo);
-    if (crmContact && (crmContact.nome || crmContact.empresa)) {
-        return crmContact.nome || crmContact.empresa;
-    }
+            safe_name = secure_filename(file.filename)
+            unique_name = f"{int(time.time())}_{uuid.uuid4().hex[:8]}_{safe_name}"
+            filepath = os.path.join(UPLOAD_FOLDER, unique_name)
+            file.save(filepath)
 
-    const msgComNome = history.find(m => m.pushName && !m.fromMe);
-    if (msgComNome && msgComNome.pushName) {
-        return msgComNome.pushName;
-    }
+            file_size = os.path.getsize(filepath)
+            if file_size > MAX_FILE_SIZE:
+                os.remove(filepath)
+                continue
 
-    return numLimpo;
-}
+            media_type = get_media_type(unique_name)
+            uploaded_urls.append({
+                "url": f"/media/{unique_name}",
+                "filename": unique_name,
+                "type": media_type,
+                "size_kb": round(file_size / 1024, 1)
+            })
 
-function selectChat(jid) {
-    activeJid = jid;
-    const displayName = getContactDisplayName(jid, chatHistory[jid]);
-    document.getElementById('currentChatTitle').textContent = displayName;
-    renderChatContacts();
-    renderMessages();
-}
+        cleanup_old_uploads()
 
-function renderChatContacts() {
-    const list = document.getElementById('chatContactList');
-    const jids = Object.keys(chatHistory);
+        if not uploaded_urls:
+            return jsonify({"success": False, "error": "Nenhum arquivo válido enviado"}), 400
+
+        return jsonify({
+            "success": True,
+            "url": uploaded_urls[0]["url"],
+            "filename": uploaded_urls[0]["filename"],
+            "type": uploaded_urls[0]["type"],
+            "size_kb": uploaded_urls[0]["size_kb"],
+            "urls": uploaded_urls
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# BUSCA NO PIXABAY
+# ─────────────────────────────────────────────
+@app.route('/api/pixabay', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_pixabay():
+    if not PIXABAY_API_KEY:
+        return jsonify({"success": False, "error": "PIXABAY_API_KEY não configurada no servidor."}), 400
     
-    if(jids.length === 0) {
-        list.innerHTML = '<div class="empty-state"><p>Nenhuma mensagem ainda</p></div>';
-        return;
-    }
-
-    list.innerHTML = jids.map(jid => {
-        const history = chatHistory[jid];
-        const lastRaw = history[history.length - 1];
-        const lastMsg = lastRaw.text
-            || (lastRaw.mediaType === 'image' ? '📷 Imagem'
-              : lastRaw.mediaType === 'video' ? '🎥 Vídeo'
-              : lastRaw.mediaType === 'audio' ? '🎵 Áudio'
-              : '📎 Mídia');
-        const isActive = jid === activeJid ? 'background: var(--accent-bg);' : '';
-        const displayName = getContactDisplayName(jid, history);
-
-        return `
-        <div class="contact-item" style="${isActive}" onclick="selectChat('${jid}')">
-            <div class="contact-info">
-                <div class="contact-name">${displayName}</div>
-                <div class="contact-sub" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">${lastMsg}</div>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-function renderMessages() {
-    const area = document.getElementById('chatMessageArea');
-    if(!activeJid || !chatHistory[activeJid]) {
-        area.innerHTML = '';
-        return;
-    }
-
-    area.innerHTML = chatHistory[activeJid].map(msg => {
-        const align = msg.fromMe
-            ? 'align-self: flex-end; background: var(--accent); color: white;'
-            : 'align-self: flex-start; background: var(--bg-surface); border: 1px solid var(--border);';
-
-        let inner = '';
-        if (msg.mediaType === 'image' && msg.mediaBase64) {
-            inner = `<img src="${msg.mediaBase64}" style="max-width:100%; border-radius:6px; display:block;" />`;
-            if (msg.caption) inner += `<div style="margin-top:6px; font-size:12px;">${msg.caption}</div>`;
-        } else if (msg.mediaType === 'video' && msg.mediaBase64) {
-            inner = `<video controls style="max-width:100%; border-radius:6px; display:block;" src="${msg.mediaBase64}"></video>`;
-            if (msg.caption) inner += `<div style="margin-top:6px; font-size:12px;">${msg.caption}</div>`;
-        } else if (msg.mediaType === 'audio' && msg.mediaBase64) {
-            inner = `<audio controls style="width:100%;" src="${msg.mediaBase64}"></audio>`;
-        } else {
-            inner = msg.text || '📎 Mídia';
-        }
-
-        return `<div style="max-width: 70%; padding: 12px 16px; border-radius: 8px; font-size: 13px; line-height: 1.4; ${align}">${inner}</div>`;
-    }).join('');
-    
-    area.scrollTop = area.scrollHeight;
-}
-
-/* ── Imagem anexada no chat ── */
-let _chatImageBase64 = null;
-let _chatImageMime   = null;
-
-function handleChatImageSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    if (file.size > 15 * 1024 * 1024) { alert('Arquivo muito grande. Máximo 15MB.'); return; }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        _chatImageBase64 = dataUrl;
-        _chatImageMime   = file.type;
-        document.getElementById('chatImageThumb').src = dataUrl;
-        document.getElementById('chatImagePreview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-    event.target.value = '';
-}
-
-function clearChatImage() {
-    _chatImageBase64 = null;
-    _chatImageMime   = null;
-    document.getElementById('chatImagePreview').style.display = 'none';
-    document.getElementById('chatImageThumb').src = '';
-}
-
-function sendReply() {
-    const input   = document.getElementById('chatReplyInput');
-    const text    = input.value.trim();
-    const hasImg  = !!_chatImageBase64;
-
-    if (!text && !hasImg) return;
-    if (!activeJid) return;
-
-    if (hasImg) {
-        const isVideo = _chatImageMime.startsWith('video/');
-        const payload = {
-            jid:         activeJid,
-            mediaBase64: _chatImageBase64,
-            mediaType:   isVideo ? 'video' : 'image',
-            caption:     text
-        };
-        socket.emit('enviar_resposta', payload);
-
-        if (!chatHistory[activeJid]) chatHistory[activeJid] = [];
-        chatHistory[activeJid].push({
-            remoteJid:   activeJid,
-            fromMe:      true,
-            mediaType:   isVideo ? 'video' : 'image',
-            mediaBase64: _chatImageBase64,
-            caption:     text
-        });
-        clearChatImage();
-    } else {
-        socket.emit('enviar_resposta', { jid: activeJid, text: text });
-        if (!chatHistory[activeJid]) chatHistory[activeJid] = [];
-        chatHistory[activeJid].push({ remoteJid: activeJid, text: text, fromMe: true });
-    }
-
-    _saveChatHistory();
-    renderMessages();
-    input.value = '';
-}
-
-async function checkChipStatus() {
-    try {
-        const r = await fetch('/api/wpp/status');
-        const d = await r.json();
-        const dot = document.getElementById('chipDot');
-        const lbl = document.getElementById('chipLabel');
-        if (d.connected) {
-            dot.className = 'chip-dot connected';
-            lbl.textContent = `Conectado — ${d.number || 'chip ativo'}`;
-        } else {
-            dot.className = 'chip-dot disconnected';
-            lbl.textContent = 'Chip desconectado';
-        }
-    } catch {
-        document.getElementById('chipDot').className = 'chip-dot disconnected';
-        document.getElementById('chipLabel').textContent = 'API offline';
-    }
-}
-
-async function loadContacts() {
-    if(!CONFIG.DIRECTUS_TOKEN || CONFIG.DIRECTUS_TOKEN === "" || CONFIG.DIRECTUS_TOKEN.includes("SEU_TOKEN")) {
-        document.getElementById('contactsList').innerHTML = `<div class="empty-state"><p>Configure o Directus no .env</p></div>`;
-        return;
-    }
-    try {
-        const url = `${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}?limit=-1`;
-        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}` } });
-        const data = await res.json();
+    data = request.json or {}
+    query = data.get('query', '').strip()
+    if not query:
+        return jsonify({"success": False, "error": "Busca vazia"}), 400
         
-        if (data.data) {
-            allContacts = data.data.map(c => ({
-                id: String(c.id),
-                nome: c.nome || '',
-                empresa: c.empresa || '',
-                whatsapp: c.telefone || '',
-                email: c.email || '',
-                origem: c.origem || 'Manual',
-                status: c.status || 'Novo',
-                ramo: c.ramo || c.nicho || '',
-                cidade: c.cidade || (() => {
-                    const obs = c.observacoes || c.endereco || '';
-                    const m = obs.match(/[-–]\s*([A-Z]{2})\s*,/);
-                    if (m) {
-                        const cidadeMatch = obs.match(/,\s*([^,\-]+)\s*[-–]\s*[A-Z]{2}/);
-                        return cidadeMatch ? cidadeMatch[1].trim() : '';
-                    }
-                    return '';
-                })()
-            })).filter(c => c.whatsapp && c.whatsapp.trim() !== '');
+    try:
+        url = f"https://pixabay.com/api/?key={PIXABAY_API_KEY}&q={urllib.parse.quote(query)}&image_type=photo&orientation=vertical&per_page=8"
+        response = requests.get(url, timeout=10)
+        res_data = response.json()
+        
+        images = []
+        for hit in res_data.get("hits", []):
+            images.append({
+                "url": hit["largeImageURL"],
+                "preview": hit["previewURL"],
+                "tags": hit["tags"]
+            })
+            
+        return jsonify({"success": True, "images": images})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+@app.route('/api/leonardo', methods=['POST'])
+@limiter.limit("15 per minute")
+def api_leonardo():
+    if not LEONARDO_API_KEY:
+        return jsonify({"success": False, "error": "LEONARDO_API_KEY não configurada"}), 400
+    
+    data = request.json or {}
+    prompt = data.get('prompt', '').strip()
+    
+    if not prompt:
+        return jsonify({"success": False, "error": "Busca vazia"}), 400
 
-            /* Populando filtros de ramo e cidade dinamicamente */
-            const ramos  = [...new Set(allContacts.map(c => c.ramo).filter(Boolean))].sort();
-            const cidades = [...new Set(allContacts.map(c => c.cidade).filter(Boolean))].sort();
-            const selRamo  = document.getElementById('filterRamo');
-            const selCidade = document.getElementById('filterCidade');
-            selRamo.innerHTML  = '<option value="">Todos os ramos</option>'  + ramos.map(r  => `<option value="${r}">${r}</option>`).join('');
-            selCidade.innerHTML = '<option value="">Todas as cidades</option>' + cidades.map(ci => `<option value="${ci}">${ci}</option>`).join('');
-
-            try {
-                const pre = localStorage.getItem('wpp_pre_selected');
-                if (pre) {
-                    const ids = JSON.parse(pre);
-                    ids.forEach(id => selectedIds.add(id));
-                    localStorage.removeItem('wpp_pre_selected');
-                }
-            } catch(e){}
-
-            filterContacts();
-            updateSelectInfo();
+    try:
+        url_gen = "https://cloud.leonardo.ai/api/rest/v1/generations"
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "authorization": f"Bearer {LEONARDO_API_KEY}"
         }
-    } catch (e) {
-        document.getElementById('contactsList').innerHTML = '<div class="empty-state"><p>Erro ao carregar contatos do Directus.</p></div>';
-    }
-}
+        payload = {
+            "height": 1024,
+            "width": 1024,
+            "modelId": "6bef9f1b-29cb-40c7-b9df-32b51c1f67d3",
+            "prompt": prompt,
+            "num_images": 1
+        }
+        
+        res_gen = requests.post(url_gen, json=payload, headers=headers).json()
+        gen_id = res_gen.get("sdGenerationJob", {}).get("generationId")
 
-function filterContacts() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const status = document.getElementById('filterStatus').value.toLowerCase();
-    const origem = document.getElementById('filterOrigem').value.toLowerCase();
-    const ramo   = document.getElementById('filterRamo').value.toLowerCase();
-    const cidade = document.getElementById('filterCidade').value.toLowerCase();
+        if not gen_id:
+            return jsonify({"success": False, "error": "Falha na API do Leonardo"}), 500
 
-    filteredList = allContacts.filter(c => {
-        const nome    = (c.nome    || '').toLowerCase();
-        const empresa = (c.empresa || '').toLowerCase();
-        const matchSearch = !search || nome.includes(search) || empresa.includes(search);
-        const matchStatus = !status || (c.status || '').toLowerCase() === status;
-        const matchOrigem = !origem || (c.origem || '').toLowerCase() === origem;
-        const matchRamo   = !ramo   || (c.ramo   || '').toLowerCase() === ramo;
-        const matchCidade = !cidade || (c.cidade || '').toLowerCase() === cidade;
-        return matchSearch && matchStatus && matchOrigem && matchRamo && matchCidade;
-    });
-
-    renderContacts();
-    updateSelectInfo();
-}
-
-function renderContacts() {
-    const list = document.getElementById('contactsList');
-    if (!filteredList.length) {
-        list.innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><p>Nenhum contato encontrado com WhatsApp.</p></div>';
-        return;
-    }
-    list.innerHTML = filteredList.map(c => {
-        const sel = selectedIds.has(c.id);
-        const statusTag = (c.status || 'novo').toLowerCase();
-        const tagClass  = statusTag === 'quente' ? 'quente' : statusTag === 'novo' ? 'novo' : '';
-        const empresa   = c.empresa || c.nome || '';
-        const sub       = c.whatsapp + (c.origem ? ` · ${c.origem}` : '');
-        return `
-        <div class="contact-item ${sel ? 'selected' : ''}" onclick="toggleContact('${c.id}')">
-            <div class="contact-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
-            <div class="contact-info">
-                <div class="contact-name">${empresa}</div>
-                <div class="contact-sub">${sub}</div>
-            </div>
-            <span class="contact-tag ${tagClass}">${c.status || 'novo'}</span>
-        </div>`;
-    }).join('');
-}
-
-function toggleContact(id) {
-    if (selectedIds.has(id)) selectedIds.delete(id);
-    else selectedIds.add(id);
-    renderContacts();
-    updateCounters();
-}
-
-function toggleSelectAll() {
-    const allFiltered = filteredList.map(c => c.id);
-    const allSelected = allFiltered.every(id => selectedIds.has(id));
-    if (allSelected) { allFiltered.forEach(id => selectedIds.delete(id)); }
-    else             { allFiltered.forEach(id => selectedIds.add(id)); }
-    renderContacts();
-    updateCounters();
-}
-
-function updateSelectInfo() {
-    const total = filteredList.length;
-    document.getElementById('selectInfo').textContent = `${total} contato${total !== 1 ? 's' : ''} com WhatsApp`;
-}
-
-function updateCounters() {
-    document.getElementById('cntSelected').textContent = selectedIds.size;
-    document.getElementById('cntSent').textContent = sentToday;
-    document.getElementById('cntLimit').textContent = getDailyLimit();
-}
-
-function getDailyLimit() {
-    return currentMode === 'lote50' ? 50 : currentMode === 'lote10' ? 10 : 50;
-}
-
-function setMode(mode) {
-    currentMode = mode;
-    ['manual', 'lote10', 'lote50'].forEach(m => {
-        document.getElementById('tab' + m.charAt(0).toUpperCase() + m.slice(1)).classList.toggle('active', m === mode);
-    });
-
-    if (mode !== 'manual') {
-        const limit  = mode === 'lote10' ? 10 : 50;
-        const novos  = filteredList.filter(c => (c.status || '').toLowerCase() === 'novo').slice(0, limit);
-        selectedIds  = new Set(novos.map(c => c.id));
-        renderContacts();
-    }
-    updateCounters();
-}
-
-async function generateCopy() {
-    const btn = event.target.closest('.ai-btn');
-    btn.disabled = true;
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Gerando...`;
-    try {
-        const r = await fetch('/api/wpp/generate-copy', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ nicho: 'prospecção B2B' })
-        });
-        const d = await r.json();
-        if (d.success) document.getElementById('msgInput').value = d.copy;
-        else alert('Erro ao gerar: ' + d.error);
-    } catch { alert('Erro de conexão com o servidor.'); }
-    btn.disabled = false;
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Gerar mensagem com IA (Groq)`;
-}
-
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file) processImageFile(file);
-}
-function handleDrop(event) {
-    event.preventDefault();
-    document.getElementById('uploadArea').classList.remove('drag-over');
-    const file = event.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) processImageFile(file);
-}
-function processImageFile(file) {
-    if (file.size > 5 * 1024 * 1024) { alert('Imagem muito grande. Máximo 5MB.'); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-        selectedImage = e.target.result.split(',')[1];
-        const prev = document.getElementById('uploadPreview');
-        prev.style.display = 'block';
-        prev.innerHTML = `<img src="${e.target.result}" alt="preview"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ ${file.name}</small>`;
-    };
-    reader.readAsDataURL(file);
-}
-
-function insertVar(v) {
-    const ta = document.getElementById('msgInput');
-    const start = ta.selectionStart, end = ta.selectionEnd;
-    const text = ta.value;
-    ta.value = text.substring(0, start) + v + text.substring(end);
-    ta.selectionStart = ta.selectionEnd = start + v.length;
-    ta.focus();
-}
-
-async function startDispatch() {
-    if (isDispatching) {
-        cancelDispatch = true;
-        document.getElementById('dispatchBtn').textContent = 'Cancelando...';
-        return;
-    }
-
-    const targets = allContacts.filter(c => selectedIds.has(c.id));
-    if (!targets.length) { alert('Selecione pelo menos um contato.'); return; }
-
-    const msg = document.getElementById('msgInput').value.trim();
-    if (!msg) { alert('Digite uma mensagem.'); return; }
-
-    const delayMin = parseInt(document.getElementById('delayMin').value) || 15;
-    const delayMax = parseInt(document.getElementById('delayMax').value) || 40;
-    const videoUrl = document.getElementById('videoUrl').value.trim();
-    const limit    = getDailyLimit();
-
-    if (sentToday >= limit) { alert(`Limite diário de ${limit} mensagens atingido.`); return; }
-
-    isDispatching = true;
-    cancelDispatch = false;
-    const btn = document.getElementById('dispatchBtn');
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pausar disparo`;
-    btn.style.background = 'var(--warning)';
-
-    const progressWrap = document.getElementById('progressWrap');
-    progressWrap.classList.add('active');
-
-    const logSection = document.getElementById('logSection');
-    logSection.style.display = 'block';
-
-    let sent = 0;
-    const total = Math.min(targets.length, limit - sentToday);
-
-    for (let i = 0; i < total; i++) {
-        if (cancelDispatch) break;
-
-        const contact = targets[i];
-        const numero  = contact.whatsapp;
-        const nomeFmt = (contact.nome || contact.empresa || '').trim();
-        const empFmt  = (contact.empresa || '').trim();
-
-        const msgFinal = msg
-            .replace(/{nome}/g, nomeFmt || 'prezado(a)')
-            .replace(/{empresa}/g, empFmt || '')
-            .replace(/{numero}/g, numero);
-
-        const pct = Math.round(((i) / total) * 100);
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('progressPct').textContent  = pct + '%';
-        document.getElementById('progressText').textContent = `Enviando ${i+1} de ${total}...`;
-
-        try {
-            const payload = { number: numero, message: msgFinal };
-            if (selectedImage) payload.image = selectedImage;
-            if (videoUrl) payload.videoUrl = videoUrl;
-
-            const r = await fetch('/api/wpp/send', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const d = await r.json();
-
-            if (d.success) {
-                sent++;
-                sentToday++;
-                localStorage.setItem('wpp_sent_today', sentToday);
-                addLog('ok',  i+1, `Enviado → ${nomeFmt || numero} (${numero})`);
-
-                const jidChat = numero.includes('@') ? numero : numero + '@s.whatsapp.net';
-                if (!chatHistory[jidChat]) chatHistory[jidChat] = [];
-
-                let chatMsg = { remoteJid: jidChat, fromMe: true };
-                if (selectedImage) {
-                    chatMsg.mediaType = 'image';
-                    chatMsg.mediaBase64 = 'data:image/jpeg;base64,' + selectedImage;
-                    chatMsg.caption = msgFinal;
-                } else if (videoUrl) {
-                    chatMsg.mediaType = 'video';
-                    chatMsg.mediaBase64 = videoUrl;
-                    chatMsg.caption = msgFinal;
-                } else {
-                    chatMsg.text = msgFinal;
-                }
-
-                chatHistory[jidChat] = chatHistory[jidChat].filter(m => !(m.text === msgFinal && m.fromMe));
-                chatHistory[jidChat].push(chatMsg);
-                _saveChatHistory();
-
-                if (activeJid === jidChat && document.getElementById('viewChat').style.display === 'flex') {
-                    renderMessages();
-                }
-                if (document.getElementById('viewChat').style.display === 'flex') {
-                    renderChatContacts();
-                }
+        url_get = f"https://cloud.leonardo.ai/api/rest/v1/generations/{gen_id}"
+        
+        for _ in range(15):
+            time.sleep(2)
+            res_img = requests.get(url_get, headers=headers).json()
+            status = res_img.get("generations_by_pk", {}).get("status")
+            
+            if status == "COMPLETE":
+                imgs = res_img.get("generations_by_pk", {}).get("generated_images", [])
+                if imgs:
+                    return jsonify({"success": True, "url": imgs[0]["url"]})
+                break
                 
-                await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}/${contact.id}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${CONFIG.DIRECTUS_TOKEN}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status: 'Enviado em Massa' })
-                });
-
-            } else {
-                addLog('err', i+1, `Falha → ${numero}: ${d.error || 'Erro desconhecido'}`);
-            }
-        } catch (e) {
-            addLog('err', i+1, `Falha → ${numero}: conexão recusada`);
-        }
-
-        updateCounters();
-
-        if (i < total - 1 && !cancelDispatch) {
-            const delay = currentMode === 'lote50' ? 288 : Math.floor(Math.random() * (delayMax - delayMin + 1)) + delayMin;
-            await countdown(delay);
-        }
-    }
-
-    isDispatching = false;
-    cancelDispatch = false;
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Iniciar Disparo`;
-    btn.style.background = '';
-    document.getElementById('progressFill').style.width = '100%';
-    document.getElementById('progressPct').textContent  = '100%';
-    document.getElementById('progressText').textContent = `Concluído — ${sent} de ${total} enviados`;
-    document.getElementById('timerBadge').classList.remove('active');
-
-    addLog('ok', '✓', `Disparo finalizado: ${sent}/${total} enviados com sucesso.`);
-    loadContacts(); 
-}
-
-function countdown(seconds) {
-    return new Promise(resolve => {
-        const badge = document.getElementById('timerBadge');
-        const text  = document.getElementById('timerText');
-        badge.classList.add('active');
-        let remaining = seconds;
-        const interval = setInterval(() => {
-            if (cancelDispatch || remaining <= 0) {
-                clearInterval(interval);
-                badge.classList.remove('active');
-                resolve();
-                return;
-            }
-            text.textContent = `Aguardando ${remaining}s antes do próximo envio...`;
-            remaining--;
-        }, 1000);
-    });
-}
-
-function addLog(type, num, msg) {
-    const box = document.getElementById('logBox');
-    const now = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    const entry = document.createElement('div');
-    entry.className = 'log-entry';
-    entry.innerHTML = `
-        <div class="log-dot ${type}"></div>
-        <span class="log-num">#${num}</span>
-        <span class="log-msg">${msg}</span>
-        <span class="log-time">${now}</span>`;
-    box.prepend(entry);
-}
-
-function clearLog() {
-    document.getElementById('logBox').innerHTML = '';
-    document.getElementById('logSection').style.display = 'none';
-}
-
-
-function loadKanbanArtes() {
-    const select = document.getElementById('arteKanbanSelect');
-    try {
-        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-        prontos.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.id;
-            opt.textContent = item.titulo || 'Arte #' + item.id;
-            select.appendChild(opt);
-        });
-
-        const activeDispatch = localStorage.getItem('wl_active_dispatch');
-        if (activeDispatch) {
-            select.value = activeDispatch;
-            loadSelectedArtImage();
-            localStorage.removeItem('wl_active_dispatch');
-        }
-    } catch (e) {
-        console.warn('Não foi possível carregar artes do Kanban:', e);
-    }
-}
-
-function loadSelectedArtImage() {
-    const select = document.getElementById('arteKanbanSelect');
-    const msgInput = document.getElementById('msgInput');
-    const value = select.value;
-    
-    if (!value) {
-        selectedImage = null;
-        const prev = document.getElementById('uploadPreview');
-        prev.style.display = 'none';
-        prev.innerHTML = '';
-        return;
-    }
-
-    try {
-        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-        const card = prontos.find(c => c.id === value);
+        return jsonify({"success": False, "error": "Timeout gerando imagem"}), 408
         
-        if (card) {
-            if (card.copy) {
-                msgInput.value = card.copy;
-            }
-            
-            const thumbRef = card.thumb || card.id;
-            const imageUrl = thumbRef.startsWith('http') ? thumbRef : `${CONFIG.DIRECTUS_URL}/assets/${thumbRef}`;
-            
-            fetch(imageUrl)
-                .then(r => r.blob())
-                .then(blob => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        selectedImage = e.target.result.split(',')[1];
-                        const prev = document.getElementById('uploadPreview');
-                        prev.style.display = 'block';
-                        prev.innerHTML = `<img src="${e.target.result}" alt="Arte Kanban" style="max-height:80px; border-radius:var(--radius); border:1px solid var(--border);"> <br><small style="color:var(--accent-dark); font-size:10px;">✓ Arte do Kanban selecionada</small>`;
-                    };
-                    reader.readAsDataURL(blob);
-                })
-                .catch(() => { console.warn('Erro ao carregar imagem do Kanban.'); });
-        }
-    } catch(e) {}
-}
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
-updateCounters();
-checkChipStatus();
-loadContacts();
-loadKanbanArtes();
-setInterval(checkChipStatus, 30000);
-</script>
-</body>
-</html>
+
+# ─────────────────────────────────────────────
+# NOVA ROTA: INSPIRAÇÕES VIA SERPER
+# ─────────────────────────────────────────────
+@app.route('/api/inspirations', methods=['POST'])
+@limiter.limit("20 per minute")
+def api_inspirations():
+    if not SERPER_API_KEY:
+        return jsonify({"success": False, "error": "SERPER_API_KEY não configurada no servidor."}), 400
+
+    data = request.json or {}
+    niche = data.get('niche', '').strip()
+    if not niche:
+        return jsonify({"success": False, "error": "Nicho não informado."}), 400
+
+    # Construção da query para buscar ideias de posts orientadas ao criador/negócio
+    query = f"ideias de posts para negócio de {niche} criador de conteúdo instagram dicas simples"
+    url = "https://google.serper.dev/search"
+    headers = {
+        "X-API-KEY": SERPER_API_KEY,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "q": query,
+        "num": 10
+    }
+
+    try:
+        resp = requests.post(url, headers=headers, json=payload, timeout=15)
+        results = resp.json()
+        organic = results.get("organic", [])
+
+        inspos = []
+        for item in organic[:8]:
+            title = item.get("title", "")
+            snippet = item.get("snippet", "")
+            link = item.get("link", "")
+            # Classificação simples pelo título/snippet
+            lower_text = (title + " " + snippet).lower()
+            if "reels" in lower_text or " reel " in lower_text:
+                post_type = "Reels"
+            elif "carrossel" in lower_text or "carousel" in lower_text:
+                post_type = "Carrossel"
+            else:
+                post_type = "Postagem Estática"
+
+            inspos.append({
+                "type": post_type,
+                "title": title[:120],
+                "snippet": snippet[:180],
+                "link": link
+            })
+
+        # Camada de IA: reformula os snippets brutos como ideias práticas para o criador/empresário
+        if inspos and groq_client:
+            raw_snippets = "\n".join([f"- {i['title']}: {i['snippet']}" for i in inspos])
+            try:
+                ai_resp = groq_client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Você é um estrategista de conteúdo para pequenos negócios. "
+                                "A partir dos resultados abaixo, extraia ideias SIMPLES e PRÁTICAS de posts "
+                                "que um empresário ou IA pode criar rapidamente: ex. 'Mostre os bastidores da montagem', "
+                                "'Poste uma comparação antes/depois do prato', 'Faça um carrossel com os ingredientes do dia'. "
+                                "Seja direto, sem enrolação. Retorne APENAS um JSON: "
+                                "{\"ideias\": [{\"tipo\": \"Reels|Carrossel|Estática\", \"titulo\": \"...\", \"descricao\": \"...\"}]}"
+                            )
+                        },
+                        {"role": "user", "content": f"Nicho: {niche}\n\nResultados:\n{raw_snippets}"}
+                    ],
+                    model=BEST_FREE_MODEL,
+                    temperature=0.5,
+                    response_format={"type": "json_object"},
+                )
+                parsed = json.loads(ai_resp.choices[0].message.content)
+                ideias = parsed.get("ideias", [])
+                inspos = [
+                    {
+                        "type": i.get("tipo", "Postagem Estática"),
+                        "title": i.get("titulo", ""),
+                        "snippet": i.get("descricao", ""),
+                        "link": ""
+                    }
+                    for i in ideias
+                ]
+            except Exception:
+                pass  # fallback: mantém os inspos originais do Serper
+
+        return jsonify({"success": True, "inspirations": inspos})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Erro na busca: {str(e)}"}), 500
+
+
+# ─────────────────────────────────────────────
+# HELPERS DE IA COM FALLBACK AUTOMÁTICO
+# Ordem: OpenRouter → Groq → Gemini
+# ─────────────────────────────────────────────
+
+def _openrouter_call(messages, model="google/gemini-2.0-flash-001",
+                     temperature=0.45, max_tokens=8192, json_mode=False):
+    """Chama OpenRouter. Lança exceção em caso de falha."""
+    if not OPENROUTER_API_KEY:
+        raise Exception("OPENROUTER_API_KEY ausente")
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json"}
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+    res = requests.post(url, headers=headers, json=payload, timeout=60).json()
+    if 'error' in res:
+        err = res['error']
+        msg = err.get('message', str(err)) if isinstance(err, dict) else str(err)
+        raise Exception(f"OpenRouter: {msg}")
+    text = res['choices'][0]['message']['content']
+    tokens = res.get('usage', {}).get('total_tokens', 0)
+    return text, tokens
+
+
+def _groq_call(messages, temperature=0.45, max_tokens=8000, json_mode=False):
+    """Chama Groq. Lança exceção em caso de falha."""
+    if not groq_client:
+        raise Exception("GROQ_API_KEY ausente")
+    kwargs = dict(
+        messages=messages,
+        model=BEST_FREE_MODEL,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        top_p=0.92,
+    )
+    if json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = groq_client.chat.completions.create(**kwargs)
+    text = response.choices[0].message.content
+    tokens = getattr(getattr(response, 'usage', None), 'total_tokens', 0)
+    return text, tokens
+
+
+def _gemini_call(system_prompt, user_content,
+                 temperature=0.45, max_tokens=8192, json_mode=False):
+    """Chama Gemini diretamente. Lança exceção em caso de falha."""
+    if not GEMINI_API_KEY:
+        raise Exception("GEMINI_API_KEY ausente")
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    )
+    gen_config = {"temperature": temperature, "maxOutputTokens": max_tokens}
+    if json_mode:
+        gen_config["responseMimeType"] = "application/json"
+    payload = {
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"parts": [{"text": user_content}]}],
+        "generationConfig": gen_config,
+    }
+    res = requests.post(url, json=payload, timeout=60).json()
+    if 'error' in res:
+        raise Exception(f"Gemini: {res['error']['message']}")
+    text = res['candidates'][0]['content']['parts'][0]['text']
+    return text, 0
+
+
+def _ai_with_fallback(system_prompt, user_content,
+                      temperature=0.45, max_tokens=8192,
+                      json_mode=False, preferred_engine='openrouter'):
+    """
+    Tenta provedores em cascata: preferred_engine → os demais.
+    Ordem padrão: openrouter → groq → gemini.
+    Retorna (text, tokens, engine_usado).
+    """
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user",   "content": user_content},
+    ]
+    all_providers = ['openrouter', 'groq', 'gemini']
+    if preferred_engine in all_providers:
+        order = [preferred_engine] + [p for p in all_providers if p != preferred_engine]
+    else:
+        order = all_providers
+
+    errors = []
+    for provider in order:
+        try:
+            print(f"[ai_fallback] Tentando provider: {provider}")
+            if provider == 'openrouter':
+                text, tokens = _openrouter_call(
+                    messages, temperature=temperature,
+                    max_tokens=max_tokens, json_mode=json_mode)
+            elif provider == 'groq':
+                text, tokens = _groq_call(
+                    messages, temperature=temperature,
+                    max_tokens=max_tokens, json_mode=json_mode)
+            elif provider == 'gemini':
+                text, tokens = _gemini_call(
+                    system_prompt, user_content,
+                    temperature=temperature,
+                    max_tokens=max_tokens, json_mode=json_mode)
+            else:
+                continue
+            print(f"[ai_fallback] Sucesso com: {provider}")
+            return text, tokens, provider
+        except Exception as e:
+            errors.append(f"{provider}: {str(e)}")
+            print(f"[ai_fallback] {provider} falhou → {e}. Tentando próximo...")
+            continue
+
+    raise Exception("Todos os provedores falharam → " + " | ".join(errors))
+
+
+# ─────────────────────────────────────────────
+# GERAÇÃO DE HTML VIA IA (UNIFICADA)
+# ─────────────────────────────────────────────
+@app.route('/api/generate', methods=['POST'])
+@limiter.limit("25 per minute")
+def api_generate():
+    data = request.json or {}
+    prompt           = data.get('prompt', '').strip()
+    assets           = data.get('assets', [])
+    previous_code    = data.get('previous_code', None)
+    style_preset     = data.get('style_preset', 'dark')
+    format_ratio     = data.get('format_ratio', '9:16')
+    ai_engine        = data.get('ai_engine', 'groq')
+    generation_mode  = data.get('generation_mode', 'generate')   # 'generate' ou 'replace'
+
+    if not prompt:
+        return jsonify({"success": False, "error": "Prompt não pode estar vazio"}), 400
+
+    if len(prompt) > 3000:
+        return jsonify({"success": False, "error": "Prompt muito longo. Máximo: 3000 caracteres"}), 400
+
+    # ─────────────────────────────────────────────────────────────────
+    # MODO REPLACE (substituição exata de variáveis CHAVE_)
+    # ─────────────────────────────────────────────────────────────────
+    if generation_mode == "replace":
+        if not previous_code:
+            return jsonify({"success": False, "error": "Modo 'replace' exige um template base (previous_code)."}), 400
+
+        # Mapeamento de estilos para guia de cores (usado pela IA para gerar JSON)
+        style_guides = {
+            'dark':      'Cores HEX para paleta escura premium. Pretos profundos, cinzas e acentos neon.',
+            'neon':      'Cores HEX para paleta neon vibrante. Roxo, rosa, azul elétrico em fundo preto absoluto.',
+            'minimal':   'Cores HEX para design minimalista. Tons sólidos, sóbrios e muito espaço branco.',
+            'gold':      'Cores HEX para paleta luxo. Dourado, preto fosco, champagne.',
+            'gradient':  'Cores HEX para paleta moderna e vibrante.',
+            'corporate': 'Cores HEX para estilo corporativo. Azul petróleo, branco, cinza.',
+        }
+        style_guide = style_guides.get(style_preset, style_guides['dark'])
+
+        system_prompt_replace = f"""Você é um motor de processamento de dados JSON estruturado.
+A sua única função é ler o código HTML do template fornecido, identificar todas as variáveis em maiúsculo que começam com CHAVE_ e preenchê-las com base na instrução do usuário.
+
+Regras de processamento
+* Retorne APENAS um objeto JSON válido, sem crases, sem markdown, sem explicações.
+* As chaves do JSON devem ser as variáveis encontradas no código, como CHAVE_TITULO, CHAVE_SUBTITULO, CHAVE_IMG_1, CHAVE_COR_PRIMARIA, etc.
+* Extraia a intenção criativa do usuário para gerar os textos corretos.
+* Use as URLs dos ASSETS fornecidos para substituir as chaves de imagem/vídeo.
+* Para chaves de cor, gere códigos HEX reais com base na seguinte diretriz de estilo: {style_guide}
+* Não altere o nome das chaves. Copie exatamente como estão no HTML fornecido."""
+
+        user_content_replace = f"INSTRUÇÃO CRIATIVA: {prompt}\n\n"
+
+        if assets:
+            user_content_replace += "ASSETS DISPONÍVEIS:\n" + '\n'.join(assets) + '\n\n'
+
+        user_content_replace += f"CÓDIGO TEMPLATE PARA MAPEAMENTO DE CHAVES:\n{previous_code}"
+
+        try:
+            generated_json_str = ""
+            tokens_used = 0
+            engine_used = ai_engine
+
+            # ── Fallback automático: tenta preferred → openrouter → groq → gemini ──
+            generated_json_str, tokens_used, engine_used = _ai_with_fallback(
+                system_prompt_replace,
+                user_content_replace,
+                temperature=0.1,
+                max_tokens=4096,
+                json_mode=True,
+                preferred_engine=ai_engine,
+            )
+
+            # Limpeza rigorosa para evitar falha de parse JSON
+            generated_json_str = generated_json_str.strip()
+            if generated_json_str.startswith("```json"):
+                generated_json_str = generated_json_str[7:]
+            elif generated_json_str.startswith("```"):
+                generated_json_str = generated_json_str[3:]
+            if generated_json_str.endswith("```"):
+                generated_json_str = generated_json_str[:-3]
+            generated_json_str = generated_json_str.strip()
+
+            try:
+                substituicoes = json.loads(generated_json_str)
+            except json.JSONDecodeError as e:
+                raise Exception(f"A IA não retornou um JSON válido. Erro: {str(e)} Retorno: {generated_json_str[:100]}")
+
+            html_final = previous_code
+            for chave, valor in substituicoes.items():
+                html_final = html_final.replace(str(chave), str(valor))
+
+            # Garante substituição de CHAVE_PROPORCAO com o formato selecionado
+            if 'CHAVE_PROPORCAO' in html_final:
+                html_final = html_final.replace('CHAVE_PROPORCAO', format_ratio)
+
+            # Salvar no histórico
+            session_id = get_session_id(request)
+            if session_id not in version_history:
+                version_history[session_id] = []
+
+            version_entry = {
+                "id":        str(uuid.uuid4()),
+                "timestamp": int(time.time()),
+                "prompt":    prompt,
+                "style":     style_preset,
+                "format":    format_ratio,
+                "html":      html_final,
+                "assets":    assets,
+                "mode":      "replace"
+            }
+            version_history[session_id].append(version_entry)
+            if len(version_history[session_id]) > 15:
+                version_history[session_id] = version_history[session_id][-15:]
+
+            return jsonify({
+                "success":       True,
+                "html":          html_final,
+                "version_id":    version_entry["id"],
+                "version_count": len(version_history[session_id]),
+                "tokens_used":   tokens_used,
+                "model":         engine_used,
+                "mode":          "replace"
+            })
+
+        except Exception as e:
+            error_msg = str(e)
+            if "429" in error_msg or "limit" in error_msg.lower():
+                msg = "Cota de IA excedida (429). Aguarde alguns segundos ou troque de motor."
+            elif "api_key" in error_msg.lower() or "auth" in error_msg.lower():
+                msg = "Erro de autenticação nas chaves de API."
+            else:
+                msg = f"Erro no replace: {error_msg}"
+            return jsonify({"success": False, "error": msg}), 500
+
+    # ─────────────────────────────────────────────────────────────────
+    # MODO GENERATE (criação livre, igual ao original)
+    # ─────────────────────────────────────────────────────────────────
+    else:
+        style_guides = {
+            'dark':      'Paleta escura premium (pretos profundos, cinzas, acentos neon sutis), estilo Motor Dark Studio',
+            'neon':      'Paleta neon vibrante (roxo, rosa, azul elétrico, verde limão) em fundo preto absoluto, estética cyberpunk',
+            'minimal':   'Design minimalista ultra-clean, muito espaço branco, tipografia grande e forte, cores sólidas e sóbrias',
+            'gold':      'Paleta luxo e premium (dourado rico, preto fosco, champagne, branco pérola), elegante e sofisticado',
+            'gradient':  'Gradientes ricos e fluídos (roxo→azul, laranja→rosa, etc.), moderno, colorido e extremamente chamativo',
+            'corporate': 'Corporativo profissional confiável (azul petróleo, branco, cinza), clean e sério',
+        }
+
+        format_guides = {
+            '9:16':  'VERTICAL 9:16 — largura 100vw, altura 177.78vw (ou usar unidades fixas 1080×1920px emulado via viewport). Ideal para Stories, Reels, TikTok.',
+            '1:1':   'QUADRADO 1:1 — largura e altura iguais em 100vmin. Ideal para feed do Instagram e LinkedIn.',
+            '16:9':  'HORIZONTAL 16:9 — largura 100vw, altura 56.25vw. Ideal para YouTube, apresentações e LinkedIn.',
+            '4:5':   'PORTRAIT 4:5 — largura 100vw, altura 125vw. Ideal para feed do Instagram com mais área vertical.',
+        }
+
+        style_guide  = style_guides.get(style_preset,  style_guides['dark'])
+        format_guide = format_guides.get(format_ratio, format_guides['9:16'])
+
+        system_prompt_generate = f"""Você é um Desenvolvedor Front-End ELITE, Diretor de Arte e Especialista em Motion Design (Motor Dark Studio).
+
+═══════════════════════════════════════════
+MISSÃO ABSOLUTA
+═══════════════════════════════════════════
+Gerar um arquivo HTML 100% autocontido (CSS + JS embutidos), criando uma animação cinematográfica de altíssimo nível, digna de uma agência top de mercado. O código deve criar um motor de renderização fluído na própria página.
+
+═══════════════════════════════════════════
+ESPECIFICAÇÕES DE FORMATO
+═══════════════════════════════════════════
+{format_guide}
+O container principal deve usar: width: 100%; height: 100%; overflow: hidden; sem scrollbar.
+
+═══════════════════════════════════════════
+IDENTIDADE VISUAL
+═══════════════════════════════════════════
+{style_guide}
+Use variáveis CSS (:root) para todas as cores e tamanhos. Crie uma paleta coesa com pelo menos 5 variáveis de cor.
+
+═══════════════════════════════════════════
+REGRAS OBRIGATÓRIAS E TÉCNICAS (O SEGREDO DO SUCESSO)
+═══════════════════════════════════════════
+1. MOTOR DE CENAS: Use um sistema de Cenas (divs com class="scene") que aparecem e desaparecem. Controle a visibilidade usando opacity, transform e transition. NUNCA use display: none para transições de cena.
+2. TIMING (JS): Use um script JS no final com requestAnimationFrame, setTimeout ou Promises para controlar o tempo exato de entrada e saída de cada cena, criando um fluxo narrativo perfeito e sincronizado.
+3. IMAGENS PERFEITAS (ANTI-CORTE): Imagens e Logos DEVEM OBRIGATORIAMENTE usar regras de CSS de contenção: `max-width: 100%; max-height: 100%; object-fit: contain;` para NUNCA serem cortadas ou distorcidas.
+4. EFEITOS CANVAS (Obrigatório): Adicione um efeito de partículas ou elementos dinâmicos no fundo usando HTML5 <canvas> (ex: brilhos, pétalas, poeira, estrelas, formas flutuantes).
+5. TIPOGRAFIA CINEMATOGRÁFICA: Importe fontes elegantes do Google Fonts (ex: Cormorant Garamond, DM Sans, Inter, Playfair Display) e use tamanhos responsivos dinâmicos com clamp() (ex: clamp(2rem, 5vw, 5rem)).
+6. TRANSIÇÕES SUAVES: Crie transições (ease-in-out ou cubic-bezier) longas e suaves de pelo menos 1.2 segundos entre os elementos e camadas.
+7. PROFUNDIDADE E LAYERS: Use box-shadow, text-shadow, drop-shadow (em SVGs ou PNGs), e backdrop-filter: blur() para criar camadas ricas e texturas sofisticadas. 
+8. CARROSSEL / POST ESTÁTICO (CRÍTICO): Se o usuário pedir um carrossel de fotos para postar, ou uma imagem estática, NUNCA USE auto-play rápido. Crie botões visíveis de navegação (Próximo/Anterior) ou permita troca de cena por clique, para que o usuário possa tirar print de cada tela com calma. Pare o temporizador automático!
+
+═══════════════════════════════════════════
+REGRAS DE CONTEÚDO E ASSETS
+═══════════════════════════════════════════
+- NUNCA use "Lorem ipsum" — crie conteúdo coerente e persuasivo com a instrução.
+- NUNCA deixe regiões vazias sem intenção visual.
+- SEMPRE crie hierarquia visual (hero element, suporte, background animado).
+- Se houver assets do usuário (logos, fotos, vídeos): ELES SÃO O ELEMENTO CENTRAL DO DESIGN.
+- Aplique as imagens/logos do usuário com destaque absoluto, centralizado ou no topo das cenas aplicáveis. NUNCA distorça essas imagens.
+- Vídeos do usuário: use <video autoplay muted loop playsinline style="object-fit: contain; max-width: 100%; max-height: 100%;">.
+
+═══════════════════════════════════════════
+SAÍDA ESPERADA
+═══════════════════════════════════════════
+Retorne APENAS o código HTML bruto e válido. NENHUMA formatação markdown. ZERO texto antes ou depois do código. ZERO explicações. Comece com <!DOCTYPE html> e termine com </html>."""
+
+        user_content_generate = f"INSTRUÇÃO CRIATIVA: {prompt}\n\n"
+
+        if assets:
+            user_content_generate += "═══ ASSETS DO USUÁRIO (INTEGRE OBRIGATORIAMENTE) ═══\n"
+            for i, asset_url in enumerate(assets, 1):
+                mtype = 'VÍDEO' if any(asset_url.lower().endswith(v) for v in ['.mp4', '.webm']) else 'IMAGEM'
+                user_content_generate += f"  [{i}] {mtype}: {asset_url}\n"
+            user_content_generate += "\nTodos os assets acima DEVEM aparecer no HTML final como elementos visuais centrais. NÃO corte-os e mantenha a proporção natural (object-fit: contain).\n\n"
+
+        if previous_code:
+            user_content_generate += (
+                "═══ CÓDIGO HTML EXISTENTE (TEMPLATE BASE) ═══\n"
+                "O código abaixo é um template funcional de alta qualidade.\n"
+                "PRESERVE estritamente a física do canvas, os temporizadores (timers/JS), os z-indexes e o motor de cenas.\n"
+                "Sua tarefa é SUBSTITUIR APENAS textos, URLs de imagens, cores (mantendo a harmonia) e tipografia para se adaptar perfeitamente à INSTRUÇÃO CRIATIVA e aos ASSETS DO USUÁRIO.\n\n"
+                f"{previous_code}"
+            )
+        else:
+            user_content_generate += "Crie do zero com base na instrução acima."
+
+        try:
+            generated_html = ""
+            tokens_used = 0
+            engine_used = ai_engine
+
+            # ── Fallback automático: tenta preferred → openrouter → groq → gemini ──
+            generated_html, tokens_used, engine_used = _ai_with_fallback(
+                system_prompt_generate,
+                user_content_generate,
+                temperature=0.45,
+                max_tokens=8192,
+                json_mode=False,
+                preferred_engine=ai_engine,
+            )
+
+            generated_html = generated_html.strip()
+            if generated_html.startswith("```html"):
+                generated_html = generated_html[7:]
+            elif generated_html.startswith("```"):
+                generated_html = generated_html[3:]
+            if generated_html.endswith("```"):
+                generated_html = generated_html[:-3]
+            generated_html = generated_html.strip()
+
+            lower = generated_html.lower()
+            if not (lower.startswith('<!doctype') or lower.startswith('<html')):
+                return jsonify({
+                    "success": False,
+                    "error": "O modelo não retornou HTML válido. Tente reformular a instrução."
+                }), 500
+
+            session_id = get_session_id(request)
+            if session_id not in version_history:
+                version_history[session_id] = []
+
+            version_entry = {
+                "id":        str(uuid.uuid4()),
+                "timestamp": int(time.time()),
+                "prompt":    prompt,
+                "style":     style_preset,
+                "format":    format_ratio,
+                "html":      generated_html,
+                "assets":    assets,
+                "mode":      "generate"
+            }
+            version_history[session_id].append(version_entry)
+
+            if len(version_history[session_id]) > 15:
+                version_history[session_id] = version_history[session_id][-15:]
+
+            return jsonify({
+                "success":       True,
+                "html":          generated_html,
+                "version_id":    version_entry["id"],
+                "version_count": len(version_history[session_id]),
+                "tokens_used":   tokens_used,
+                "model":         engine_used,
+                "mode":          "generate"
+            })
+
+        except Exception as e:
+            error_msg = str(e)
+            if "429" in error_msg or "limit" in error_msg.lower():
+                msg = "Cota de IA excedida (429). Aguarde alguns segundos ou troque de motor."
+            elif "api_key" in error_msg.lower() or "auth" in error_msg.lower():
+                msg = "Erro de autenticação nas chaves de API."
+            else:
+                msg = f"Erro na geração: {error_msg}"
+            return jsonify({"success": False, "error": msg}), 500
+
+
+# ─────────────────────────────────────────────
+# HISTÓRICO DE VERSÕES
+# ─────────────────────────────────────────────
+@app.route('/api/history', methods=['GET'])
+def api_history():
+    session_id = get_session_id(request)
+    history = version_history.get(session_id, [])
+    summary = [
+        {
+            "id":        v["id"],
+            "timestamp": v["timestamp"],
+            "prompt":    v["prompt"][:80] + "…" if len(v["prompt"]) > 80 else v["prompt"],
+            "style":     v.get("style", "dark"),
+            "format":    v.get("format", "9:16"),
+            "mode":      v.get("mode", "generate")
+        }
+        for v in history
+    ]
+    return jsonify({"success": True, "history": list(reversed(summary)), "count": len(summary)})
+
+
+@app.route('/api/history/<version_id>', methods=['GET'])
+def api_get_version(version_id):
+    session_id = get_session_id(request)
+    history = version_history.get(session_id, [])
+    version = next((v for v in history if v["id"] == version_id), None)
+    if not version:
+        return jsonify({"success": False, "error": "Versão não encontrada"}), 404
+    return jsonify({"success": True, "version": version})
+
+
+@app.route('/api/history', methods=['DELETE'])
+def api_clear_history():
+    session_id = get_session_id(request)
+    version_history[session_id] = []
+    return jsonify({"success": True, "message": "Histórico limpo com sucesso"})
+
+
+# ─────────────────────────────────────────────
+# TEMPLATES REAIS (LENDO DA PASTA html_templates)
+# ─────────────────────────────────────────────
+@app.route('/api/templates', methods=['GET'])
+def api_templates():
+    templates = []
+    try:
+        if os.path.exists(HTML_TEMPLATES_FOLDER):
+            for fname in os.listdir(HTML_TEMPLATES_FOLDER):
+                if fname.endswith('.html'):
+                    file_path = os.path.join(HTML_TEMPLATES_FOLDER, fname)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    
+                    clean_name = fname.replace('.html', '').replace('_', ' ').title()
+                    
+                    templates.append({
+                        "id": fname,
+                        "name": clean_name,
+                        "prompt": f"Mantenha a animação, canvas e estrutura deste template, mas altere os textos e imagens para a seguinte instrução: ",
+                        "style": "dark",
+                        "url": f"/html_templates/{fname}",
+                        "html": content
+                    })
+    except Exception as e:
+        print(f"Erro ao ler templates: {e}")
+
+    if not templates:
+        templates = [
+            {
+                "id": "exemplo_vazio",
+                "name": "Nenhum Template Encontrado",
+                "prompt": "Crie uma animação do zero pois não há templates na pasta html_templates...",
+                "style": "dark",
+                "url": "",
+                "html": ""
+            }
+        ]
+
+    return jsonify({"success": True, "templates": templates})
+
+
+# ─────────────────────────────────────────────
+# STATUS DA API
+# ─────────────────────────────────────────────
+@app.route('/api/status', methods=['GET'])
+def api_status():
+    total_versions = sum(len(v) for v in version_history.values())
+    try:
+        uploads_count = len(os.listdir(UPLOAD_FOLDER))
+    except Exception:
+        uploads_count = 0
+
+    return jsonify({
+        "success":        True,
+        "model":          BEST_FREE_MODEL,
+        "api_configured": True,
+        "total_sessions": len(version_history),
+        "total_versions": total_versions,
+        "uploads_count":  uploads_count,
+    })
+
+
+# ─────────────────────────────────────────────
+# FORMULÁRIO DO CLIENTE
+# ─────────────────────────────────────────────
+@app.route('/formulario')
+@login_marketing_required
+def formulario():
+    return render_template('formulario.html')
+
+
+# ─────────────────────────────────────────────
+# SUGESTÃO DE TEXTO VIA IA (para o formulário e Kanban)
+# ─────────────────────────────────────────────
+@app.route('/api/sugestao-texto', methods=['POST'])
+@limiter.limit("60 per minute")
+def api_sugestao_texto():
+    data = request.json or {}
+    prompt = data.get('prompt', '').strip()
+
+    if not prompt:
+        return jsonify({"success": False, "error": "Prompt vazio"}), 400
+
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada"}), 400
+
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Você é um assistente especialista em marketing digital e diretor de arte. "
+                        "Siga rigorosamente as instruções do usuário. "
+                        "Se o usuário pedir um retorno em JSON, retorne APENAS o JSON válido e estrito, "
+                        "sem blocos de código markdown (```json) e sem nenhum texto adicional."
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ],
+            model=BEST_FREE_MODEL,
+            temperature=0.5,
+            max_tokens=3000,
+        )
+        text = response.choices[0].message.content.strip()
+        return jsonify({"success": True, "text": text})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# RECEBER PEDIDO DO FORMULÁRIO
+# Salva o pedido em JSON local (sem banco de dados)
+# ─────────────────────────────────────────────
+PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
+os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
+
+@app.route('/painel')
+@login_marketing_required
+def painel():
+    return render_template('painel.html')
+
+@app.route('/api/form-pedido', methods=['POST'])
+@limiter.limit("10 per minute")
+def api_form_pedido():
+    data = request.json or {}
+
+    pedido_id = str(uuid.uuid4())[:8].upper()
+    timestamp = int(time.time())
+
+    pedido = {
+        "id":           pedido_id,
+        "timestamp":    timestamp,
+        "template_id":  data.get("template_id", ""),
+        "prompt":       data.get("prompt", ""),
+        "assets":       data.get("assets", []),
+        "colors":       data.get("colors", {}),
+        "fields":       data.get("fields", {}),
+        "status":       "pendente",
+    }
+
+    # Salva em arquivo JSON na pasta pedidos/
+    pedido_path = os.path.join(PEDIDOS_FOLDER, f"pedido_{pedido_id}.json")
+    try:
+        with open(pedido_path, 'w', encoding='utf-8') as f:
+            json.dump(pedido, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Erro ao salvar pedido: {str(e)}"}), 500
+
+    print(f"[PEDIDO] Novo pedido recebido: {pedido_id} | Template: {pedido['template_id']} | Cliente: {pedido['fields'].get('cliente','')}")
+
+    return jsonify({
+        "success":   True,
+        "pedido_id": pedido_id,
+        "message":   "Pedido recebido com sucesso!"
+    })
+
+
+# ─────────────────────────────────────────────
+# LISTAR PEDIDOS (para você ver no painel)
+# ─────────────────────────────────────────────
+@app.route('/api/pedidos', methods=['GET'])
+def api_pedidos():
+    pedidos = []
+    try:
+        for fname in sorted(os.listdir(PEDIDOS_FOLDER), reverse=True):
+            if fname.endswith('.json'):
+                fpath = os.path.join(PEDIDOS_FOLDER, fname)
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    pedidos.append(json.load(f))
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    return jsonify({"success": True, "pedidos": pedidos, "total": len(pedidos)})
+
+
+# ─────────────────────────────────────────────
+# CRM — ARMAZENAMENTO LOCAL (JSON)
+# ─────────────────────────────────────────────
+CONTACTS_FILE = os.path.join(BASE_DIR, 'contacts.json')
+
+def load_contacts():
+    try:
+        if os.path.exists(CONTACTS_FILE):
+            with open(CONTACTS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[CRM] Erro ao carregar contacts.json: {e}")
+    return []
+
+def save_contacts(contacts):
+    try:
+        with open(CONTACTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(contacts, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"[CRM] Erro ao salvar contacts.json: {e}")
+        return False
+
+@app.route('/api/crm/contacts', methods=['GET'])
+def crm_list():
+    contacts = load_contacts()
+    return jsonify({"success": True, "contacts": contacts, "total": len(contacts)})
+
+@app.route('/api/crm/contacts', methods=['POST'])
+@limiter.limit("120 per minute")
+def crm_create():
+    data = request.json or {}
+    contacts = load_contacts()
+    contact = {
+        "id":         str(uuid.uuid4()),
+        "created_at": int(time.time()),
+        "nome":       data.get("nome", "").strip(),
+        "empresa":    data.get("empresa", "").strip(),
+        "whatsapp":   data.get("whatsapp", "").strip(),
+        "email":      data.get("email", "").strip(),
+        "origem":     data.get("origem", "manual"),
+        "status":     data.get("status", "novo"),
+        "tags":       data.get("tags", []),
+        "obs":        data.get("obs", "").strip(),
+    }
+    if not contact["nome"] and not contact["empresa"] and not contact["whatsapp"]:
+        return jsonify({"success": False, "error": "Preencha nome, empresa ou WhatsApp."}), 400
+    contacts.append(contact)
+    save_contacts(contacts)
+    return jsonify({"success": True, "contact": contact})
+
+@app.route('/api/crm/contacts/<contact_id>', methods=['GET'])
+def crm_get(contact_id):
+    contacts = load_contacts()
+    contact  = next((c for c in contacts if c["id"] == contact_id), None)
+    if not contact:
+        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
+    return jsonify({"success": True, "contact": contact})
+
+@app.route('/api/crm/contacts/<contact_id>', methods=['PATCH'])
+@limiter.limit("120 per minute")
+def crm_update(contact_id):
+    data     = request.json or {}
+    contacts = load_contacts()
+    idx      = next((i for i, c in enumerate(contacts) if c["id"] == contact_id), None)
+    if idx is None:
+        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
+    allowed = ["nome","empresa","whatsapp","email","origem","status","tags","obs"]
+    for field in allowed:
+        if field in data:
+            contacts[idx][field] = data[field]
+    contacts[idx]["updated_at"] = int(time.time())
+    save_contacts(contacts)
+    return jsonify({"success": True, "contact": contacts[idx]})
+
+@app.route('/api/crm/contacts/<contact_id>', methods=['DELETE'])
+@limiter.limit("60 per minute")
+def crm_delete(contact_id):
+    contacts = load_contacts()
+    original = len(contacts)
+    contacts = [c for c in contacts if c["id"] != contact_id]
+    if len(contacts) == original:
+        return jsonify({"success": False, "error": "Contato não encontrado."}), 404
+    save_contacts(contacts)
+    return jsonify({"success": True, "message": "Contato excluído."})
+
+@app.route('/api/crm/export', methods=['GET'])
+def crm_export():
+    import csv, io
+    contacts = load_contacts()
+    output   = io.StringIO()
+    writer   = csv.writer(output)
+    headers  = ["nome","empresa","whatsapp","email","origem","status","tags","obs","created_at"]
+    writer.writerow(headers)
+    for c in contacts:
+        writer.writerow([
+            c.get("nome",""), c.get("empresa",""), c.get("whatsapp",""),
+            c.get("email",""), c.get("origem",""), c.get("status",""),
+            ";".join(c.get("tags",[])), c.get("obs",""),
+            c.get("created_at","")
+        ])
+    output.seek(0)
+    return Response(
+        "\ufeff" + output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=crm_export_{int(time.time())}.csv"}
+    )
+
+# ─────────────────────────────────────────────
+# MINERADOR — GOOGLE MAPS, INSTAGRAM, LINKEDIN
+# ─────────────────────────────────────────────
+def _limpar_telefone(txt):
+    nums = re.sub(r'\D', '', str(txt))
+    if len(nums) >= 10:
+        return f"55{nums}" if not nums.startswith('55') else nums
+    return None
+
+def _extrair_email_txt(txt):
+    m = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', str(txt))
+    return m.group(0) if m else None
+
+def _extrair_whatsapp_txt(txt):
+    padrao = r'(?:(?:\+|00)?55\s?)?(?:\(?([1-9][0-9])\)?\s?)?(?:((?:9\d|[2-9])\d{3})\-?(\d{4}))'
+    match  = re.search(padrao, str(txt))
+    if match:
+        ddd, p1, p2 = match.groups()
+        if not ddd: ddd = "11"
+        return f"55{ddd}{p1}{p2}".replace(" ","").replace("-","")
+    return None
+
+def _serper_places(query, num=20):
+    if not SERPER_API_KEY:
+        return []
+    try:
+        res = requests.post(
+            "https://google.serper.dev/places",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
+            timeout=15
+        )
+        return res.json().get("places", [])
+    except Exception as e:
+        print(f"[Minerador] Serper places error: {e}")
+        return []
+
+def _serper_search(query, num=20):
+    if not SERPER_API_KEY:
+        return []
+    try:
+        res = requests.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": num, "gl": "br", "hl": "pt-br"},
+            timeout=15
+        )
+        return res.json().get("organic", [])
+    except Exception as e:
+        print(f"[Minerador] Serper search error: {e}")
+        return []
+
+@app.route('/api/minerador', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_minerador():
+    data    = request.json or {}
+    fonte   = data.get("fonte", "maps")
+    nicho   = data.get("nicho", "").strip()
+    cidade  = data.get("cidade", "").strip()
+    bairros = data.get("bairros", "").strip()
+    quantidade = int(data.get("quantidade", 20))
+    results = []
+
+    if fonte == "maps":
+        lista_bairros = [b.strip() for b in bairros.split(',') if b.strip()] if bairros else [""]
+        for bairro in lista_bairros:
+            query = f"{nicho} em {bairro} {cidade}".strip() if bairro else f"{nicho} {cidade}".strip()
+            places = _serper_places(query, quantidade)
+            for p in places:
+                nome    = p.get("title","")
+                tel_raw = p.get("phoneNumber","")
+                tel     = _limpar_telefone(tel_raw) if tel_raw else None
+                results.append({
+                    "nome":     "", "empresa": nome,
+                    "whatsapp": tel or "",
+                    "email":    "",
+                    "endereco": p.get("address",""),
+                    "info":     p.get("address",""),
+                    "fonte":    "maps",
+                    "link":     p.get("website",""),
+                })
+            time.sleep(0.3)
+
+    elif fonte == "instagram":
+        queries = [
+            f'site:instagram.com "{nicho}" "{cidade}"',
+            f'site:instagram.com "{nicho}" {cidade} whatsapp',
+        ]
+        seen = set()
+        for q in queries:
+            items = _serper_search(q, quantidade)
+            for item in items:
+                txt      = (item.get("title","") + " " + item.get("snippet",""))
+                wpp      = _extrair_whatsapp_txt(txt)
+                email    = _extrair_email_txt(txt)
+                empresa  = item.get("title","").split("|")[0].split("•")[0].strip()[:60]
+                key      = wpp or email or empresa
+                if key and key not in seen:
+                    seen.add(key)
+                    results.append({
+                        "nome": "", "empresa": empresa,
+                        "whatsapp": wpp or "",
+                        "email":    email or "",
+                        "endereco": "", "info": item.get("snippet","")[:100],
+                        "fonte":    "instagram",
+                        "link":     item.get("link",""),
+                    })
+
+    elif fonte == "linkedin":
+        queries = [
+            f'site:linkedin.com/company "{nicho}" "{cidade}"',
+            f'site:linkedin.com/in "{nicho}" "{cidade}"',
+        ]
+        seen = set()
+        for q in queries:
+            items = _serper_search(q, quantidade)
+            for item in items:
+                txt    = (item.get("title","") + " " + item.get("snippet",""))
+                wpp    = _extrair_whatsapp_txt(txt)
+                email  = _extrair_email_txt(txt)
+                emp    = item.get("title","").split("|")[0].split("-")[0].strip()[:60]
+                key    = wpp or email or emp
+                if key and key not in seen:
+                    seen.add(key)
+                    results.append({
+                        "nome": "", "empresa": emp,
+                        "whatsapp": wpp or "",
+                        "email":    email or "",
+                        "endereco": "", "info": item.get("snippet","")[:100],
+                        "fonte":    "linkedin",
+                        "link":     item.get("link",""),
+                    })
+
+    if not results:
+        return jsonify({"success": True, "results": [], "message": "Nenhum contato encontrado. Tente outro nicho ou cidade."})
+
+    return jsonify({"success": True, "results": results, "total": len(results)})
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+@app.route('/api/scrape-email', methods=['POST'])
+def api_scrape_email():
+    data = request.json or {}
+    url = data.get('url', '').strip()
+    if not url: 
+        return jsonify({"email": ""})
+    
+    if not url.startswith('http'): 
+        url = 'http://' + url
+        
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        res = requests.get(url, headers=headers, timeout=5, verify=False)
+        emails = re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', res.text)
+        validos = [e for e in set(emails) if not e.endswith(('png','jpg','jpeg','gif','webp', 'css', 'js')) and 'sentry' not in e and 'wix' not in e]
+        
+        if validos:
+            return jsonify({"email": validos[0].lower()})
+    except:
+        pass
+        
+    return jsonify({"email": ""})
+
+
+# ─────────────────────────────────────────────
+# WHATSAPP — STATUS DO CHIP (Baileys)
+# ─────────────────────────────────────────────
+@app.route('/api/wpp/status', methods=['GET'])
+def wpp_status():
+    try:
+        r = requests.get(f"{BAILEYS_URL}/status", timeout=5)
+        data = r.json()
+        return jsonify({
+            "success":   True,
+            "connected": data.get("connected", False),
+            "number":    data.get("number", "")
+        })
+    except Exception as e:
+        return jsonify({"success": True, "connected": False, "number": "", "error": str(e)})
+
+
+# ─────────────────────────────────────────────
+# WHATSAPP — ENVIAR MENSAGEM (via Baileys)
+# ─────────────────────────────────────────────
+@app.route('/api/wpp/send', methods=['POST'])
+@limiter.limit("120 per minute")
+def wpp_send():
+    data      = request.json or {}
+    number    = data.get("number", "").strip()
+    message   = data.get("message", "").strip()
+    image     = data.get("image", None)
+    video_url = data.get("videoUrl", "").strip()
+
+    if not number:
+        return jsonify({"success": False, "error": "Número não informado."}), 400
+    if not message:
+        return jsonify({"success": False, "error": "Mensagem não pode estar vazia."}), 400
+
+    # Normaliza o número: garante formato 55DDDNUMERO
+    number_clean = re.sub(r'\D', '', number)
+    if not number_clean.startswith('55') and len(number_clean) >= 10:
+        number_clean = '55' + number_clean
+
+    payload = {
+        "number":  number_clean,
+        "message": message
+    }
+    if image:
+        payload["image"] = image
+    if video_url:
+        payload["videoUrl"] = video_url
+
+    try:
+        r = requests.post(
+            f"{BAILEYS_URL}/disparar",
+            json=payload,
+            timeout=20
+        )
+        if r.status_code == 200:
+            return jsonify({"success": True, "number": number_clean})
+        else:
+            return jsonify({"success": False, "error": f"API Baileys retornou {r.status_code}: {r.text[:200]}"}), 500
+    except requests.exceptions.ConnectionError:
+        return jsonify({"success": False, "error": "API do WhatsApp offline. Verifique o servidor Baileys."}), 503
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# WHATSAPP — GERAR COPY COM IA (Groq)
+# ─────────────────────────────────────────────
+@app.route('/api/wpp/generate-copy', methods=['POST'])
+@limiter.limit("20 per minute")
+def wpp_generate_copy():
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada no servidor."}), 400
+
+    data      = request.json or {}
+    nicho     = data.get("nicho", "negócios B2B").strip()
+    empresa   = data.get("empresa", "").strip()
+    descricao = data.get("descricao", "").strip()
+
+    contexto = ""
+    if empresa:   contexto += f" Minha empresa se chama {empresa}."
+    if descricao: contexto += f" O que vendemos: {descricao}."
+
+    prompt = (
+        f"Você é um especialista em prospecção via WhatsApp. "
+        f"Escreva UMA mensagem de abordagem fria, MUITO CURTA (máximo 2 frases), "
+        f"informal e direta, para prospectar clientes do nicho: {nicho}.{contexto} "
+        f"Use as variáveis {{nome}} para o nome do contato e {{empresa}} para a empresa dele. "
+        f"Tom: vizinho simpático mas profissional. Sem cara de robô. Sem emojis em excesso. "
+        f"Retorne apenas o texto da mensagem, sem aspas, sem explicações."
+    )
+
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=BEST_FREE_MODEL,
+            temperature=0.7,
+            max_tokens=150
+        )
+        copy = response.choices[0].message.content.strip()
+        return jsonify({"success": True, "copy": copy})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# E-MAIL — ROTA DE PÁGINA
+# ─────────────────────────────────────────────
+@app.route('/email')
+@login_marketing_required
+def email_page():
+    return render_template('email.html',
+        directus_url=os.environ.get("DIRECTUS_URL", ""),
+        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
+        directus_table=os.environ.get("DIRECTUS_TABLE", "")
+    )
+
+
+# ─────────────────────────────────────────────
+# E-MAIL — ARQUIVOS DE DADOS
+# ─────────────────────────────────────────────
+SMTP_CONFIG_FILE   = os.path.join(BASE_DIR, 'smtp_config.json')
+EMAIL_HISTORY_FILE = os.path.join(BASE_DIR, 'email_history.json')
+
+# Jobs de disparo em memória: { job_id: { status, progress, log, total, sent, errors } }
+email_jobs: dict = {}
+
+
+def _directus_smtp_table():
+    """Retorna o nome da coleção SMTP no Directus, testando os dois formatos possíveis."""
+    candidates = ["config_smtp", "Config_SMTP", "Config SMTP", "Config_Smtp"]
+    for name in candidates:
+        try:
+            import urllib.parse as _up
+            url = f"{DIRECTUS_URL}/items/{_up.quote(name, safe='')}?limit=1"
+            r = requests.get(url, headers=get_directus_headers(), timeout=5)
+            if r.status_code == 200:
+                return name
+        except Exception:
+            pass
+    return None
+
+
+def load_smtp_config() -> dict:
+    """Busca a config SMTP do Directus. Fallback para smtp_config.json local."""
+    if DIRECTUS_URL and DIRECTUS_TOKEN:
+        try:
+            table = _directus_smtp_table()
+            if table:
+                import urllib.parse as _up
+                url = f"{DIRECTUS_URL}/items/{_up.quote(table, safe='')}?limit=1"
+                r = requests.get(url, headers=get_directus_headers(), timeout=5)
+                if r.status_code == 200:
+                    data = r.json().get("data", [])
+                    if data:
+                        row = data[0]
+                        cfg = {
+                            "host": row.get("SMTP_Host") or row.get("smtp_host") or "",
+                            "port": int(row.get("SMTP_Port") or row.get("smtp_port") or 587),
+                            "user": row.get("SMTP_User") or row.get("smtp_user") or "",
+                            "pass": row.get("SMTP_Pass") or row.get("smtp_pass") or "",
+                            "_directus_id": row.get("id"),
+                            "_directus_table": table,
+                        }
+                        if cfg["host"] and cfg["user"] and cfg["pass"]:
+                            return cfg
+        except Exception as e:
+            print(f"[Email] Erro ao buscar SMTP do Directus: {e}")
+    # fallback: arquivo local
+    try:
+        if os.path.exists(SMTP_CONFIG_FILE):
+            with open(SMTP_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[Email] Erro ao carregar smtp_config.json: {e}")
+    return {}
+
+
+def save_smtp_config(cfg: dict) -> bool:
+    """Salva a config SMTP no Directus (se disponível) e também localmente como backup."""
+    # Salva local sempre (backup)
+    try:
+        local_cfg = {k: v for k, v in cfg.items() if not k.startswith("_")}
+        with open(SMTP_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(local_cfg, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[Email] Erro ao salvar smtp_config.json local: {e}")
+
+    # Salva no Directus se configurado
+    if DIRECTUS_URL and DIRECTUS_TOKEN:
+        try:
+            import urllib.parse as _up
+            table = cfg.get("_directus_table") or _directus_smtp_table()
+            if not table:
+                table = "Config_SMTP"
+            payload = {
+                "SMTP_Host": cfg.get("host", ""),
+                "SMTP_Port": cfg.get("port", 587),
+                "SMTP_User": cfg.get("user", ""),
+                "SMTP_Pass": cfg.get("pass", ""),
+            }
+            directus_id = cfg.get("_directus_id")
+            if directus_id:
+                r = requests.patch(
+                    f"{DIRECTUS_URL}/items/{_up.quote(table, safe='')}/{directus_id}",
+                    headers=get_directus_headers(), json=payload, timeout=10
+                )
+            else:
+                r = requests.post(
+                    f"{DIRECTUS_URL}/items/{_up.quote(table, safe='')}",
+                    headers=get_directus_headers(), json=payload, timeout=10
+                )
+            if r.status_code in (200, 201, 204):
+                print(f"[Email] SMTP salvo no Directus OK")
+                return True
+            else:
+                print(f"[Email] Erro ao salvar SMTP no Directus: {r.status_code} {r.text[:200]}")
+        except Exception as e:
+            print(f"[Email] Erro ao salvar SMTP no Directus: {e}")
+    return True  # retorna True se ao menos o local foi salvo
+
+
+def load_email_history() -> list:
+    try:
+        if os.path.exists(EMAIL_HISTORY_FILE):
+            with open(EMAIL_HISTORY_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        print(f"[Email] Erro ao carregar email_history.json: {e}")
+    return []
+
+
+def save_email_history(history: list) -> bool:
+    try:
+        # Mantém apenas os últimos 500 registros
+        history = history[-500:]
+        with open(EMAIL_HISTORY_FILE, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception as e:
+        print(f"[Email] Erro ao salvar email_history.json: {e}")
+        return False
+
+
+def _enviar_email_smtp(smtp_cfg: dict, to: str, subject: str, body: str,
+                       anexo_bytes=None, anexo_nome=None, anexo_mime=None) -> tuple:
+    """Envia um e-mail via SMTP. Retorna (True, 'OK') ou (False, 'mensagem de erro')."""
+    try:
+        to      = str(to).strip()
+        subject = str(subject).strip()
+        body    = str(body).replace('\n', '<br>')
+
+        # Detecta imagem inline via {{imagem}}
+        usar_inline = (
+            anexo_bytes is not None
+            and anexo_mime is not None
+            and "image" in anexo_mime
+            and "{{imagem}}" in body.lower()
+        )
+
+        if usar_inline:
+            msg = MIMEMultipart('related')
+            msg['From']    = smtp_cfg['user']
+            msg['To']      = to
+            msg['Subject'] = subject
+            alt = MIMEMultipart('alternative')
+            msg.attach(alt)
+            body_upd = body.replace("{{imagem}}", '<br><img src="cid:imagem_corpo" style="max-width:100%;height:auto;"><br>')
+            alt.attach(MIMEText(body_upd, 'html', 'utf-8'))
+            img = MIMEImage(anexo_bytes)
+            img.add_header('Content-ID', '<imagem_corpo>')
+            img.add_header('Content-Disposition', 'inline', filename=anexo_nome or 'imagem.jpg')
+            msg.attach(img)
+        else:
+            msg = MIMEMultipart()
+            msg['From']    = smtp_cfg['user']
+            msg['To']      = to
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'html', 'utf-8'))
+            if anexo_bytes is not None and not usar_inline:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(anexo_bytes)
+                encoders.encode_base64(part)
+                part.add_header('Content-Disposition', f'attachment; filename="{anexo_nome or "anexo"}"')
+                msg.attach(part)
+
+        server = smtplib.SMTP(smtp_cfg['host'], int(smtp_cfg['port']))
+        server.starttls()
+        server.login(smtp_cfg['user'], smtp_cfg['pass'])
+        server.sendmail(smtp_cfg['user'], to, msg.as_string())
+        server.quit()
+        return True, "OK"
+    except Exception as e:
+        return False, str(e)
+
+
+def _disparo_email_worker(job_id: str, contacts: list, assunto: str, corpo: str,
+                           smtp_cfg: dict, delay_min: int, delay_max: int,
+                           anexo_bytes=None, anexo_nome=None, anexo_mime=None,
+                           agendamento_ts: int = None, base_url: str = ''):
+    """Thread worker para disparo de e-mails em lote, com agendamento e tracking."""
+    job     = email_jobs[job_id]
+    history = load_email_history()
+    total   = len(contacts)
+    job['total'] = total
+
+    # ── Agendamento: aguarda até o horário definido ──────────────────────────
+    if agendamento_ts and agendamento_ts > int(time.time()):
+        job['status'] = 'agendado'
+        job['log'].append({'type': 'info', 'text': f'⏳ Aguardando horário agendado: {time.strftime("%d/%m/%Y %H:%M", time.localtime(agendamento_ts))}'})
+        while int(time.time()) < agendamento_ts:
+            if job.get('cancel'):
+                job['status'] = 'cancelled'
+                return
+            time.sleep(5)
+
+    job['status'] = 'running'
+
+    for i, contact in enumerate(contacts):
+        if job.get('cancel'):
+            job['status'] = 'cancelled'
+            break
+
+        nome    = str(contact.get('nome', '') or contact.get('empresa', '') or 'Prezado(a)')
+        empresa = str(contact.get('empresa', '') or '')
+        email   = str(contact.get('email', '')).strip()
+
+        if not email or '@' not in email:
+            job['log'].append({'type': 'warning', 'text': f'Sem e-mail válido: {nome}'})
+            continue
+
+        assunto_final = assunto.replace('{nome}', nome).replace('{empresa}', empresa)
+        corpo_final   = corpo.replace('{nome}', nome).replace('{empresa}', empresa)
+
+        # Gera ID único para este envio e injeta tracking
+        history_id = str(uuid.uuid4())[:12]
+        if base_url:
+            corpo_final = _inject_tracking(corpo_final, history_id, base_url)
+
+        ok, msg = _enviar_email_smtp(smtp_cfg, email, assunto_final, corpo_final,
+                                     anexo_bytes, anexo_nome, anexo_mime)
+
+        ts = int(time.time())
+        if ok:
+            job['sent']   += 1
+            job['log'].append({'type': 'success', 'text': f'✓ {email}'})
+            history.append({'id': history_id, 'ts': ts, 'to': email,
+                            'nome': nome, 'assunto': assunto_final, 'status': 'enviado',
+                            'opened': False, 'clicked': False})
+            # Atualiza status do contato no CRM
+            try:
+                contacts_all = load_contacts()
+                for c in contacts_all:
+                    if c.get('id') == contact.get('id'):
+                        c['status'] = 'em_contato'
+                        break
+                save_contacts(contacts_all)
+            except Exception:
+                pass
+        else:
+            job['errors'] += 1
+            job['log'].append({'type': 'error', 'text': f'✗ {email}: {msg}'})
+            history.append({'id': history_id, 'ts': ts, 'to': email,
+                            'nome': nome, 'assunto': assunto_final, 'status': f'erro: {msg[:60]}',
+                            'opened': False, 'clicked': False})
+
+        job['progress'] = round(((i + 1) / total) * 100)
+        save_email_history(history)
+
+        # Delay entre envios (exceto no último)
+        if i < total - 1 and not job.get('cancel'):
+            delay = random.randint(delay_min, delay_max)
+            job['log'].append({'type': 'info', 'text': f'Aguardando {delay}s...'})
+            for _ in range(delay):
+                if job.get('cancel'):
+                    break
+                time.sleep(1)
+
+    if job['status'] == 'running':
+        job['status']   = 'done'
+        job['progress'] = 100
+        job['log'].append({'type': 'success',
+                           'text': f'Disparo concluído — {job["sent"]} enviados, {job["errors"]} erros.'})
+
+
+# ─────────────────────────────────────────────
+# E-MAIL — ROTAS DA API
+# ─────────────────────────────────────────────
+
+@app.route('/api/email/smtp-config', methods=['GET'])
+def email_get_smtp():
+    cfg = load_smtp_config()
+    # Não retorna a senha por segurança; retorna apenas host/port/user
+    safe = {k: v for k, v in cfg.items() if k != 'pass'}
+    safe['has_pass'] = bool(cfg.get('pass'))
+    return jsonify({"success": True, "config": safe})
+
+
+@app.route('/api/email/smtp-config', methods=['POST'])
+@limiter.limit("20 per minute")
+def email_save_smtp():
+    data = request.json or {}
+    cfg  = load_smtp_config()
+    cfg['host'] = data.get('host', cfg.get('host', 'smtp.gmail.com')).strip()
+    cfg['port'] = int(data.get('port', cfg.get('port', 587)))
+    cfg['user'] = data.get('user', cfg.get('user', '')).strip()
+    if data.get('pass'):
+        cfg['pass'] = data['pass']
+    ok = save_smtp_config(cfg)
+    return jsonify({"success": ok, "message": "Configuração salva." if ok else "Erro ao salvar."})
+
+
+@app.route('/api/email/test-smtp', methods=['POST'])
+@limiter.limit("5 per minute")
+def email_test_smtp():
+    data = request.json or {}
+    cfg  = {
+        'host': data.get('host', '').strip(),
+        'port': int(data.get('port', 587)),
+        'user': data.get('user', '').strip(),
+        'pass': data.get('pass', '').strip(),
+    }
+    if not cfg['host'] or not cfg['user'] or not cfg['pass']:
+        return jsonify({"success": False, "error": "Preencha host, usuário e senha."}), 400
+    try:
+        server = smtplib.SMTP(cfg['host'], cfg['port'], timeout=10)
+        server.starttls()
+        server.login(cfg['user'], cfg['pass'])
+        server.quit()
+        return jsonify({"success": True, "message": f"Conexão com {cfg['host']} bem-sucedida!"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
+@app.route('/track/open/<history_id>', methods=['GET'])
+def email_track_open(history_id):
+    """Pixel de rastreamento de abertura — retorna GIF 1x1 transparente."""
+    try:
+        history = load_email_history()
+        for entry in history:
+            if entry.get('id') == history_id:
+                entry['opened'] = True
+                entry['opened_at'] = int(time.time())
+                break
+        save_email_history(history)
+    except Exception as e:
+        print(f"[Track] Erro ao registrar abertura {history_id}: {e}")
+    # GIF 1x1 transparente
+    gif = (b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00'
+           b'!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01'
+           b'\x00\x00\x02\x02D\x01\x00;')
+    return Response(gif, mimetype='image/gif',
+                    headers={'Cache-Control': 'no-store, no-cache, must-revalidate',
+                             'Pragma': 'no-cache'})
+
+
+@app.route('/track/click/<history_id>', methods=['GET'])
+def email_track_click(history_id):
+    """Rastreamento de clique — registra e redireciona para a URL original."""
+    dest = request.args.get('url', '/')
+    try:
+        history = load_email_history()
+        for entry in history:
+            if entry.get('id') == history_id:
+                entry['clicked'] = True
+                entry['clicked_at'] = int(time.time())
+                break
+        save_email_history(history)
+    except Exception as e:
+        print(f"[Track] Erro ao registrar clique {history_id}: {e}")
+    return redirect(dest)
+
+
+def _inject_tracking(body: str, history_id: str, base_url: str) -> str:
+    """Injeta pixel de abertura e reescreve links para rastreamento de cliques."""
+    # Pixel de abertura — insere antes do </body> ou no final
+    pixel = f'<img src="{base_url}/track/open/{history_id}" width="1" height="1" style="display:none;" alt="">'
+    if '</body>' in body.lower():
+        body = re.sub(r'</body>', pixel + '</body>', body, flags=re.IGNORECASE)
+    else:
+        body = body + pixel
+
+    # Reescreve hrefs para passar pelo /track/click
+    def rewrite_link(m):
+        href = m.group(1)
+        if href.startswith('#') or href.startswith('mailto:') or '/track/' in href:
+            return m.group(0)
+        encoded = urllib.parse.quote(href, safe='')
+        return f'href="{base_url}/track/click/{history_id}?url={encoded}"'
+
+    body = re.sub(r'href="([^"]+)"', rewrite_link, body)
+    return body
+
+
+@app.route('/api/email/send-batch', methods=['POST'])
+@limiter.limit("10 per minute")
+def email_send_batch():
+    # Pega dados do form (multipart por causa do anexo)
+    assunto      = (request.form.get('assunto') or '').strip()
+    corpo        = (request.form.get('corpo') or '').strip()
+    # AGORA RECEBEMOS OS DADOS COMPLETOS DO CONTATO (NÃO SÓ O ID)
+    targets_json = request.form.get('targets')
+    delay_min    = int(request.form.get('delay_min') or 30)
+    delay_max    = int(request.form.get('delay_max') or 90)
+    agendamento  = request.form.get('agendamento')   # timestamp Unix (str) ou None
+    arte_id      = (request.form.get('arte_id') or '').strip()
+
+    if not assunto:
+        return jsonify({"success": False, "error": "Assunto é obrigatório."}), 400
+    if not corpo:
+        return jsonify({"success": False, "error": "Corpo do e-mail é obrigatório."}), 400
+    if not targets_json:
+        return jsonify({"success": False, "error": "Selecione ao menos um contato."}), 400
+
+    # Tenta pegar SMTP do Directus/local; aceita também os dados enviados pelo front como fallback
+    smtp_cfg = load_smtp_config()
+    if not (smtp_cfg.get('host') and smtp_cfg.get('user') and smtp_cfg.get('pass')):
+        # fallback: front pode enviar smtp_* no FormData
+        smtp_host = (request.form.get('smtp_host') or '').strip()
+        smtp_user = (request.form.get('smtp_user') or '').strip()
+        smtp_pass = (request.form.get('smtp_pass') or '').strip()
+        smtp_port = int(request.form.get('smtp_port') or 587)
+        if smtp_host and smtp_user and smtp_pass:
+            smtp_cfg = {'host': smtp_host, 'port': smtp_port, 'user': smtp_user, 'pass': smtp_pass}
+        else:
+            return jsonify({"success": False, "error": "Configure o SMTP antes de disparar (aba Configurações)."}), 400
+
+    try:
+        contacts = json.loads(targets_json)
+    except json.JSONDecodeError:
+        return jsonify({"success": False, "error": "Erro ao ler a lista de destinatários."}), 400
+
+    if not contacts:
+        return jsonify({"success": False, "error": "Nenhum contato válido selecionado."}), 400
+
+    # Lida com anexo opcional
+    anexo_bytes = None
+    anexo_nome  = None
+    anexo_mime  = None
+    if 'anexo' in request.files:
+        f = request.files['anexo']
+        if f and f.filename:
+            anexo_bytes = f.read()
+            anexo_nome  = secure_filename(f.filename)
+            anexo_mime  = f.content_type or 'application/octet-stream'
+
+    # Resolve timestamp de agendamento
+    agendamento_ts = None
+    if agendamento:
+        try:
+            agendamento_ts = int(agendamento)
+        except (ValueError, TypeError):
+            pass
+
+    job_id = str(uuid.uuid4())[:12]
+    job_status_inicial = 'agendado' if agendamento_ts and agendamento_ts > int(time.time()) else 'starting'
+    email_jobs[job_id] = {
+        'status':        job_status_inicial,
+        'progress':      0,
+        'total':         len(contacts),
+        'sent':          0,
+        'errors':        0,
+        'log':           [],
+        'cancel':        False,
+        'created':       int(time.time()),
+        'agendamento_ts': agendamento_ts,
+    }
+
+    # Determina URL base para tracking (usa REQUEST_HOST ou HOST padrão)
+    base_url = os.environ.get("APP_BASE_URL", "").rstrip('/')
+    if not base_url:
+        base_url = request.host_url.rstrip('/')
+
+    t = threading.Thread(
+        target=_disparo_email_worker,
+        args=(job_id, contacts, assunto, corpo, smtp_cfg, delay_min, delay_max,
+              anexo_bytes, anexo_nome, anexo_mime, agendamento_ts, base_url),
+        daemon=True
+    )
+    t.start()
+
+    return jsonify({"success": True, "job_id": job_id, "total": len(contacts)})
+
+@app.route('/api/email/job-status/<job_id>', methods=['GET'])
+def email_job_status(job_id):
+    job = email_jobs.get(job_id)
+    if not job:
+        return jsonify({"success": False, "error": "Job não encontrado."}), 404
+    # Retorna apenas os últimos 50 logs para não sobrecarregar
+    return jsonify({
+        "success":        True,
+        "status":         job['status'],
+        "progress":       job['progress'],
+        "total":          job['total'],
+        "sent":           job['sent'],
+        "errors":         job['errors'],
+        "log":            job['log'][-50:],
+        "agendamento_ts": job.get('agendamento_ts'),
+    })
+
+
+@app.route('/api/email/job-cancel/<job_id>', methods=['POST'])
+def email_job_cancel(job_id):
+    job = email_jobs.get(job_id)
+    if not job:
+        return jsonify({"success": False, "error": "Job não encontrado."}), 404
+    job['cancel'] = True
+    return jsonify({"success": True, "message": "Cancelamento solicitado."})
+
+
+@app.route('/api/email/history', methods=['GET'])
+def email_history():
+    history = load_email_history()
+    return jsonify({"success": True, "history": list(reversed(history)), "total": len(history)})
+
+
+@app.route('/api/email/history', methods=['DELETE'])
+def email_clear_history():
+    save_email_history([])
+    return jsonify({"success": True, "message": "Histórico limpo."})
+
+
+@app.route('/api/email/generate-copy', methods=['POST'])
+@limiter.limit("20 per minute")
+def email_generate_copy():
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada."}), 400
+
+    data      = request.json or {}
+    nicho     = data.get('nicho', 'negócios B2B').strip()
+    empresa   = data.get('empresa', '').strip()
+    descricao = data.get('descricao', '').strip()
+
+    contexto = ''
+    if empresa:   contexto += f' Minha empresa é {empresa}.'
+    if descricao: contexto += f' O que vendemos: {descricao}.'
+
+    prompt = (
+        f"Você é um copywriter especialista em e-mail marketing B2B. "
+        f"Crie um e-mail de prospecção fria para o nicho: {nicho}.{contexto} "
+        f"Retorne um JSON com os campos 'assunto' (máx 60 chars, direto e curioso) "
+        f"e 'corpo' (HTML simples, máx 3 parágrafos curtos, tom pessoal e direto, "
+        f"use {{nome}} para personalizar). Sem markdown, apenas JSON puro."
+    )
+
+    try:
+        response = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "Retorne APENAS JSON válido, sem markdown, sem explicações."},
+                {"role": "user", "content": prompt}
+            ],
+            model=BEST_FREE_MODEL,
+            temperature=0.7,
+            max_tokens=600,
+            response_format={"type": "json_object"},
+        )
+        raw  = response.choices[0].message.content.strip()
+        data = json.loads(raw)
+        return jsonify({"success": True, "assunto": data.get('assunto', ''), "corpo": data.get('corpo', '')})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+
+# ─────────────────────────────────────────────
+# CALENDÁRIO
+# ─────────────────────────────────────────────
+@app.route('/calendario')
+@login_marketing_required
+def calendario():
+    return render_template('calendario.html',
+        directus_url=DIRECTUS_URL,
+        directus_token=DIRECTUS_TOKEN,
+        directus_table=DIRECTUS_TABLE,
+    )
+
+
+# ─────────────────────────────────────────────
+# GOALS / PROGRESSO
+# ─────────────────────────────────────────────
+@app.route('/api/goals/progresso', methods=['GET'])
+def goals_progresso():
+    tipo   = request.args.get('tipo', '').strip()
+    mes    = request.args.get('mes', '').strip()
+
+    if not tipo or not mes:
+        return jsonify({"success": False, "error": "Parâmetros 'tipo' e 'mes' são obrigatórios."}), 400
+
+    try:
+        ano_str, mes_str = mes.split('-')
+        ano = int(ano_str)
+        num_mes = int(mes_str)
+    except Exception:
+        return jsonify({"success": False, "error": "Formato de mês inválido. Use YYYY-MM."}), 400
+
+    hdrs = {"Authorization": f"Bearer {DIRECTUS_TOKEN}", "Content-Type": "application/json"}
+    valor = 0
+
+    try:
+        if tipo == 'posts':
+            data_inicio = f"{ano}-{mes_str:>02}-01"
+            data_fim    = f"{ano}-{mes_str:>02}-31"
+            url = (
+                f"{DIRECTUS_URL}/items/content_cards"
+                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+                f"&filter[status_kanban][_in]=pronto,publicado"
+                f"&filter[data_publicacao][_between]={data_inicio},{data_fim}"
+                f"&aggregate[count]=id"
+            )
+            res  = requests.get(url, headers=hdrs, timeout=10)
+            data = res.json()
+            valor = data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0
+
+        elif tipo == 'disparos':
+            url = (
+                f"{DIRECTUS_URL}/items/campaigns"
+                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
+                f"&aggregate[sum]=enviados"
+            )
+            try:
+                res  = requests.get(url, headers=hdrs, timeout=10)
+                data = res.json()
+                directus_enviados = int(data.get('data', [{}])[0].get('sum', {}).get('enviados', 0) or 0)
+            except Exception:
+                directus_enviados = 0
+
+            url_email = f"{DIRECTUS_URL}/items/email_history?filter[workspace_id][_eq]={DIRECTUS_TABLE}&limit=-1"
+            try:
+                res_e = requests.get(url_email, headers=hdrs, timeout=10)
+                data_e = res_e.json().get('data', [])
+                email_enviados = sum(1 for h in data_e if h.get('status', '').startswith('enviado'))
+            except Exception:
+                email_enviados = 0
+
+            valor = email_enviados + directus_enviados
+
+        elif tipo == 'leads':
+            url = f"{DIRECTUS_URL}/items/contacts?filter[workspace_id][_eq]={DIRECTUS_TABLE}&aggregate[count]=id"
+            try:
+                res  = requests.get(url, headers=hdrs, timeout=10)
+                data = res.json()
+                valor = int(data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0)
+            except Exception:
+                valor = 0
+
+        else:
+            valor = 0
+
+    except Exception as e:
+        print(f"[goals/progresso] Erro ao calcular '{tipo}': {e}")
+        valor = 0
+
+    return jsonify({"success": True, "tipo": tipo, "mes": mes, "valor": valor})
+
+
+@app.route('/api/goals/relatorio', methods=['GET'])
+def goals_relatorio():
+    mes = request.args.get('mes', datetime.datetime.now().strftime('%Y-%m'))
+    if not weasyprint:
+        return jsonify({"success": False, "error": "WeasyPrint não instalado no servidor."}), 501
+    try:
+        html = f"<html><head><style>body{{font-family:sans-serif;}} h1{{color:#2563eb;}}</style></head><body><h1>Relatório {mes}</h1><p>Gerado automaticamente.</p></body></html>"
+        pdf_bytes = weasyprint.HTML(string=html).write_pdf()
+        return Response(pdf_bytes, mimetype='application/pdf', headers={'Content-Disposition': f'attachment; filename=relatorio_{mes}.pdf'})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─────────────────────────────────────────────
+# MÉTRICAS — GOOGLE OAUTH2 + GSC + GA4
+# ─────────────────────────────────────────────
+SCOPES_ALL = [
+    'https://www.googleapis.com/auth/webmasters.readonly',
+    'https://www.googleapis.com/auth/analytics.readonly'
+]
+TOKENS_FILE = os.path.join(BASE_DIR, 'data', 'metricas_tokens.json')
+
+
+def _load_tokens():
+    try:
+        if os.path.exists(TOKENS_FILE):
+            with open(TOKENS_FILE, 'r') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {}
+
+
+def _save_tokens(data: dict):
+    os.makedirs(os.path.dirname(TOKENS_FILE), exist_ok=True)
+    with open(TOKENS_FILE, 'w') as f:
+        json.dump(data, f)
+
+
+def _get_creds(workspace_id: str):
+    tokens = _load_tokens()
+    tok = tokens.get(workspace_id)
+    if not tok:
+        return None
+    creds = Credentials(
+        token         = tok.get('token'),
+        refresh_token = tok.get('refresh_token'),
+        token_uri     = 'https://oauth2.googleapis.com/token',
+        client_id     = GOOGLE_CLIENT_ID,
+        client_secret = GOOGLE_CLIENT_SECRET,
+        scopes        = SCOPES_ALL,
+    )
+    if creds.expired and creds.refresh_token:
+        try:
+            from google.auth.transport.requests import Request as GRequest
+            creds.refresh(GRequest())
+            tok['token'] = creds.token
+            tokens[workspace_id] = tok
+            _save_tokens(tokens)
+        except Exception as e:
+            print(f"[metricas] Falha ao renovar token: {e}")
+            return None
+    return creds
+
+
+@app.route('/metricas')
+@login_marketing_required
+def metricas():
+    return render_template('metricas.html',
+        directus_url   = DIRECTUS_URL,
+        directus_token = DIRECTUS_TOKEN,
+        directus_table = DIRECTUS_TABLE,
+    )
+
+
+@app.route('/api/metricas/status', methods=['GET'])
+def metricas_status():
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+    tokens = _load_tokens()
+    tok = tokens.get(workspace_id, {})
+    return jsonify({
+        "success"       : True,
+        "gsc_conectado" : creds is not None and creds.valid,
+        "ga4_conectado" : creds is not None and creds.valid and bool(GA4_PROPERTY_ID),
+        "gsc_site"      : tok.get('gsc_site', ''),
+        "ga4_property"  : GA4_PROPERTY_ID,
+    })
+
+
+@app.route('/api/metricas/oauth/start')
+def metricas_oauth_start():
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return "Erro: GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET não configurados.", 400
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id"    : GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri"     : "https://accounts.google.com/o/oauth2/auth",
+                "token_uri"    : "https://oauth2.googleapis.com/token",
+                "redirect_uris": [GOOGLE_REDIRECT_URI],
+            }
+        },
+        scopes=SCOPES_ALL,
+        redirect_uri=GOOGLE_REDIRECT_URI,
+    )
+    auth_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='consent',
+    )
+    session['oauth_state'] = state
+    # NOVA LINHA: Salva o código de verificação para usar na volta
+    session['code_verifier'] = getattr(flow, 'code_verifier', None) 
+    
+    return redirect(auth_url)
+
+
+@app.route('/api/metricas/oauth/callback')
+def metricas_oauth_callback():
+    state = session.get('oauth_state', '')
+    code_verifier = session.get('code_verifier') # <--- RECUPERA AQUI
+
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return "Erro de configuração OAuth.", 400
+
+    flow = Flow.from_client_config(
+        {
+            "web": {
+                "client_id"    : GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri"     : "https://accounts.google.com/o/oauth2/auth",
+                "token_uri"    : "https://oauth2.googleapis.com/token",
+                "redirect_uris": [GOOGLE_REDIRECT_URI],
+            }
+        },
+        scopes=SCOPES_ALL,
+        state=state,
+        redirect_uri=GOOGLE_REDIRECT_URI,
+    )
+
+    try:
+        # Corrige o http para https que fizemos antes
+        auth_response = request.url.replace('http://', 'https://')
+        
+        # Cria os argumentos para enviar ao Google
+        fetch_kwargs = {'authorization_response': auth_response}
+        if code_verifier:
+            fetch_kwargs['code_verifier'] = code_verifier
+            
+        # Pega o token final enviando o verifier junto
+        flow.fetch_token(**fetch_kwargs)
+        creds = flow.credentials
+
+        gsc_site = ""
+        try:
+            svc = build('searchconsole', 'v1', credentials=creds, cache_discovery=False)
+            sites = svc.sites().list().execute()
+            entries = sites.get('siteEntry', [])
+            if entries:
+                gsc_site = entries[0].get('siteUrl', '')
+        except Exception:
+            pass
+
+        workspace_id = DIRECTUS_TABLE
+        tokens = _load_tokens()
+        tokens[workspace_id] = {
+            'token'        : creds.token,
+            'refresh_token': creds.refresh_token,
+            'gsc_site'     : gsc_site,
+        }
+        _save_tokens(tokens)
+        return redirect('/metricas?conectado=1')
+
+    except Exception as e:
+        return f"Erro no callback OAuth: {e}", 400
+
+
+@app.route('/api/metricas/gsc', methods=['GET'])
+def metricas_gsc():
+    dias = int(request.args.get('dias', 28))
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+
+    if not creds or not creds.valid:
+        return jsonify({"success": False, "error": "Search Console não conectado."}), 401
+
+    tokens = _load_tokens()
+    gsc_site = tokens.get(workspace_id, {}).get('gsc_site', '')
+    if not gsc_site:
+        return jsonify({"success": False, "error": "Nenhum site encontrado no Search Console."}), 400
+
+    try:
+        svc = build('searchconsole', 'v1', credentials=creds, cache_discovery=False)
+        end   = datetime.date.today() - datetime.timedelta(days=3)
+        start = end - datetime.timedelta(days=dias)
+
+        resp_dia = svc.searchanalytics().query(siteUrl=gsc_site, body={
+            'startDate' : start.strftime('%Y-%m-%d'),
+            'endDate'   : end.strftime('%Y-%m-%d'),
+            'dimensions': ['date'],
+            'rowLimit'  : 90,
+        }).execute()
+
+        por_dia = []
+        total_cliques = total_impressoes = total_ctr_sum = total_pos_sum = 0
+        rows_dia = resp_dia.get('rows', [])
+        for row in rows_dia:
+            cl = row.get('clicks', 0)
+            im = row.get('impressions', 0)
+            ct = round(row.get('ctr', 0) * 100, 2)
+            po = round(row.get('position', 0), 1)
+            por_dia.append({'data': row['keys'][0], 'cliques': cl, 'impressoes': im, 'ctr': ct, 'posicao': po})
+            total_cliques    += cl
+            total_impressoes += im
+            total_ctr_sum    += ct
+            total_pos_sum    += po
+
+        n = len(rows_dia) or 1
+        totais = {
+            'cliques'   : total_cliques,
+            'impressoes': total_impressoes,
+            'ctr'       : round(total_ctr_sum / n, 1),
+            'posicao'   : round(total_pos_sum / n, 1),
+        }
+
+        resp_pg = svc.searchanalytics().query(siteUrl=gsc_site, body={
+            'startDate' : start.strftime('%Y-%m-%d'),
+            'endDate'   : end.strftime('%Y-%m-%d'),
+            'dimensions': ['page'],
+            'rowLimit'  : 10,
+            'orderBy'   : [{'fieldName': 'clicks', 'sortOrder': 'DESCENDING'}],
+        }).execute()
+
+        top_paginas = [{
+            'pagina'    : r['keys'][0],
+            'cliques'   : r.get('clicks', 0),
+            'impressoes': r.get('impressions', 0),
+            'ctr'       : round(r.get('ctr', 0) * 100, 2),
+            'posicao'   : round(r.get('position', 0), 1),
+        } for r in resp_pg.get('rows', [])]
+
+        resp_kw = svc.searchanalytics().query(siteUrl=gsc_site, body={
+            'startDate' : start.strftime('%Y-%m-%d'),
+            'endDate'   : end.strftime('%Y-%m-%d'),
+            'dimensions': ['query'],
+            'rowLimit'  : 10,
+            'orderBy'   : [{'fieldName': 'clicks', 'sortOrder': 'DESCENDING'}],
+        }).execute()
+
+        top_keywords = [{
+            'query'     : r['keys'][0],
+            'cliques'   : r.get('clicks', 0),
+            'impressoes': r.get('impressions', 0),
+            'ctr'       : round(r.get('ctr', 0) * 100, 2),
+            'posicao'   : round(r.get('position', 0), 1),
+        } for r in resp_kw.get('rows', [])]
+
+        return jsonify({
+            "success"     : True,
+            "totais"      : totais,
+            "por_dia"     : por_dia,
+            "top_paginas" : top_paginas,
+            "top_keywords": top_keywords,
+            "site"        : gsc_site,
+            "periodo_dias": dias,
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/metricas/ga4', methods=['GET'])
+def metricas_ga4():
+    dias = int(request.args.get('dias', 28))
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+
+    if not creds or not creds.valid:
+        return jsonify({"success": False, "error": "Google Analytics não conectado."}), 401
+    if not GA4_PROPERTY_ID:
+        return jsonify({"success": False, "error": "GA4_PROPERTY_ID não configurado no .env"}), 400
+
+    try:
+        svc = build('analyticsdata', 'v1beta', credentials=creds, cache_discovery=False)
+        end   = datetime.date.today() - datetime.timedelta(days=1)
+        start = end - datetime.timedelta(days=dias)
+
+        resp_dia = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'dimensions': [{'name': 'date'}],
+            'metrics'   : [{'name': 'sessions'}, {'name': 'activeUsers'}, {'name': 'screenPageViews'}],
+            'orderBys'  : [{'dimension': {'dimensionName': 'date'}}],
+        }).execute()
+
+        por_dia = []
+        for row in resp_dia.get('rows', []):
+            dt = row['dimensionValues'][0]['value']
+            dt_fmt = f"{dt[:4]}-{dt[4:6]}-{dt[6:]}"
+            por_dia.append({
+                'data'     : dt_fmt,
+                'sessoes'  : int(row['metricValues'][0]['value']),
+                'usuarios' : int(row['metricValues'][1]['value']),
+                'pageviews': int(row['metricValues'][2]['value']),
+            })
+
+        resp_tot = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'metrics'   : [
+                {'name': 'sessions'},
+                {'name': 'activeUsers'},
+                {'name': 'screenPageViews'},
+                {'name': 'averageSessionDuration'},
+            ],
+        }).execute()
+
+        totais = {'sessoes': 0, 'usuarios': 0, 'pageviews': 0, 'tempo_medio': 0}
+        if resp_tot.get('rows'):
+            mv = resp_tot['rows'][0]['metricValues']
+            totais = {
+                'sessoes'    : int(mv[0]['value']),
+                'usuarios'   : int(mv[1]['value']),
+                'pageviews'  : int(mv[2]['value']),
+                'tempo_medio': round(float(mv[3]['value']), 0),
+            }
+
+        resp_cn = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'dimensions': [{'name': 'sessionDefaultChannelGroup'}],
+            'metrics'   : [{'name': 'sessions'}, {'name': 'activeUsers'}],
+            'orderBys'  : [{'metric': {'metricName': 'sessions'}, 'desc': True}],
+            'limit'     : 8,
+        }).execute()
+
+        canais = [{
+            'canal'   : r['dimensionValues'][0]['value'],
+            'sessoes' : int(r['metricValues'][0]['value']),
+            'usuarios': int(r['metricValues'][1]['value']),
+        } for r in resp_cn.get('rows', [])]
+
+        resp_pg = svc.properties().runReport(property=GA4_PROPERTY_ID, body={
+            'dateRanges': [{'startDate': start.strftime('%Y-%m-%d'), 'endDate': end.strftime('%Y-%m-%d')}],
+            'dimensions': [{'name': 'pagePath'}],
+            'metrics'   : [{'name': 'screenPageViews'}, {'name': 'activeUsers'}],
+            'orderBys'  : [{'metric': {'metricName': 'screenPageViews'}, 'desc': True}],
+            'limit'     : 10,
+        }).execute()
+
+        top_paginas = [{
+            'pagina'   : r['dimensionValues'][0]['value'],
+            'pageviews': int(r['metricValues'][0]['value']),
+            'usuarios' : int(r['metricValues'][1]['value']),
+        } for r in resp_pg.get('rows', [])]
+
+        return jsonify({
+            "success"     : True,
+            "totais"      : totais,
+            "por_dia"     : por_dia,
+            "canais"      : canais,
+            "top_paginas" : top_paginas,
+            "periodo_dias": dias,
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/metricas/sync', methods=['POST'])
+@limiter.limit("10 per minute")
+def metricas_sync():
+    workspace_id = DIRECTUS_TABLE
+    creds = _get_creds(workspace_id)
+    if not creds or not creds.valid:
+        return jsonify({"success": False, "error": "Nenhuma conexão ativa. Conecte o Google primeiro."}), 401
+    return jsonify({"success": True, "message": "Dados atualizados com sucesso."})
+
+
+@app.route('/api/metricas/ia-analise', methods=['POST'])
+@limiter.limit("10 per minute")
+def metricas_ia_analise():
+    if not groq_client:
+        return jsonify({"success": False, "error": "GROQ_API_KEY não configurada."}), 400
+
+    data    = request.json or {}
+    gsc     = data.get('gsc', {})
+    ga4     = data.get('ga4', {})
+    periodo = data.get('periodo', 28)
+
+    partes = []
+    if gsc:
+        partes.append(
+            f"GSC ({periodo} dias): {gsc.get('cliques',0)} cliques, "
+            f"{gsc.get('impressoes',0)} impressões, CTR {gsc.get('ctr',0)}%, "
+            f"posição média {gsc.get('posicao',0)}."
+        )
+    if ga4:
+        seg = ga4.get('tempo_medio', 0)
+        partes.append(
+            f"GA4 ({periodo} dias): {ga4.get('sessoes',0)} sessões, "
+            f"{ga4.get('usuarios',0)} usuários, {ga4.get('pageviews',0)} visualizações, "
+            f"tempo médio {int(seg//60)}m{int(seg%60)}s."
+        )
+
+    if not partes:
+        return jsonify({"success": False, "error": "Sem dados para analisar."}), 400
+
+    prompt = (
+        "Você é um especialista em marketing digital e SEO. "
+        "Analise os dados abaixo e dê um diagnóstico direto e acionável em 3-4 frases. "
+        "Aponte o ponto mais crítico, o que está bom e 1 ação concreta para melhorar. "
+        "Seja objetivo, sem jargões desnecessários.\n\n"
+        "Dados: " + " ".join(partes)
+    )
+
+    try:
+        resp = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "Você é um analista de marketing digital direto e prático. Responda em português do Brasil."},
+                {"role": "user", "content": prompt}
+            ],
+            model=BEST_FREE_MODEL,
+            temperature=0.5,
+            max_tokens=300,
+        )
+        analise = resp.choices[0].message.content.strip()
+        return jsonify({"success": True, "analise": analise})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# ============================================================
+# MARKETING OS — AUTENTICAÇÃO
+# Cole este bloco no seu app.py, antes do "if __name__ == '__main__':"
+# ============================================================
+# PASSO 1: Crie no Directus a collection "usuarios_marketing" com:
+#   - nome        (string)
+#   - email       (string, único)
+#   - senha_hash  (string)
+#   - ativo       (boolean, default: true)
+#   - perfil      (string: "admin" ou "operador")
+#
+# PASSO 2: Crie o primeiro usuário direto no Directus.
+#   No campo senha_hash, cole o hash gerado por:
+#   python3 -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('SUA_SENHA_AQUI'))"
+# ============================================================
+
+from functools import wraps
+
+def get_headers():
+    """Alias para get_directus_headers — usado no login."""
+    return get_directus_headers()
+
+def get_client_ip():
+    return request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+
+# Rate limit simples em memória: máx 5 tentativas por minuto por IP
+_login_attempts: dict = {}
+
+def check_rate_limit(ip: str, key: str) -> bool:
+    agora = time.time()
+    bucket = f"{key}:{ip}"
+    tentativas = _login_attempts.get(bucket, [])
+    tentativas = [t for t in tentativas if agora - t < 60]  # janela de 1 minuto
+    if len(tentativas) >= 5:
+        return False
+    tentativas.append(agora)
+    _login_attempts[bucket] = tentativas
+    return True
+
+def login_marketing_required(f):
+    """Decorator que protege qualquer rota do Marketing OS."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('marketing_user_id'):
+            return redirect('/marketing/login')
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route('/marketing/login', methods=['GET', 'POST'])
+def marketing_login():
+    # Se já está logado, vai direto para o hub
+    if session.get('marketing_user_id'):
+        return redirect('/marketing/hub')
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        senha = request.form.get('senha', '')
+
+        # Rate limit — mesmo padrão do resto do sistema
+        client_ip = get_client_ip()
+        if not check_rate_limit(client_ip, 'marketing_login'):
+            flash('Muitas tentativas. Aguarde 1 minuto.', 'error')
+            return render_template('login_marketing.html')
+
+        try:
+            url = f"{DIRECTUS_URL}/items/usuarios_marketing?filter[email][_eq]={email}&filter[ativo][_eq]=true"
+            r = requests.get(url, headers=get_headers(), timeout=7)
+            data = r.json().get('data', [])
+
+            if data:
+                usuario = data[0]
+                senha_salva = usuario.get('senha_hash', '')
+                senha_ok = False
+
+                # Verifica se já é hash werkzeug (começa com pbkdf2, scrypt, etc.)
+                if senha_salva.startswith('pbkdf2:') or senha_salva.startswith('scrypt:'):
+                    senha_ok = check_password_hash(senha_salva, senha)
+                else:
+                    # Ainda é texto puro — compara direto
+                    senha_ok = (senha_salva == senha)
+                    if senha_ok:
+                        # Aproveita e já salva como hash pra próxima vez
+                        novo_hash = generate_password_hash(senha)
+                        requests.patch(
+                            f"{DIRECTUS_URL}/items/usuarios_marketing/{usuario['id']}",
+                            headers=get_headers(),
+                            json={'senha_hash': novo_hash},
+                            timeout=7
+                        )
+
+                if senha_ok:
+                    session['marketing_user_id'] = usuario['id']
+                    session['marketing_user_nome'] = usuario.get('nome', email)
+                    session['marketing_user_perfil'] = usuario.get('perfil', 'operador')
+                    session.permanent = True
+                    return redirect('/marketing/hub')
+
+            flash('E-mail ou senha incorretos.', 'error')
+
+        except Exception as e:
+            print(f"Erro login marketing: {e}")
+            flash('Erro ao conectar. Tente novamente.', 'error')
+
+    return render_template('login_marketing.html')
+
+
+@app.route('/marketing/logout')
+def marketing_logout():
+    session.pop('marketing_user_id', None)
+    session.pop('marketing_user_nome', None)
+    session.pop('marketing_user_perfil', None)
+    return redirect('/marketing/login')
+
+
+# ============================================================
+# EXEMPLO: Como proteger uma rota do Marketing OS
+# Use o decorator @login_marketing_required em cada rota do hub
+# ============================================================
+
+@app.route('/marketing/hub')
+@login_marketing_required
+def marketing_hub():
+    return redirect('/home')
+# Outros exemplos de rotas protegidas:
+# @app.route('/marketing/whatsapp')
+# @login_marketing_required
+# def marketing_whatsapp():
+#     return render_template('whatsapp.html')
+#
+# @app.route('/marketing/prospeccao')
+# @login_marketing_required
+# def marketing_prospeccao():
+#     return render_template('prospeccao.html')
+# ─────────────────────────────────────────────
+# INICIALIZAÇÃO
+# ─────────────────────────────────────────────
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    print(f"🚀 Motor Dark Studio — rodando na porta {port}")
+    app.run(host='0.0.0.0', port=port, debug=debug)
