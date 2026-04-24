@@ -135,6 +135,42 @@ def get_session_id(req) -> str:
 
 
 # ─────────────────────────────────────────────
+# AUTENTICAÇÃO — HELPERS E DECORATOR
+# ─────────────────────────────────────────────
+from functools import wraps
+
+def get_headers():
+    """Alias para get_directus_headers — usado no login."""
+    return get_directus_headers()
+
+def get_client_ip():
+    return request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+
+# Rate limit simples em memória: máx 5 tentativas por minuto por IP
+_login_attempts: dict = {}
+
+def check_rate_limit(ip: str, key: str) -> bool:
+    agora = time.time()
+    bucket = f"{key}:{ip}"
+    tentativas = _login_attempts.get(bucket, [])
+    tentativas = [t for t in tentativas if agora - t < 60]  # janela de 1 minuto
+    if len(tentativas) >= 5:
+        return False
+    tentativas.append(agora)
+    _login_attempts[bucket] = tentativas
+    return True
+
+def login_marketing_required(f):
+    """Decorator que protege qualquer rota do Marketing OS."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('marketing_user_id'):
+            return redirect('/marketing/login')
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ─────────────────────────────────────────────
 # ROTAS PRINCIPAIS
 # ─────────────────────────────────────────────
 @app.route('/')
@@ -2527,37 +2563,7 @@ def metricas_ia_analise():
 #   python3 -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('SUA_SENHA_AQUI'))"
 # ============================================================
 
-from functools import wraps
 
-def get_headers():
-    """Alias para get_directus_headers — usado no login."""
-    return get_directus_headers()
-
-def get_client_ip():
-    return request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
-
-# Rate limit simples em memória: máx 5 tentativas por minuto por IP
-_login_attempts: dict = {}
-
-def check_rate_limit(ip: str, key: str) -> bool:
-    agora = time.time()
-    bucket = f"{key}:{ip}"
-    tentativas = _login_attempts.get(bucket, [])
-    tentativas = [t for t in tentativas if agora - t < 60]  # janela de 1 minuto
-    if len(tentativas) >= 5:
-        return False
-    tentativas.append(agora)
-    _login_attempts[bucket] = tentativas
-    return True
-
-def login_marketing_required(f):
-    """Decorator que protege qualquer rota do Marketing OS."""
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not session.get('marketing_user_id'):
-            return redirect('/marketing/login')
-        return f(*args, **kwargs)
-    return decorated
 
 
 @app.route('/marketing/login', methods=['GET', 'POST'])
