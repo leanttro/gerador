@@ -174,6 +174,7 @@ def login_marketing_required(f):
 # ROTAS PRINCIPAIS
 # ─────────────────────────────────────────────
 @app.route('/')
+@login_marketing_required
 def index():
     return render_template('index.html')
 
