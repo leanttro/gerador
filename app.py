@@ -16,11 +16,12 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email import encoders
-from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response, redirect
+from flask import Flask, request, jsonify, render_template, send_from_directory, session, Response, redirect, flash
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from groq import Groq
 from werkzeug.utils import secure_filename
+from werkzeug.security import check_password_hash, generate_password_hash
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -47,7 +48,7 @@ MAX_FILE_SIZE_MB = 20
 MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", uuid.uuid4().hex)
+app.secret_key = os.environ.get("SECRET_KEY", "marketing-os-chave-fixa-troque-em-producao")
 
 limiter = Limiter(
     get_remote_address,
@@ -141,6 +142,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/home')
+@login_marketing_required
 def home():
     return render_template('home.html',
         directus_url=os.environ.get("DIRECTUS_URL", ""),
@@ -148,14 +150,17 @@ def home():
         directus_table=os.environ.get("DIRECTUS_TABLE", "")
     )
 @app.route('/conteudo')
+@login_marketing_required
 def conteudo():
     return render_template('conteudo.html')
 
 @app.route('/criacao')
+@login_marketing_required
 def criacao():
     return render_template('criacao.html')
 
 @app.route('/prospeccao')
+@login_marketing_required
 def prospeccao():
     return render_template('prospeccao.html', 
         directus_url=os.environ.get("DIRECTUS_URL", ""),
@@ -165,6 +170,7 @@ def prospeccao():
     )
 
 @app.route('/whatsapp')
+@login_marketing_required
 def whatsapp():
     return render_template('whatsapp.html',
         directus_url=os.environ.get("DIRECTUS_URL", ""),
@@ -936,6 +942,7 @@ def api_status():
 # FORMULÁRIO DO CLIENTE
 # ─────────────────────────────────────────────
 @app.route('/formulario')
+@login_marketing_required
 def formulario():
     return render_template('formulario.html')
 
@@ -988,6 +995,7 @@ PEDIDOS_FOLDER = os.path.join(BASE_DIR, 'pedidos')
 os.makedirs(PEDIDOS_FOLDER, exist_ok=True)
 
 @app.route('/painel')
+@login_marketing_required
 def painel():
     return render_template('painel.html')
 
@@ -1426,6 +1434,7 @@ def wpp_generate_copy():
 # E-MAIL — ROTA DE PÁGINA
 # ─────────────────────────────────────────────
 @app.route('/email')
+@login_marketing_required
 def email_page():
     return render_template('email.html',
         directus_url=os.environ.get("DIRECTUS_URL", ""),
@@ -1984,6 +1993,7 @@ def email_generate_copy():
 # CALENDÁRIO
 # ─────────────────────────────────────────────
 @app.route('/calendario')
+@login_marketing_required
 def calendario():
     return render_template('calendario.html',
         directus_url=DIRECTUS_URL,
@@ -2136,6 +2146,7 @@ def _get_creds(workspace_id: str):
 
 
 @app.route('/metricas')
+@login_marketing_required
 def metricas():
     return render_template('metricas.html',
         directus_url   = DIRECTUS_URL,
@@ -2517,6 +2528,27 @@ def metricas_ia_analise():
 # ============================================================
 
 from functools import wraps
+
+def get_headers():
+    """Alias para get_directus_headers — usado no login."""
+    return get_directus_headers()
+
+def get_client_ip():
+    return request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+
+# Rate limit simples em memória: máx 5 tentativas por minuto por IP
+_login_attempts: dict = {}
+
+def check_rate_limit(ip: str, key: str) -> bool:
+    agora = time.time()
+    bucket = f"{key}:{ip}"
+    tentativas = _login_attempts.get(bucket, [])
+    tentativas = [t for t in tentativas if agora - t < 60]  # janela de 1 minuto
+    if len(tentativas) >= 5:
+        return False
+    tentativas.append(agora)
+    _login_attempts[bucket] = tentativas
+    return True
 
 def login_marketing_required(f):
     """Decorator que protege qualquer rota do Marketing OS."""
