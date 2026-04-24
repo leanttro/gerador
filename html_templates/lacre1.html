@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Lacre de Segurança - Leanttro Tecnologia</title>
+    <style>
+        :root {
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
+            --border-width: 3px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--cor-fundo);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            overflow: hidden;
+        }
+
+        .lacre-container {
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--cor-fundo);
+            border: var(--border-width) solid var(--cor-texto);
+        }
+
+        .row-top, .row-bottom {
+            display: flex;
+            height: 20%;
+            width: 100%;
+        }
+
+        .row-top {
+            border-bottom: var(--border-width) solid var(--cor-texto);
+        }
+
+        .row-bottom {
+            border-top: var(--border-width) solid var(--cor-texto);
+        }
+
+        .row-middle {
+            display: flex;
+            height: 60%;
+            width: 100%;
+        }
+
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(2rem, 7vw, 4rem);
+            color: var(--cor-texto);
+        }
+
+        .row-top .cell:not(:last-child),
+        .row-bottom .cell:not(:last-child) {
+            border-right: var(--border-width) solid var(--cor-texto);
+        }
+
+        .col-left {
+            width: 20%;
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-width) solid var(--cor-texto);
+        }
+
+        .col-right {
+            width: 20%;
+            display: flex;
+            flex-direction: column;
+            border-left: var(--border-width) solid var(--cor-texto);
+        }
+
+        .col-left .cell, .col-right .cell {
+            height: 33.333%;
+            width: 100%;
+        }
+
+        .col-left .cell:not(:last-child),
+        .col-right .cell:not(:last-child) {
+            border-bottom: var(--border-width) solid var(--cor-texto);
+        }
+
+        .center-logo {
+            width: 60%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        img.logo {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .corner {
+            width: 20%;
+        }
+
+        .top-mid {
+            width: 30%;
+            color: var(--cor-destaque);
+        }
+
+        .bot-mid {
+            width: 20%;
+        }
+
+        .text-light {
+            font-weight: 300;
+        }
+        
+        .text-regular {
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="lacre-container">
+        <div class="row-top">
+            <div class="cell corner text-regular">1</div>
+            <div class="cell top-mid text-regular">26</div>
+            <div class="cell top-mid text-regular">27</div>
+            <div class="cell corner text-regular">28</div>
+        </div>
+
+        <div class="row-middle">
+            <div class="col-left">
+                <div class="cell text-regular">2</div>
+                <div class="cell text-regular">3</div>
+                <div class="cell text-regular">4</div>
+            </div>
+
+            <div class="center-logo">
+                <img src="CHAVE_LOGO" alt="Logo Cliente" class="logo">
+            </div>
+
+            <div class="col-right">
+                <div class="cell text-regular">12</div>
+                <div class="cell text-regular">11</div>
+                <div class="cell text-regular">10</div>
+            </div>
+        </div>
+
+        <div class="row-bottom">
+            <div class="cell corner text-regular">5</div>
+            <div class="cell bot-mid text-light">6</div>
+            <div class="cell bot-mid text-light">7</div>
+            <div class="cell bot-mid text-light">8</div>
+            <div class="cell corner text-regular">9</div>
+        </div>
+    </div>
+</body>
+</html>
