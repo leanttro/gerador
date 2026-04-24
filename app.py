@@ -2500,7 +2500,123 @@ def metricas_ia_analise():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+# ============================================================
+# MARKETING OS — AUTENTICAÇÃO
+# Cole este bloco no seu app.py, antes do "if __name__ == '__main__':"
+# ============================================================
+# PASSO 1: Crie no Directus a collection "usuarios_marketing" com:
+#   - nome        (string)
+#   - email       (string, único)
+#   - senha_hash  (string)
+#   - ativo       (boolean, default: true)
+#   - perfil      (string: "admin" ou "operador")
+#
+# PASSO 2: Crie o primeiro usuário direto no Directus.
+#   No campo senha_hash, cole o hash gerado por:
+#   python3 -c "from werkzeug.security import generate_password_hash; print(generate_password_hash('SUA_SENHA_AQUI'))"
+# ============================================================
 
+from functools import wraps
+
+def login_marketing_required(f):
+    """Decorator que protege qualquer rota do Marketing OS."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('marketing_user_id'):
+            return redirect('/marketing/login')
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route('/marketing/login', methods=['GET', 'POST'])
+def marketing_login():
+    # Se já está logado, vai direto para o hub
+    if session.get('marketing_user_id'):
+        return redirect('/marketing/hub')
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        senha = request.form.get('senha', '')
+
+        # Rate limit — mesmo padrão do resto do sistema
+        client_ip = get_client_ip()
+        if not check_rate_limit(client_ip, 'marketing_login'):
+            flash('Muitas tentativas. Aguarde 1 minuto.', 'error')
+            return render_template('login_marketing.html')
+
+        try:
+            url = f"{DIRECTUS_URL}/items/usuarios_marketing?filter[email][_eq]={email}&filter[ativo][_eq]=true"
+            r = requests.get(url, headers=get_headers(), timeout=7)
+            data = r.json().get('data', [])
+
+            if data:
+                usuario = data[0]
+                senha_salva = usuario.get('senha_hash', '')
+                senha_ok = False
+
+                # Verifica se já é hash werkzeug (começa com pbkdf2, scrypt, etc.)
+                if senha_salva.startswith('pbkdf2:') or senha_salva.startswith('scrypt:'):
+                    senha_ok = check_password_hash(senha_salva, senha)
+                else:
+                    # Ainda é texto puro — compara direto
+                    senha_ok = (senha_salva == senha)
+                    if senha_ok:
+                        # Aproveita e já salva como hash pra próxima vez
+                        novo_hash = generate_password_hash(senha)
+                        requests.patch(
+                            f"{DIRECTUS_URL}/items/usuarios_marketing/{usuario['id']}",
+                            headers=get_headers(),
+                            json={'senha_hash': novo_hash},
+                            timeout=7
+                        )
+
+                if senha_ok:
+                    session['marketing_user_id'] = usuario['id']
+                    session['marketing_user_nome'] = usuario.get('nome', email)
+                    session['marketing_user_perfil'] = usuario.get('perfil', 'operador')
+                    session.permanent = True
+                    return redirect('/marketing/hub')
+
+            flash('E-mail ou senha incorretos.', 'error')
+
+        except Exception as e:
+            print(f"Erro login marketing: {e}")
+            flash('Erro ao conectar. Tente novamente.', 'error')
+
+    return render_template('login_marketing.html')
+
+
+@app.route('/marketing/logout')
+def marketing_logout():
+    session.pop('marketing_user_id', None)
+    session.pop('marketing_user_nome', None)
+    session.pop('marketing_user_perfil', None)
+    return redirect('/marketing/login')
+
+
+# ============================================================
+# EXEMPLO: Como proteger uma rota do Marketing OS
+# Use o decorator @login_marketing_required em cada rota do hub
+# ============================================================
+
+@app.route('/marketing/hub')
+@login_marketing_required
+def marketing_hub():
+    # Exemplo: rota protegida do hub
+    # Substitua pelo seu render_template real
+    usuario_nome = session.get('marketing_user_nome', 'Usuário')
+    return render_template('marketing_hub.html', usuario_nome=usuario_nome)
+
+# Outros exemplos de rotas protegidas:
+# @app.route('/marketing/whatsapp')
+# @login_marketing_required
+# def marketing_whatsapp():
+#     return render_template('whatsapp.html')
+#
+# @app.route('/marketing/prospeccao')
+# @login_marketing_required
+# def marketing_prospeccao():
+#     return render_template('prospeccao.html')
 # ─────────────────────────────────────────────
 # INICIALIZAÇÃO
 # ─────────────────────────────────────────────
