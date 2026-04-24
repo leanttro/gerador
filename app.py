@@ -2602,11 +2602,7 @@ def marketing_logout():
 @app.route('/marketing/hub')
 @login_marketing_required
 def marketing_hub():
-    # Exemplo: rota protegida do hub
-    # Substitua pelo seu render_template real
-    usuario_nome = session.get('marketing_user_nome', 'Usuário')
-    return render_template('marketing_hub.html', usuario_nome=usuario_nome)
-
+    return redirect('/home')
 # Outros exemplos de rotas protegidas:
 # @app.route('/marketing/whatsapp')
 # @login_marketing_required
