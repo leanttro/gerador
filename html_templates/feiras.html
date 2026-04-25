@@ -5,25 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Feira de Rua</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cor-fundo:               CHAVE_COR_FUNDO;
-            --cor-texto-principal:     CHAVE_COR_TEXTO;
-            --cor-destaque:            CHAVE_COR_DESTAQUE;
+            --cor-fundo: CHAVE_COR_FUNDO;
+            --cor-texto-principal: CHAVE_COR_TEXTO;
+            --cor-destaque: CHAVE_COR_DESTAQUE;
             --cor-destaque-secundaria: CHAVE_COR_SECUNDARIA;
-            --fonte-display:           'Bebas Neue', sans-serif;
-            --fonte-corpo:             'Montserrat', sans-serif;
-            --vel-fast:   0.25s;
-            --vel-normal: 0.5s;
+            --fonte-principal: 'Montserrat', sans-serif;
+
+            --velocidade-animacao-fast: 0.25s;
+            --velocidade-animacao-normal: 0.5s;
         }
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background-color: var(--cor-fundo);
             color: var(--cor-texto-principal);
-            font-family: var(--fonte-corpo);
+            font-family: var(--fonte-principal);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -31,105 +35,242 @@
             overflow: hidden;
         }
 
-        /* ================================
-           CONTAINER ÚNICO
-           Flask injeta as dimensões:
-           4:5  → CHAVE_LARGURA=400px  CHAVE_ALTURA=500px
-           9:16 → CHAVE_LARGURA=405px  CHAVE_ALTURA=720px
-           ================================ */
-        .template-container {
-            width:  400px;
+        /* ==============================
+           CONTAINER PRINCIPAL - PROPORÇÃO 4:5
+           ============================== */
+        .template-motion-container {
+            width: 400px;
             height: 500px;
             background-color: var(--cor-fundo);
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            padding: 0;
         }
 
-        /* Fundo decorativo */
-        .bg-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: var(--cor-destaque);
-            opacity: 0.06;
-            pointer-events: none;
-            z-index: 0;
-        }
-        .bg-circle-1 { width: 300px; height: 300px; top: -70px; right: -70px; }
-        .bg-circle-2 { width: 160px; height: 160px; bottom: 50px; left: -45px; }
-
-        .grain-overlay {
-            position: absolute;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            opacity: 0.04;
-            pointer-events: none;
-            z-index: 1;
-        }
-
+        /* Linha decorativa vertical esquerda */
         .side-line {
             position: absolute;
-            left: 0; top: 0;
-            width: 3px; height: 100%;
-            background: linear-gradient(to bottom, transparent 0%, var(--cor-destaque) 25%, var(--cor-destaque) 75%, transparent 100%);
-            opacity: 0.4;
-            z-index: 2;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--cor-destaque) 30%,
+                var(--cor-destaque) 70%,
+                transparent 100%
+            );
+            opacity: 0.35;
+            z-index: 1;
             animation: fadeInTop 0.8s ease-out forwards;
         }
-        .side-line-right {
-            position: absolute;
-            right: 0; top: 0;
-            width: 1px; height: 100%;
-            background: linear-gradient(to bottom, transparent 0%, var(--cor-destaque) 40%, var(--cor-destaque) 60%, transparent 100%);
-            opacity: 0.15;
-            z-index: 2;
-        }
 
-        /* HEADER */
+        /* ==============================
+           HEADER - LOGO DA CLIENTE (CENTRALIZADO E MAIOR)
+           ============================== */
         .template-header {
             width: 100%;
-            height: 80px;
+            height: 85px;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 6px 20px;
+            padding: 2px 20px 6px;
             position: relative;
             z-index: 10;
-            animation: fadeInTop var(--vel-fast) ease-out forwards;
+            animation: fadeInTop var(--velocidade-animacao-fast) ease-out forwards;
         }
+
         .cliente-logo {
-            max-width: 220px;
-            max-height: 68px;
+            max-width: 240px;
+            max-height: 80px;
             object-fit: contain;
         }
 
-        /* FOTO 16:9 */
+        /* ==============================
+           IMAGEM DO PRODUTO — ÁREA PRINCIPAL
+           ============================== */
         .template-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             position: relative;
-            z-index: 10;
-            padding: 0 18px;
+            padding: 4px 20px 0 20px;
         }
-        .photo-scene {
+
+        .motion-scene-container {
             width: 100%;
-            height: 225px;
-            border-radius: 12px;
-            overflow: hidden;
+            height: 255px;
             position: relative;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1);
-            animation: fadeInScale var(--vel-normal) ease-out forwards,
-                       bob 4s ease-in-out infinite alternate 1.5s;
+            border-radius: 14px;
+            overflow: hidden;
+            background-color: rgba(0,0,0,0.04);
+            margin-bottom: 16px;
+            animation: fadeInFast var(--velocidade-animacao-normal) ease-out forwards,
+                       bob 3s ease-in-out infinite alternate 1.2s;
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.07),
+                0 1px 4px rgba(0,0,0,0.04);
         }
-        .photo-scene img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .photo-scene::after {
+
+        .main-product-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+            display: block;
+        }
+
+        /* Shimmer sutil sobre a imagem */
+        .motion-scene-container::after {
             content: '';
             position: absolute;
             inset: 0;
-            border-radius: 12px;
-            background: linear-gradient(160deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(0,0,0,0.12) 100%);
+            border-radius: 14px;
+            background: linear-gradient(
+                160deg,
+                rgba(255,255,255,0.10) 0%,
+                transparent 50%,
+                rgba(0,0,0,0.06) 100%
+            );
             pointer-events: none;
             z-index: 2;
         }
+
+        /* Elementos decorativos flutuantes sobre a imagem */
+        .layered-graphic-element {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            pointer-events: none;
+            border: 1.5px solid var(--cor-destaque);
+            border-radius: 8px;
+            opacity: 0.18;
+            z-index: 3;
+            animation: rotateLoop 7s linear infinite,
+                       pulseFast 1.6s ease-in-out infinite alternate;
+        }
+
+        .element-top-right  { top: 12px; right: 12px; animation-delay: 0s; }
+        .element-bottom-left { bottom: 12px; left: 12px; animation-delay: 0.5s; width: 28px; height: 28px; border-radius: 50%; }
+
+        /* ==============================
+           TEXTOS DO PRATO
+           ============================== */
+        .text-details {
+            width: 100%;
+            text-align: left;
+            position: relative;
+            z-index: 10;
+            padding-left: 2px;
+        }
+
+        .dish-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--cor-texto-principal);
+            margin-bottom: 5px;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.1s) forwards;
+        }
+
+        .ingredients-list {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--cor-texto-principal);
+            line-height: 1.5;
+            margin-bottom: 10px;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards;
+        }
+
+        /* MACROS — TAGS MINIMALISTAS */
+        .macros-info {
+            display: flex;
+            gap: 7px;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: var(--cor-destaque-secundaria);
+            margin-bottom: 4px;
+            opacity: 0;
+            flex-wrap: wrap;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.3s) forwards;
+        }
+
+        .macro-tag {
+            background-color: transparent;
+            border: 1px solid var(--cor-destaque);
+            color: var(--cor-destaque);
+            padding: 2px 8px;
+            border-radius: 20px;
+            opacity: 0.7;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==============================
+           DIVISOR ELEGANTE
+           ============================== */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                var(--cor-destaque) 0%,
+                transparent 100%
+            );
+            opacity: 0.18;
+            margin: 0 0 10px 0;
+            opacity: 0;
+            animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.35s) forwards;
+        }
+
+        /* ==============================
+           FOOTER
+           ============================== */
+        .template-footer {
+            padding: 0 20px 16px 22px;
+            text-align: left;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--cor-destaque-secundaria);
+            position: relative;
+            z-index: 10;
+        }
+
+        .cta-text {
+            color: var(--cor-destaque-secundaria);
+            font-weight: 500;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            opacity: 0;
+            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards;
+        }
+
+        /* Pequeno ícone decorativo no footer */
+        .footer-accent {
+            width: 20px;
+            height: 1px;
+            background: var(--cor-destaque);
+            opacity: 0.3;
+            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.45s) forwards;
+        }
+
+
+        /* Badge tipo */
         .badge-tipo {
             position: absolute;
             top: 10px; left: 10px;
@@ -142,185 +283,107 @@
             text-transform: uppercase;
             padding: 3px 10px;
             border-radius: 20px;
-            opacity: 0;
-            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.1s) forwards;
-        }
-        .deco {
-            position: absolute;
-            border: 1.5px solid var(--cor-destaque);
-            opacity: 0.2;
-            pointer-events: none;
-            z-index: 3;
-            animation: rotateLoop 8s linear infinite, pulseDeco 2s ease-in-out infinite alternate;
-        }
-        .deco-tr { width: 34px; height: 34px; border-radius: 7px; top: 10px; right: 10px; }
-        .deco-bl { width: 20px; height: 20px; border-radius: 50%; bottom: 10px; left: 10px; animation-delay: 0.6s; }
-
-        /* TEXTOS */
-        .text-block {
-            position: relative;
-            z-index: 10;
-            padding: 12px 20px 0 22px;
-        }
-        .feira-titulo {
-            font-family: var(--fonte-display);
-            font-size: 26px;
-            color: var(--cor-texto-principal);
-            line-height: 1.0;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-            opacity: 0;
-            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.15s) forwards;
-        }
-        .feira-descricao {
-            font-size: 11px;
-            font-weight: 400;
-            color: var(--cor-texto-principal);
-            line-height: 1.5;
-            margin-bottom: 10px;
-            opacity: 0;
-            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.25s) forwards;
-        }
-        .divider {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(to right, var(--cor-destaque) 0%, transparent 80%);
-            margin-bottom: 10px;
-            opacity: 0;
-            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.3s) forwards;
-        }
-        .info-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 7px;
-            opacity: 0;
-            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.35s) forwards;
-        }
-        .info-row + .info-row { animation-delay: calc(var(--vel-normal) + 0.42s); }
-        .info-icon { font-size: 12px; line-height: 1.5; flex-shrink: 0; }
-        .info-text { font-size: 11px; font-weight: 500; line-height: 1.4; }
-        .info-label {
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            color: var(--cor-destaque);
-            display: block;
-            margin-bottom: 1px;
         }
 
-        /* FOOTER */
-        .template-footer {
-            position: relative;
-            z-index: 10;
-            margin-top: auto;
-            padding: 10px 20px 16px 22px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .cta-text {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            color: var(--cor-destaque-secundaria);
-            opacity: 0;
-            animation: fadeInLeft var(--vel-fast) ease-out calc(var(--vel-normal) + 0.5s) forwards;
-        }
-        .user-handle {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: var(--cor-destaque);
-            opacity: 0;
-            animation: fadeInRight var(--vel-fast) ease-out calc(var(--vel-normal) + 0.5s) forwards;
-        }
-
-        /* ANIMAÇÕES */
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.97); }
+        /* ==============================
+           ANIMAÇÕES
+           ============================== */
+        @keyframes fadeInFast {
+            from { opacity: 0; transform: scale(0.98); }
             to   { opacity: 1; transform: scale(1); }
         }
+
         @keyframes fadeInTop {
-            from { opacity: 0; transform: translateY(-14px); }
+            from { opacity: 0; transform: translateY(-16px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+
         @keyframes fadeInText {
             from { opacity: 0; transform: translateX(8px); }
             to   { opacity: 1; transform: translateX(0); }
         }
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-14px); }
-            to   { opacity: 1; transform: translateX(0); }
-        }
+
         @keyframes fadeInRight {
-            from { opacity: 0; transform: translateX(14px); }
+            from { opacity: 0; transform: translateX(16px); }
             to   { opacity: 1; transform: translateX(0); }
         }
+
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-16px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
         @keyframes bob {
             from { transform: translateY(0px); }
-            to   { transform: translateY(5px); }
+            to   { transform: translateY(4px); }
         }
+
+        @keyframes pulseFast {
+            from { opacity: 0.12; }
+            to   { opacity: 0.3; }
+        }
+
         @keyframes rotateLoop {
             from { transform: rotate(0deg); }
             to   { transform: rotate(360deg); }
         }
-        @keyframes pulseDeco {
-            from { opacity: 0.12; }
-            to   { opacity: 0.28; }
+
+        @keyframes breathe {
+            from { transform: scale(1); }
+            to   { transform: scale(1.15); }
         }
     </style>
 </head>
 <body>
 
-    <div class="template-container">
+    <div class="template-motion-container" id="fit-marmita-app">
 
-        <div class="bg-circle bg-circle-1"></div>
-        <div class="bg-circle bg-circle-2"></div>
-        <div class="grain-overlay"></div>
         <div class="side-line"></div>
-        <div class="side-line-right"></div>
 
-        <header class="template-header">
-            <img src="CHAVE_LOGO" alt="Logo" class="cliente-logo">
+        <header class="template-header" id="logo-container">
+            <img src="CHAVE_LOGO" alt="Logo Cliente" class="cliente-logo" id="client-logo-img">
         </header>
 
-        <main class="template-main">
-            <div class="photo-scene">
-                <img src="CHAVE_IMAGEM" alt="Foto da Feira">
+        <main class="template-main" id="motion-main-content">
+
+            <div class="motion-scene-container" id="video-scene">
+                <img src="CHAVE_IMAGEM" id="main-product-video" class="main-product-video" alt="Foto da Feira">
                 <span class="badge-tipo">CHAVE_TIPO</span>
-                <div class="deco deco-tr"></div>
-                <div class="deco deco-bl"></div>
+
+                <div class="layered-graphic-element element-top-right"></div>
+                <div class="layered-graphic-element element-bottom-left"></div>
             </div>
+
+            <div class="text-details" id="text-details-container">
+                <h1 class="dish-title" id="dish-title-text">CHAVE_TITULO</h1>
+
+                <p class="ingredients-list" id="ingredients-list-text">CHAVE_DESCRICAO</p>
+
+                <div class="macros-info" id="macros-info-tags">
+                    <span>🕐 CHAVE_HORARIO</span>
+                    <span>📍 CHAVE_ENDERECO</span>
+                </div>
+            </div>
+
         </main>
 
-        <div class="text-block">
-            <h1 class="feira-titulo">CHAVE_TITULO</h1>
-            <p class="feira-descricao">CHAVE_DESCRICAO</p>
-            <div class="divider"></div>
-            <div class="info-row">
-                <span class="info-icon">🕐</span>
-                <div class="info-text">
-                    <span class="info-label">Horário</span>
-                    CHAVE_HORARIO
-                </div>
-            </div>
-            <div class="info-row">
-                <span class="info-icon">📍</span>
-                <div class="info-text">
-                    <span class="info-label">Endereço</span>
-                    CHAVE_ENDERECO
-                </div>
-            </div>
-        </div>
-
-        <footer class="template-footer">
-            <span class="cta-text">CHAVE_CTA</span>
-            <span class="user-handle">CHAVE_USER</span>
+        <footer class="template-footer" id="footer-container">
+            <span class="cta-text" id="cta-footer-text">CHAVE_CTA</span>
+            <span class="footer-accent">CHAVE_USER</span>
         </footer>
 
     </div>
+
+    <script>
+        /* O JavaScript original foi desativado/comentado porque o backend em Flask
+        (seu app.py) já faz a substituição das CHAVES via replace string.
+        Se este JS rodar, ele vai apagar as chaves e quebrar a automação.
+
+        function updateMotionTemplate(data) { ... }
+        const novoPratoMotionData = { ... };
+        updateMotionTemplate(novoPratoMotionData);
+        */
+    </script>
 
 </body>
 </html>
