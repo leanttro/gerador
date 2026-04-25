@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Feira de Rua</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo:              CHAVE_COR_FUNDO;
+            --cor-texto-principal:    CHAVE_COR_TEXTO;
+            --cor-destaque:           CHAVE_COR_DESTAQUE;
+            --cor-destaque-secundaria:CHAVE_COR_SECUNDARIA;
+            --fonte-display:          'Bebas Neue', sans-serif;
+            --fonte-corpo:            'Montserrat', sans-serif;
+
+            --vel-fast:   0.25s;
+            --vel-normal: 0.5s;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            gap: 40px;
+            padding: 40px 20px;
+            font-family: var(--fonte-corpo);
+        }
+
+        /* ================================
+           LABEL DO FORMATO (preview only)
+           ================================ */
+        .format-label {
+            color: #555;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: -32px;
+        }
+
+        /* ================================
+           WRAPPER — CONTROLA PROPORÇÃO
+           ================================ */
+        .template-wrapper {
+            position: relative;
+            overflow: hidden;
+            background-color: var(--cor-fundo);
+        }
+
+        /* 4:5 = 400 x 500 */
+        .wrapper-45 {
+            width: 400px;
+            height: 500px;
+        }
+
+        /* 9:16 = 405 x 720 */
+        .wrapper-916 {
+            width: 405px;
+            height: 720px;
+        }
+
+        /* ================================
+           ELEMENTOS DECORATIVOS DE FUNDO
+           ================================ */
+        .bg-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--cor-destaque);
+            opacity: 0.06;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-circle-1 { width: 320px; height: 320px; top: -80px; right: -80px; }
+        .bg-circle-2 { width: 180px; height: 180px; bottom: 60px; left: -50px; }
+
+        .grain-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Linha lateral esquerda */
+        .side-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--cor-destaque) 25%,
+                var(--cor-destaque) 75%,
+                transparent 100%
+            );
+            opacity: 0.4;
+            z-index: 2;
+            animation: fadeInTop 0.8s ease-out forwards;
+        }
+
+        /* Linha lateral direita fina */
+        .side-line-right {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0%,
+                var(--cor-destaque) 40%,
+                var(--cor-destaque) 60%,
+                transparent 100%
+            );
+            opacity: 0.15;
+            z-index: 2;
+        }
+
+        /* ================================
+           HEADER — LOGO
+           ================================ */
+        .template-header {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 72px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 8px 24px;
+            animation: fadeInTop var(--vel-fast) ease-out forwards;
+        }
+
+        .cliente-logo {
+            max-width: 200px;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        /* ================================
+           IMAGEM PRINCIPAL — 16:9
+           ================================ */
+        .template-main {
+            position: relative;
+            z-index: 10;
+            padding: 0 18px;
+        }
+
+        .photo-scene {
+            width: 100%;
+            /* 16:9 ratio */
+            aspect-ratio: 16 / 9;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow:
+                0 8px 32px rgba(0,0,0,0.18),
+                0 2px 6px rgba(0,0,0,0.10);
+            animation: fadeInScale var(--vel-normal) ease-out forwards,
+                       bob 4s ease-in-out infinite alternate 1.5s;
+        }
+
+        .photo-scene img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Shimmer sobre a foto */
+        .photo-scene::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            background: linear-gradient(
+                160deg,
+                rgba(255,255,255,0.08) 0%,
+                transparent 50%,
+                rgba(0,0,0,0.12) 100%
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Badge tipo de feira — canto superior esquerdo da foto */
+        .badge-tipo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 5;
+            background: var(--cor-destaque);
+            color: #fff;
+            font-family: var(--fonte-corpo);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            opacity: 0;
+            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.1s) forwards;
+        }
+
+        /* Elementos decorativos flutuantes */
+        .deco-square {
+            position: absolute;
+            border: 1.5px solid var(--cor-destaque);
+            border-radius: 6px;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 3;
+            animation: rotateLoop 8s linear infinite, pulseDeco 2s ease-in-out infinite alternate;
+        }
+        .deco-sq-tr { width: 36px; height: 36px; top: 10px; right: 10px; }
+        .deco-sq-bl { width: 22px; height: 22px; bottom: 10px; left: 10px; border-radius: 50%; animation-delay: 0.6s; }
+
+        /* ================================
+           BLOCO DE TEXTOS
+           ================================ */
+        .text-block {
+            position: relative;
+            z-index: 10;
+            padding: 14px 20px 0 22px;
+        }
+
+        /* Título */
+        .feira-titulo {
+            font-family: var(--fonte-display);
+            font-size: 28px;
+            color: var(--cor-texto-principal);
+            line-height: 1.0;
+            letter-spacing: 0.5px;
+            margin-bottom: 7px;
+            opacity: 0;
+            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.15s) forwards;
+        }
+
+        /* Descrição curta */
+        .feira-descricao {
+            font-family: var(--fonte-corpo);
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--cor-texto-principal);
+            line-height: 1.55;
+            opacity: 0.75;
+            margin-bottom: 12px;
+            opacity: 0;
+            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.25s) forwards;
+        }
+
+        /* Divisor */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, var(--cor-destaque) 0%, transparent 80%);
+            opacity: 0.25;
+            margin-bottom: 12px;
+            opacity: 0;
+            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.3s) forwards;
+        }
+
+        /* Linha de info (ícone + texto) */
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 7px;
+            opacity: 0;
+            animation: fadeInText var(--vel-fast) ease-out calc(var(--vel-normal) + 0.35s) forwards;
+        }
+        .info-row + .info-row {
+            animation-delay: calc(var(--vel-normal) + 0.42s);
+        }
+
+        .info-icon {
+            font-size: 12px;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+
+        .info-text {
+            font-family: var(--fonte-corpo);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--cor-texto-principal);
+            line-height: 1.4;
+        }
+
+        .info-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: var(--cor-destaque);
+            display: block;
+            margin-bottom: 1px;
+        }
+
+        /* ================================
+           FOOTER — CTA + USER
+           ================================ */
+        .template-footer {
+            position: relative;
+            z-index: 10;
+            padding: 12px 20px 16px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cta-text {
+            font-family: var(--fonte-corpo);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: var(--cor-destaque-secundaria);
+            opacity: 0;
+            animation: fadeInLeft var(--vel-fast) ease-out calc(var(--vel-normal) + 0.5s) forwards;
+        }
+
+        .user-handle {
+            font-family: var(--fonte-corpo);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--cor-destaque);
+            opacity: 0.7;
+            opacity: 0;
+            animation: fadeInRight var(--vel-fast) ease-out calc(var(--vel-normal) + 0.5s) forwards;
+        }
+
+        /* ================================
+           AJUSTES ESPECÍFICOS 9:16
+           ================================ */
+        .wrapper-916 .template-header {
+            height: 90px;
+        }
+
+        .wrapper-916 .text-block {
+            padding-top: 18px;
+        }
+
+        .wrapper-916 .feira-titulo {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .wrapper-916 .feira-descricao {
+            font-size: 12.5px;
+            margin-bottom: 16px;
+        }
+
+        .wrapper-916 .info-text {
+            font-size: 12.5px;
+        }
+
+        .wrapper-916 .cta-text,
+        .wrapper-916 .user-handle {
+            font-size: 13px;
+        }
+
+        .wrapper-916 .template-footer {
+            padding-bottom: 28px;
+        }
+
+        .wrapper-916 .info-row {
+            margin-bottom: 10px;
+        }
+
+        /* ================================
+           ANIMAÇÕES
+           ================================ */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.97); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeInTop {
+            from { opacity: 0; transform: translateY(-14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInText {
+            from { opacity: 0; transform: translateX(8px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-14px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(14px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes bob {
+            from { transform: translateY(0px); }
+            to   { transform: translateY(5px); }
+        }
+        @keyframes rotateLoop {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        @keyframes pulseDeco {
+            from { opacity: 0.12; }
+            to   { opacity: 0.28; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =============================================
+         FORMATO 4:5
+         ============================================= -->
+    <span class="format-label">4 : 5</span>
+
+    <div class="template-wrapper wrapper-45" id="template-45">
+
+        <div class="bg-circle bg-circle-1"></div>
+        <div class="bg-circle bg-circle-2"></div>
+        <div class="grain-overlay"></div>
+        <div class="side-line"></div>
+        <div class="side-line-right"></div>
+
+        <!-- HEADER -->
+        <header class="template-header">
+            <img src="CHAVE_LOGO" alt="Logo" class="cliente-logo">
+        </header>
+
+        <!-- FOTO 16:9 -->
+        <main class="template-main">
+            <div class="photo-scene">
+                <img src="CHAVE_IMAGEM" alt="Foto da Feira">
+                <span class="badge-tipo">CHAVE_TIPO</span>
+                <div class="deco-square deco-sq-tr"></div>
+                <div class="deco-square deco-sq-bl"></div>
+            </div>
+        </main>
+
+        <!-- TEXTOS -->
+        <div class="text-block">
+            <h1 class="feira-titulo">CHAVE_TITULO</h1>
+            <p class="feira-descricao">CHAVE_DESCRICAO</p>
+
+            <div class="divider"></div>
+
+            <div class="info-row">
+                <span class="info-icon">🕐</span>
+                <div class="info-text">
+                    <span class="info-label">Horário</span>
+                    CHAVE_HORARIO
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="info-icon">📍</span>
+                <div class="info-text">
+                    <span class="info-label">Endereço</span>
+                    CHAVE_ENDERECO
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="template-footer">
+            <span class="cta-text">CHAVE_CTA</span>
+            <span class="user-handle">CHAVE_USER</span>
+        </footer>
+
+    </div>
+
+
+    <!-- =============================================
+         FORMATO 9:16
+         ============================================= -->
+    <span class="format-label">9 : 16</span>
+
+    <div class="template-wrapper wrapper-916" id="template-916">
+
+        <div class="bg-circle bg-circle-1"></div>
+        <div class="bg-circle bg-circle-2"></div>
+        <div class="grain-overlay"></div>
+        <div class="side-line"></div>
+        <div class="side-line-right"></div>
+
+        <!-- HEADER -->
+        <header class="template-header">
+            <img src="CHAVE_LOGO" alt="Logo" class="cliente-logo">
+        </header>
+
+        <!-- FOTO 16:9 -->
+        <main class="template-main">
+            <div class="photo-scene">
+                <img src="CHAVE_IMAGEM" alt="Foto da Feira">
+                <span class="badge-tipo">CHAVE_TIPO</span>
+                <div class="deco-square deco-sq-tr"></div>
+                <div class="deco-square deco-sq-bl"></div>
+            </div>
+        </main>
+
+        <!-- TEXTOS -->
+        <div class="text-block">
+            <h1 class="feira-titulo">CHAVE_TITULO</h1>
+            <p class="feira-descricao">CHAVE_DESCRICAO</p>
+
+            <div class="divider"></div>
+
+            <div class="info-row">
+                <span class="info-icon">🕐</span>
+                <div class="info-text">
+                    <span class="info-label">Horário</span>
+                    CHAVE_HORARIO
+                </div>
+            </div>
+
+            <div class="info-row">
+                <span class="info-icon">📍</span>
+                <div class="info-text">
+                    <span class="info-label">Endereço</span>
+                    CHAVE_ENDERECO
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="template-footer">
+            <span class="cta-text">CHAVE_CTA</span>
+            <span class="user-handle">CHAVE_USER</span>
+        </footer>
+
+    </div>
+
+</body>
+</html>
