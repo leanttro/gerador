@@ -239,12 +239,13 @@
            FOOTER
            ============================== */
         .template-footer {
-            padding: 0 20px 16px 22px;
-            text-align: left;
+            padding: 6px 20px 14px;
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            gap: 3px;
             font-size: 11px;
             color: var(--cor-destaque-secundaria);
             position: relative;
@@ -260,12 +261,19 @@
             animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards;
         }
 
-        /* Pequeno ícone decorativo no footer */
+        /* User handle centralizado */
         .footer-accent {
-            width: 20px;
-            height: 1px;
-            background: var(--cor-destaque);
-            opacity: 0.3;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--cor-destaque);
+            text-align: center;
+            width: 100%;
+            display: block;
+            padding-bottom: 4px;
+            background: none;
+            height: auto;
+            opacity: 0;
             animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.45s) forwards;
         }
 
