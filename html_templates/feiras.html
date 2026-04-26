@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Template Feira de Rua</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --cor-fundo: CHAVE_COR_FUNDO;
@@ -35,9 +35,6 @@
             overflow: hidden;
         }
 
-        /* ==============================
-           CONTAINER PRINCIPAL - PROPORÇÃO 4:5
-           ============================== */
         .template-motion-container {
             width: 400px;
             height: 500px;
@@ -49,7 +46,6 @@
             padding: 0;
         }
 
-        /* Linha decorativa vertical esquerda */
         .side-line {
             position: absolute;
             left: 0;
@@ -68,9 +64,6 @@
             animation: fadeInTop 0.8s ease-out forwards;
         }
 
-        /* ==============================
-           HEADER - LOGO DA CLIENTE (CENTRALIZADO E MAIOR)
-           ============================== */
         .template-header {
             width: 100%;
             height: 85px;
@@ -89,9 +82,6 @@
             object-fit: contain;
         }
 
-        /* ==============================
-           IMAGEM DO PRODUTO — ÁREA PRINCIPAL
-           ============================== */
         .template-main {
             flex-grow: 1;
             display: flex;
@@ -124,7 +114,6 @@
             display: block;
         }
 
-        /* Shimmer sutil sobre a imagem */
         .motion-scene-container::after {
             content: '';
             position: absolute;
@@ -140,7 +129,6 @@
             z-index: 2;
         }
 
-        /* Elementos decorativos flutuantes sobre a imagem */
         .layered-graphic-element {
             position: absolute;
             width: 42px;
@@ -157,9 +145,6 @@
         .element-top-right  { top: 12px; right: 12px; animation-delay: 0s; }
         .element-bottom-left { bottom: 12px; left: 12px; animation-delay: 0.5s; width: 28px; height: 28px; border-radius: 50%; }
 
-        /* ==============================
-           TEXTOS DO PRATO
-           ============================== */
         .text-details {
             width: 100%;
             text-align: left;
@@ -169,7 +154,7 @@
         }
 
         .dish-title {
-            font-family: 'Montserrat', sans-serif;
+            font-family: 'Playfair Display', serif;
             font-size: 15px;
             font-weight: 900;
             color: var(--cor-texto-principal);
@@ -183,7 +168,7 @@
         .ingredients-list {
             font-family: 'Montserrat', sans-serif;
             font-size: 12px;
-            font-weight: 400;
+            font-weight: 700;
             color: var(--cor-texto-principal);
             line-height: 1.5;
             margin-bottom: 10px;
@@ -191,12 +176,11 @@
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.2s) forwards;
         }
 
-        /* MACROS — TAGS MINIMALISTAS */
         .macros-info {
             display: flex;
             gap: 7px;
             font-size: 10px;
-            font-weight: 500;
+            font-weight: 700;
             letter-spacing: 0.4px;
             text-transform: uppercase;
             color: var(--cor-destaque-secundaria);
@@ -214,13 +198,10 @@
             border-radius: 20px;
             opacity: 0.7;
             font-size: 10px;
-            font-weight: 500;
+            font-weight: 700;
             letter-spacing: 0.5px;
         }
 
-        /* ==============================
-           DIVISOR ELEGANTE
-           ============================== */
         .divider {
             width: 100%;
             height: 1px;
@@ -235,33 +216,20 @@
             animation: fadeInText var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.35s) forwards;
         }
 
-        /* ==============================
-           FOOTER
-           ============================== */
         .template-footer {
-            padding: 6px 20px 14px;
+            padding: 2px 20px 10px;
             width: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 3px;
+            gap: 1px;
             font-size: 11px;
             color: var(--cor-destaque-secundaria);
             position: relative;
             z-index: 10;
         }
 
-        .cta-text {
-            color: var(--cor-destaque-secundaria);
-            font-weight: 500;
-            font-size: 11px;
-            letter-spacing: 0.3px;
-            opacity: 0;
-            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards;
-        }
-
-        /* User handle centralizado */
         .footer-accent {
             font-size: 10px;
             font-weight: 700;
@@ -274,11 +242,9 @@
             background: none;
             height: auto;
             opacity: 0;
-            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.45s) forwards;
+            animation: fadeInLeft var(--velocidade-animacao-fast) ease-out calc(var(--velocidade-animacao-normal) + 0.4s) forwards;
         }
 
-
-        /* Badge tipo */
         .badge-tipo {
             position: absolute;
             top: 10px; left: 10px;
@@ -293,9 +259,6 @@
             border-radius: 20px;
         }
 
-        /* ==============================
-           ANIMAÇÕES
-           ============================== */
         @keyframes fadeInFast {
             from { opacity: 0; transform: scale(0.98); }
             to   { opacity: 1; transform: scale(1); }
@@ -376,7 +339,6 @@
         </main>
 
         <footer class="template-footer" id="footer-container">
-            <span class="cta-text" id="cta-footer-text">CHAVE_CTA</span>
             <span class="footer-accent">CHAVE_USER</span>
         </footer>
 
