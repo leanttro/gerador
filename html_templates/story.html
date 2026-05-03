@@ -141,11 +141,11 @@
             max-height: clamp(18px,4.5vw,28px);
             object-fit: contain;
         }
-        .badge-formato {
-            font-size: clamp(5px,1.1vw,7px); font-weight: 700;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            color: var(--cor-fundo); background-color: var(--cor-destaque);
-            padding: clamp(3px,0.7vw,5px) clamp(6px,1.5vw,10px);
+        /* logo acima do celular */
+        .logo-top {
+            max-width: clamp(50px,14vw,80px);
+            max-height: clamp(18px,4.5vw,28px);
+            object-fit: contain;
         }
 
         /* LINHA VERTICAL */
@@ -216,6 +216,8 @@
 
     <div class="phone-wrap">
 
+        <img src="CHAVE_LOGO" alt="Logo" class="logo-top">
+
         <div class="phone-size">
             <div class="phone-frame">
                 <div class="btn-power"></div>
@@ -229,11 +231,6 @@
                     <div class="linha-v"></div>
 
                     <img src="CHAVE_IMAGEM" alt="Foto" class="foto">
-
-                    <header class="screen-header">
-                        <img src="CHAVE_LOGO" alt="Logo" class="logo">
-                        <div class="badge-formato">9:16 &nbsp;·&nbsp; 4:5</div>
-                    </header>
 
                     <div class="home-bar"></div>
                 </div>
