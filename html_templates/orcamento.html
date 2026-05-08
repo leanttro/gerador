@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Orçamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   CHAVES DISPONÍVEIS:
+   CHAVE_LOGO_CLIENTE   — URL logo do cliente (topo, grande)
+   CHAVE_NOME_CLIENTE   — Nome da empresa cliente
+   CHAVE_COR_FUNDO      — Cor de fundo principal (ex: #0d0d0d)
+   CHAVE_COR_DESTAQUE   — Cor de destaque/linhas (ex: #c9a84c)
+   CHAVE_COR_TEXTO      — Cor do texto principal (ex: #ffffff)
+   CHAVE_COR_TEXTO_MUTED— Cor do texto secundário (ex: rgba(255,255,255,0.5))
+   CHAVE_COR_CARD       — Cor do card de fundo das pautas (ex: rgba(255,255,255,0.04))
+   CHAVE_COR_BORDA      — Cor da borda dos itens (ex: rgba(255,255,255,0.08))
+   CHAVE_IMAGEM_FUNDO   — URL imagem de fundo (opcional, deixe em branco para sem imagem)
+   CHAVE_OVERLAY        — Overlay sobre a imagem (ex: rgba(0,0,0,0.75))
+
+   CHAVE_TITULO         — Ex: "Proposta Comercial"
+   CHAVE_SUBTITULO      — Ex: "Presença Digital Completa"
+   CHAVE_DATA           — Ex: "Maio 2026"
+   CHAVE_VALIDADE       — Ex: "Válido por 7 dias"
+
+   PAUTAS (até 10 — remova os blocos não usados):
+   CHAVE_PAUTA_1_ICONE  — emoji ou texto curto (ex: 📍)
+   CHAVE_PAUTA_1_NOME   — Ex: "Google Meu Negócio"
+   CHAVE_PAUTA_1_DESC   — Ex: "Configuração e otimização da ficha"
+
+   CHAVE_VALOR_TOTAL    — Ex: "R$ 350,00"
+   CHAVE_CONDICOES      — Ex: "Pagamento via PIX · Entrega em 48h"
+
+   CHAVE_SEU_LOGO       — URL do seu logo (rodapé, pequeno)
+   CHAVE_SEU_SITE       — Ex: "seusite.com.br"
+   CHAVE_SEU_WPP        — Ex: "(11) 99999-9999"
+═══════════════════════════════════════ */
+
+:root {
+  --fundo:       CHAVE_COR_FUNDO;
+  --destaque:    CHAVE_COR_DESTAQUE;
+  --texto:       CHAVE_COR_TEXTO;
+  --texto-muted: CHAVE_COR_TEXTO_MUTED;
+  --card:        CHAVE_COR_CARD;
+  --borda:       CHAVE_COR_BORDA;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* ── Imagem de fundo opcional ── */
+.bg-image {
+  position: absolute; inset: 0;
+  background-image: url(CHAVE_IMAGEM_FUNDO);
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+.bg-overlay {
+  position: absolute; inset: 0;
+  background: CHAVE_OVERLAY;
+  z-index: 1;
+}
+
+/* ── Container principal ── */
+.canvas {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(24px, 6%, 52px) clamp(24px, 7%, 60px);
+}
+
+/* ── Linha decorativa dourada ── */
+.linha-topo {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--destaque), transparent);
+  margin-bottom: clamp(16px, 4%, 32px);
+}
+.linha-base {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--destaque), transparent);
+  margin-top: clamp(12px, 3%, 24px);
+}
+
+/* ── Topo: logo cliente ── */
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: clamp(12px, 3.5%, 28px);
+}
+.logo-cliente {
+  max-height: clamp(36px, 8vw, 56px);
+  max-width: 55%;
+  object-fit: contain;
+  object-position: left;
+  filter: brightness(0) invert(1);
+}
+.badge-data {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.badge-data span:first-child {
+  font-size: clamp(9px, 1.8vw, 12px);
+  font-weight: 600;
+  color: var(--destaque);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.badge-data span:last-child {
+  font-size: clamp(8px, 1.5vw, 10px);
+  color: var(--texto-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Título central ── */
+.bloco-titulo {
+  margin-bottom: clamp(12px, 3%, 24px);
+}
+.label-proposta {
+  font-size: clamp(8px, 1.6vw, 11px);
+  font-weight: 600;
+  color: var(--destaque);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.titulo-principal {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(18px, 5vw, 36px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--texto);
+}
+.subtitulo {
+  font-size: clamp(10px, 2.2vw, 14px);
+  color: var(--texto-muted);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* ── Grid de pautas ── */
+.pautas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1.2%, 10px);
+  overflow: hidden;
+}
+
+.pauta-item {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2%, 16px);
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-left: 2px solid var(--destaque);
+  border-radius: 4px;
+  padding: clamp(6px, 1.5%, 12px) clamp(10px, 2.5%, 18px);
+  flex-shrink: 0;
+}
+
+.pauta-icone {
+  font-size: clamp(12px, 2.5vw, 18px);
+  flex-shrink: 0;
+  width: clamp(18px, 4vw, 26px);
+  text-align: center;
+}
+
+.pauta-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pauta-nome {
+  font-size: clamp(10px, 2.2vw, 14px);
+  font-weight: 600;
+  color: var(--texto);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pauta-desc {
+  font-size: clamp(8px, 1.7vw, 11px);
+  color: var(--texto-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Bloco de valor ── */
+.bloco-valor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: clamp(10px, 2.5%, 20px);
+  padding: clamp(8px, 2%, 16px) clamp(12px, 3%, 22px);
+  background: var(--destaque);
+  border-radius: 4px;
+}
+
+.valor-label {
+  font-size: clamp(8px, 1.6vw, 11px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(0,0,0,0.55);
+}
+
+.valor-numero {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(20px, 6vw, 40px);
+  font-weight: 700;
+  color: #000;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.valor-condicoes {
+  font-size: clamp(7px, 1.4vw, 10px);
+  color: rgba(0,0,0,0.5);
+  text-align: right;
+  line-height: 1.4;
+}
+
+/* ── Rodapé: meu logo + contato ── */
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: clamp(8px, 2%, 16px);
+}
+
+.rodape-esq {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meu-logo {
+  max-height: clamp(16px, 3vw, 22px);
+  max-width: 90px;
+  object-fit: contain;
+  object-position: left;
+  opacity: 0.55;
+  filter: brightness(0) invert(1);
+}
+
+.rodape-contato {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2%, 16px);
+}
+
+.rodape-item {
+  font-size: clamp(7px, 1.4vw, 10px);
+  color: var(--texto-muted);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rodape-dot {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: var(--destaque);
+  opacity: 0.5;
+}
+</style>
+</head>
+<body>
+
+<!-- Fundo opcional -->
+<div class="bg-image"></div>
+<div class="bg-overlay"></div>
+
+<div class="canvas">
+
+  <!-- Linha decorativa topo -->
+  <div class="linha-topo"></div>
+
+  <!-- Topo: logo + data -->
+  <div class="topo">
+    <img src="CHAVE_LOGO_CLIENTE" alt="CHAVE_NOME_CLIENTE" class="logo-cliente">
+    <div class="badge-data">
+      <span>CHAVE_DATA</span>
+      <span>CHAVE_VALIDADE</span>
+    </div>
+  </div>
+
+  <!-- Título -->
+  <div class="bloco-titulo">
+    <p class="label-proposta">Proposta Comercial</p>
+    <h1 class="titulo-principal">CHAVE_TITULO</h1>
+    <p class="subtitulo">CHAVE_SUBTITULO</p>
+  </div>
+
+  <!-- Pautas (até 10) -->
+  <div class="pautas">
+
+    <!-- PAUTA 1 -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_1_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_1_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_1_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 2 -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_2_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_2_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_2_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 3 -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_3_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_3_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_3_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 4 -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_4_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_4_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_4_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 5 — remova se não usar -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_5_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_5_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_5_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 6 — remova se não usar -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_6_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_6_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_6_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 7 — remova se não usar -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_7_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_7_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_7_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 8 — remova se não usar -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_8_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_8_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_8_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 9 — remova se não usar -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_9_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_9_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_9_DESC</span>
+      </div>
+    </div>
+
+    <!-- PAUTA 10 — remova se não usar -->
+    <div class="pauta-item">
+      <span class="pauta-icone">CHAVE_PAUTA_10_ICONE</span>
+      <div class="pauta-texto">
+        <span class="pauta-nome">CHAVE_PAUTA_10_NOME</span>
+        <span class="pauta-desc">CHAVE_PAUTA_10_DESC</span>
+      </div>
+    </div>
+
+  </div><!-- /pautas -->
+
+  <!-- Linha decorativa base -->
+  <div class="linha-base"></div>
+
+  <!-- Bloco de valor -->
+  <div class="bloco-valor">
+    <div>
+      <p class="valor-label">Investimento total</p>
+      <p class="valor-numero">CHAVE_VALOR_TOTAL</p>
+    </div>
+    <p class="valor-condicoes">CHAVE_CONDICOES</p>
+  </div>
+
+  <!-- Rodapé -->
+  <div class="rodape">
+    <div class="rodape-esq">
+      <img src="CHAVE_SEU_LOGO" alt="Meu logo" class="meu-logo">
+    </div>
+    <div class="rodape-contato">
+      <span class="rodape-item">🌐 CHAVE_SEU_SITE</span>
+      <div class="rodape-dot"></div>
+      <span class="rodape-item">📱 CHAVE_SEU_WPP</span>
+    </div>
+  </div>
+
+</div><!-- /canvas -->
+
+</body>
+</html>
