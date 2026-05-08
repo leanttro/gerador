@@ -2,70 +2,66 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orçamento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
    CHAVES DISPONÍVEIS:
-   CHAVE_LOGO_CLIENTE   — URL logo do cliente (topo, grande)
-   CHAVE_NOME_CLIENTE   — Nome da empresa cliente
-   CHAVE_COR_FUNDO      — Cor de fundo principal (ex: #0d0d0d)
-   CHAVE_COR_DESTAQUE   — Cor de destaque/linhas (ex: #c9a84c)
-   CHAVE_COR_TEXTO      — Cor do texto principal (ex: #ffffff)
-   CHAVE_COR_TEXTO_MUTED— Cor do texto secundário (ex: rgba(255,255,255,0.5))
-   CHAVE_COR_CARD       — Cor do card de fundo das pautas (ex: rgba(255,255,255,0.04))
-   CHAVE_COR_BORDA      — Cor da borda dos itens (ex: rgba(255,255,255,0.08))
-   CHAVE_IMAGEM_FUNDO   — URL imagem de fundo (opcional, deixe em branco para sem imagem)
-   CHAVE_OVERLAY        — Overlay sobre a imagem (ex: rgba(0,0,0,0.75))
+   CHAVE_COR_FUNDO        — cor de fundo (ex: #f0f9f0)
+   CHAVE_COR_DESTAQUE     — cor de destaque/linhas (ex: #4a9e1f)
+   CHAVE_COR_TEXTO        — cor texto principal (ex: #1a2e0f)
+   CHAVE_COR_TEXTO_MUTED  — cor texto secundário (ex: rgba(26,46,15,0.45))
+   CHAVE_COR_CARD         — fundo dos itens (ex: rgba(74,158,31,0.06))
+   CHAVE_COR_BORDA        — borda dos itens (ex: rgba(74,158,31,0.15))
+   CHAVE_IMAGEM_FUNDO     — URL imagem fundo (deixe vazio para sem imagem)
+   CHAVE_OVERLAY          — overlay sobre imagem (ex: rgba(0,0,0,0))
 
-   CHAVE_TITULO         — Ex: "Proposta Comercial"
-   CHAVE_SUBTITULO      — Ex: "Presença Digital Completa"
-   CHAVE_DATA           — Ex: "Maio 2026"
-   CHAVE_VALIDADE       — Ex: "Válido por 7 dias"
+   CHAVE_LOGO_CLIENTE     — URL logo do cliente
+   CHAVE_NOME_CLIENTE     — nome do cliente
 
-   PAUTAS (até 10 — remova os blocos não usados):
-   CHAVE_PAUTA_1_ICONE  — emoji ou texto curto (ex: 📍)
-   CHAVE_PAUTA_1_NOME   — Ex: "Google Meu Negócio"
-   CHAVE_PAUTA_1_DESC   — Ex: "Configuração e otimização da ficha"
+   CHAVE_TITULO           — título principal
+   CHAVE_SUBTITULO        — subtítulo
+   CHAVE_DATA             — data (ex: 08 de maio)
+   CHAVE_VALIDADE         — validade (ex: Válido até terça, 12 de maio)
 
-   CHAVE_VALOR_TOTAL    — Ex: "R$ 350,00"
-   CHAVE_CONDICOES      — Ex: "Pagamento via PIX · Entrega em 48h"
+   PAUTAS — para esconder uma pauta não usada,
+   substitua CHAVE_PAUTA_N_NOME por: __VAZIO__
+   CHAVE_PAUTA_N_ICONE / CHAVE_PAUTA_N_NOME / CHAVE_PAUTA_N_DESC  (N = 1 a 10)
 
-   CHAVE_SEU_LOGO       — URL do seu logo (rodapé, pequeno)
-   CHAVE_SEU_SITE       — Ex: "seusite.com.br"
-   CHAVE_SEU_WPP        — Ex: "(11) 99999-9999"
+   CHAVE_VALOR_TOTAL      — ex: R$ 150,00
+   CHAVE_CONDICOES        — ex: De R$ 250,00 · PIX · Entrega em 48h
+
+   CHAVE_SEU_LOGO         — URL do seu logo (pequeno, rodapé)
+   CHAVE_SEU_SITE         — seu site
+   CHAVE_SEU_WPP          — seu whatsapp
 ═══════════════════════════════════════ */
 
-:root {
-  --fundo:       CHAVE_COR_FUNDO;
-  --destaque:    CHAVE_COR_DESTAQUE;
-  --texto:       CHAVE_COR_TEXTO;
-  --texto-muted: CHAVE_COR_TEXTO_MUTED;
-  --card:        CHAVE_COR_CARD;
-  --borda:       CHAVE_COR_BORDA;
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
+  background-color: CHAVE_COR_FUNDO;
   font-family: 'Inter', sans-serif;
-  background: var(--fundo);
-  color: var(--texto);
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
 }
 
-/* ── Imagem de fundo opcional ── */
+/* ── Container com tamanho FIXO em px — igual ao template que funciona ── */
+.canvas {
+  width: 600px;
+  height: 900px;
+  background-color: CHAVE_COR_FUNDO;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 36px 40px 24px 40px;
+}
+
 .bg-image {
   position: absolute; inset: 0;
   background-image: url(CHAVE_IMAGEM_FUNDO);
@@ -78,257 +74,215 @@ body {
   background: CHAVE_OVERLAY;
   z-index: 1;
 }
+.canvas > * { position: relative; z-index: 10; }
 
-/* ── Container principal ── */
-.canvas {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(24px, 6%, 52px) clamp(24px, 7%, 60px);
-}
-
-/* ── Linha decorativa dourada ── */
 .linha-topo {
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, var(--destaque), transparent);
-  margin-bottom: clamp(16px, 4%, 32px);
-}
-.linha-base {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--destaque), transparent);
-  margin-top: clamp(12px, 3%, 24px);
+  background: linear-gradient(90deg, CHAVE_COR_DESTAQUE, transparent);
+  margin-bottom: 22px;
+  flex-shrink: 0;
 }
 
-/* ── Topo: logo cliente ── */
 .topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: clamp(12px, 3.5%, 28px);
+  margin-bottom: 18px;
+  flex-shrink: 0;
 }
 .logo-cliente {
-  max-height: clamp(36px, 8vw, 56px);
-  max-width: 55%;
+  max-height: 52px;
+  max-width: 220px;
   object-fit: contain;
   object-position: left;
-  filter: brightness(0) invert(1);
 }
 .badge-data {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 3px;
 }
-.badge-data span:first-child {
-  font-size: clamp(9px, 1.8vw, 12px);
-  font-weight: 600;
-  color: var(--destaque);
+.badge-data .data {
+  font-size: 11px;
+  font-weight: 700;
+  color: CHAVE_COR_DESTAQUE;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
-.badge-data span:last-child {
-  font-size: clamp(8px, 1.5vw, 10px);
-  color: var(--texto-muted);
+.badge-data .validade {
+  font-size: 9px;
+  color: CHAVE_COR_TEXTO_MUTED;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-/* ── Título central ── */
 .bloco-titulo {
-  margin-bottom: clamp(12px, 3%, 24px);
+  margin-bottom: 18px;
+  flex-shrink: 0;
 }
 .label-proposta {
-  font-size: clamp(8px, 1.6vw, 11px);
-  font-weight: 600;
-  color: var(--destaque);
+  font-size: 10px;
+  font-weight: 700;
+  color: CHAVE_COR_DESTAQUE;
   letter-spacing: 3px;
   text-transform: uppercase;
   margin-bottom: 6px;
 }
 .titulo-principal {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(18px, 5vw, 36px);
+  font-size: 30px;
   font-weight: 700;
   line-height: 1.15;
-  color: var(--texto);
+  color: CHAVE_COR_TEXTO;
 }
 .subtitulo {
-  font-size: clamp(10px, 2.2vw, 14px);
-  color: var(--texto-muted);
+  font-size: 12px;
+  color: CHAVE_COR_TEXTO_MUTED;
   margin-top: 4px;
-  font-weight: 400;
 }
 
-/* ── Grid de pautas ── */
+/* ── Pautas ── */
 .pautas {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: clamp(4px, 1.2%, 10px);
+  gap: 7px;
   overflow: hidden;
 }
 
 .pauta-item {
   display: flex;
   align-items: center;
-  gap: clamp(8px, 2%, 16px);
-  background: var(--card);
-  border: 1px solid var(--borda);
-  border-left: 2px solid var(--destaque);
+  gap: 14px;
+  background: CHAVE_COR_CARD;
+  border: 1px solid CHAVE_COR_BORDA;
+  border-left: 2px solid CHAVE_COR_DESTAQUE;
   border-radius: 4px;
-  padding: clamp(6px, 1.5%, 12px) clamp(10px, 2.5%, 18px);
+  padding: 10px 16px;
   flex-shrink: 0;
 }
-
 .pauta-icone {
-  font-size: clamp(12px, 2.5vw, 18px);
+  font-size: 15px;
   flex-shrink: 0;
-  width: clamp(18px, 4vw, 26px);
+  width: 20px;
   text-align: center;
 }
-
 .pauta-texto {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  min-width: 0;
+  gap: 2px;
 }
-
 .pauta-nome {
-  font-size: clamp(10px, 2.2vw, 14px);
-  font-weight: 600;
-  color: var(--texto);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 700;
+  color: CHAVE_COR_TEXTO;
 }
-
 .pauta-desc {
-  font-size: clamp(8px, 1.7vw, 11px);
-  color: var(--texto-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 10px;
+  color: CHAVE_COR_TEXTO_MUTED;
 }
 
-/* ── Bloco de valor ── */
+.linha-base {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, CHAVE_COR_DESTAQUE, transparent);
+  margin: 14px 0;
+  flex-shrink: 0;
+}
+
+/* ── Valor ── */
 .bloco-valor {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: clamp(10px, 2.5%, 20px);
-  padding: clamp(8px, 2%, 16px) clamp(12px, 3%, 22px);
-  background: var(--destaque);
+  background: CHAVE_COR_DESTAQUE;
   border-radius: 4px;
+  padding: 14px 20px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
 }
-
 .valor-label {
-  font-size: clamp(8px, 1.6vw, 11px);
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: rgba(0,0,0,0.55);
+  color: rgba(0,0,0,0.5);
+  margin-bottom: 4px;
 }
-
 .valor-numero {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(20px, 6vw, 40px);
+  font-size: 36px;
   font-weight: 700;
   color: #000;
   letter-spacing: -0.5px;
   line-height: 1;
 }
-
 .valor-condicoes {
-  font-size: clamp(7px, 1.4vw, 10px);
-  color: rgba(0,0,0,0.5);
+  font-size: 9px;
+  color: rgba(0,0,0,0.45);
   text-align: right;
-  line-height: 1.4;
+  line-height: 1.6;
+  max-width: 180px;
 }
 
-/* ── Rodapé: meu logo + contato ── */
+/* ── Rodapé ── */
 .rodape {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: clamp(8px, 2%, 16px);
+  flex-shrink: 0;
 }
-
-.rodape-esq {
+.meu-logo {
+  max-height: 18px;
+  max-width: 80px;
+  object-fit: contain;
+  opacity: 0.5;
+}
+.rodape-contato {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
-.meu-logo {
-  max-height: clamp(16px, 3vw, 22px);
-  max-width: 90px;
-  object-fit: contain;
-  object-position: left;
-  opacity: 0.55;
-  filter: brightness(0) invert(1);
-}
-
-.rodape-contato {
-  display: flex;
-  align-items: center;
-  gap: clamp(8px, 2%, 16px);
-}
-
 .rodape-item {
-  font-size: clamp(7px, 1.4vw, 10px);
-  color: var(--texto-muted);
+  font-size: 9px;
+  color: CHAVE_COR_TEXTO_MUTED;
   letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
-
 .rodape-dot {
   width: 3px; height: 3px;
   border-radius: 50%;
-  background: var(--destaque);
-  opacity: 0.5;
+  background: CHAVE_COR_DESTAQUE;
+  opacity: 0.4;
 }
 </style>
 </head>
 <body>
 
-<!-- Fundo opcional -->
-<div class="bg-image"></div>
-<div class="bg-overlay"></div>
-
 <div class="canvas">
 
-  <!-- Linha decorativa topo -->
+  <div class="bg-image"></div>
+  <div class="bg-overlay"></div>
+
   <div class="linha-topo"></div>
 
-  <!-- Topo: logo + data -->
   <div class="topo">
     <img src="CHAVE_LOGO_CLIENTE" alt="CHAVE_NOME_CLIENTE" class="logo-cliente">
     <div class="badge-data">
-      <span>CHAVE_DATA</span>
-      <span>CHAVE_VALIDADE</span>
+      <span class="data">CHAVE_DATA</span>
+      <span class="validade">CHAVE_VALIDADE</span>
     </div>
   </div>
 
-  <!-- Título -->
   <div class="bloco-titulo">
     <p class="label-proposta">Proposta Comercial</p>
     <h1 class="titulo-principal">CHAVE_TITULO</h1>
     <p class="subtitulo">CHAVE_SUBTITULO</p>
   </div>
 
-  <!-- Pautas (até 10) -->
   <div class="pautas">
 
-    <!-- PAUTA 1 -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p1">
       <span class="pauta-icone">CHAVE_PAUTA_1_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_1_NOME</span>
@@ -336,8 +290,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 2 -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p2">
       <span class="pauta-icone">CHAVE_PAUTA_2_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_2_NOME</span>
@@ -345,8 +298,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 3 -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p3">
       <span class="pauta-icone">CHAVE_PAUTA_3_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_3_NOME</span>
@@ -354,8 +306,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 4 -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p4">
       <span class="pauta-icone">CHAVE_PAUTA_4_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_4_NOME</span>
@@ -363,8 +314,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 5 — remova se não usar -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p5">
       <span class="pauta-icone">CHAVE_PAUTA_5_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_5_NOME</span>
@@ -372,8 +322,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 6 — remova se não usar -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p6">
       <span class="pauta-icone">CHAVE_PAUTA_6_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_6_NOME</span>
@@ -381,8 +330,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 7 — remova se não usar -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p7">
       <span class="pauta-icone">CHAVE_PAUTA_7_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_7_NOME</span>
@@ -390,8 +338,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 8 — remova se não usar -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p8">
       <span class="pauta-icone">CHAVE_PAUTA_8_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_8_NOME</span>
@@ -399,8 +346,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 9 — remova se não usar -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p9">
       <span class="pauta-icone">CHAVE_PAUTA_9_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_9_NOME</span>
@@ -408,8 +354,7 @@ body {
       </div>
     </div>
 
-    <!-- PAUTA 10 — remova se não usar -->
-    <div class="pauta-item">
+    <div class="pauta-item" id="p10">
       <span class="pauta-icone">CHAVE_PAUTA_10_ICONE</span>
       <div class="pauta-texto">
         <span class="pauta-nome">CHAVE_PAUTA_10_NOME</span>
@@ -417,12 +362,10 @@ body {
       </div>
     </div>
 
-  </div><!-- /pautas -->
+  </div>
 
-  <!-- Linha decorativa base -->
   <div class="linha-base"></div>
 
-  <!-- Bloco de valor -->
   <div class="bloco-valor">
     <div>
       <p class="valor-label">Investimento total</p>
@@ -431,11 +374,8 @@ body {
     <p class="valor-condicoes">CHAVE_CONDICOES</p>
   </div>
 
-  <!-- Rodapé -->
   <div class="rodape">
-    <div class="rodape-esq">
-      <img src="CHAVE_SEU_LOGO" alt="Meu logo" class="meu-logo">
-    </div>
+    <img src="CHAVE_SEU_LOGO" alt="logo" class="meu-logo">
     <div class="rodape-contato">
       <span class="rodape-item">🌐 CHAVE_SEU_SITE</span>
       <div class="rodape-dot"></div>
@@ -443,7 +383,19 @@ body {
     </div>
   </div>
 
-</div><!-- /canvas -->
+</div>
+
+<script>
+/* Esconde pautas não preenchidas pelo backend */
+document.querySelectorAll('.pauta-item').forEach(function(el) {
+  var nome = el.querySelector('.pauta-nome');
+  if (!nome) return;
+  var txt = nome.textContent.trim();
+  if (txt === '__VAZIO__' || txt === '' || txt.indexOf('CHAVE_PAUTA_') === 0) {
+    el.style.display = 'none';
+  }
+});
+</script>
 
 </body>
 </html>
