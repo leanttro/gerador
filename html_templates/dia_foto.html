@@ -19,19 +19,13 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%; height: 100%;
+      margin: 0; padding: 0;
       background: #111;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 12px; font-family: sans-serif;
+      overflow: hidden;
+      font-family: sans-serif;
     }
-
-    .selector { display: flex; gap: 10px; }
-    .selector button {
-      background: #333; color: #aaa; border: 1px solid #444;
-      padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 12px;
-      transition: all .2s;
-    }
-    .selector button.active { background: #555; color: #fff; border-color: #777; }
 
     /* frame fixo 400px de largura, altura via JS */
     .frame {
@@ -170,18 +164,10 @@
       text-transform: uppercase;
       color: var(--cor-destaque);
     }
-
-    .size-label { color: #555; font-size: 11px; margin-top: 6px; }
   </style>
 </head>
 <body>
-
-  <div class="selector">
-    <button class="active" onclick="setRatio('916',this)">9:16 — Stories</button>
-    <button onclick="setRatio('45',this)">4:5 — Feed</button>
-  </div>
-
-  <div class="frame" id="frame">
+  <div class="frame" id="frame" style="height:711px">
 
     <!-- sparkles nos 4 cantos -->
     <div class="sparks">
@@ -224,23 +210,5 @@
     </div>
 
   </div>
-
-  <p class="size-label" id="size-label">9:16 — 400 × 711 px</p>
-
-  <script>
-    const ratios = {
-      '916': { h: 711, label: '9:16 — 400 × 711 px' },
-      '45':  { h: 500, label: '4:5 — 400 × 500 px'  }
-    };
-    function setRatio(key, btn) {
-      document.querySelectorAll('.selector button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const r = ratios[key];
-      document.getElementById('frame').style.height = r.h + 'px';
-      document.getElementById('size-label').textContent = r.label;
-    }
-    document.getElementById('frame').style.height = '711px';
-  </script>
-
 </body>
 </html>
