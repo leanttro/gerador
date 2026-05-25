@@ -811,7 +811,7 @@ async function loadDashboard() {
     api('/api/admin/clientes?limit=1'),
     api('/api/admin/leads?limit=1'),
     api('/api/admin/orcamentos?limit=1'),
-    api('/api/admin/envios?limit=5'),
+    api('/api/admin/historico_envios?limit=5'),
   ]);
 
   document.getElementById('stat-clientes').textContent  = cl.total ?? '—';
@@ -983,7 +983,7 @@ async function loadMetas() {
 // ── ENVIOS ────────────────────────────────────
 async function loadEnvios() {
   const body = document.getElementById('envios-body');
-  const r = await api('/api/admin/envios');
+  const r = await api('/api/admin/historico_envios');
   if (!r.data || !r.data.length) { body.innerHTML = '<tr><td colspan="5"><div class="empty">Nenhum envio</div></td></tr>'; return; }
   body.innerHTML = r.data.map(e => `
     <tr>
