@@ -214,6 +214,17 @@ def login_marketing_required(f):
     def decorated(*args, **kwargs):
         if not session.get('marketing_user_id'):
             return redirect('/marketing/login')
+
+        # Clientes so acessam paginas liberadas no cadastro
+        if session.get('marketing_user_perfil') == 'cliente':
+            permitidos = session.get('marketing_html_permitidos') or []
+            permitidos_norm = [p.replace('.html', '').strip().lower() for p in permitidos]
+            rota_atual = f.__name__.lower()
+            sempre_ok = {'marketing_hub', 'marketing_logout', 'serve_media',
+                         'serve_html_templates', 'api_status'}
+            if rota_atual not in sempre_ok and rota_atual not in permitidos_norm:
+                return redirect('/marketing/login')
+
         return f(*args, **kwargs)
     return decorated
 
