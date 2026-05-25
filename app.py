@@ -72,10 +72,6 @@ try:
             conn.close()
 
     print("[DB] Conexão PostgreSQL configurada (sem Directus)")
-    try:
-        db_query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS senha_hash TEXT DEFAULT ''", fetch=None)
-    except Exception as _e:
-        print(f"[DB] ALTER TABLE clients: {_e}")
 except ImportError:
     print("[DB] psycopg2 não instalado — rode: pip install psycopg2-binary")
     def db_query(*a, **kw): return None
@@ -2598,6 +2594,7 @@ def marketing_login():
                 (email,), fetch='one'
             )
 
+            # ── 1) Tenta como usuário interno ────────────────────────────
             if usuario:
                 senha_salva = usuario.get('senha_hash', '')
                 senha_ok = False
@@ -2621,26 +2618,25 @@ def marketing_login():
                     session.permanent = True
                     return redirect('/marketing/hub')
 
-                if not senha_ok:
-                    # Tenta autenticar como cliente
-                    cliente = db_query(
-                        "SELECT * FROM clients WHERE email = %s LIMIT 1",
-                        (email,), fetch='one'
-                    )
-                    if cliente:
-                        senha_hash_cliente = cliente.get('senha_hash', '')
-                        if senha_hash_cliente and (
-                            check_password_hash(senha_hash_cliente, senha)
-                            if senha_hash_cliente.startswith(('pbkdf2:', 'scrypt:'))
-                            else senha_hash_cliente == senha
-                        ):
-                            session['marketing_user_id'] = f"cliente_{cliente['id']}"
-                            session['marketing_user_nome'] = cliente.get('name', email)
-                            session['marketing_user_perfil'] = 'cliente'
-                            session['marketing_client_id'] = cliente['id']
-                            session['marketing_html_permitidos'] = cliente.get('html_permitidos', [])
-                            session.permanent = True
-                            return redirect('/marketing/hub')
+            # ── 2) Tenta como cliente (sempre, independente de ter usuário) ──
+            cliente = db_query(
+                "SELECT * FROM clients WHERE email = %s LIMIT 1",
+                (email,), fetch='one'
+            )
+            if cliente:
+                senha_hash_cliente = cliente.get('senha_hash', '')
+                if senha_hash_cliente and (
+                    check_password_hash(senha_hash_cliente, senha)
+                    if senha_hash_cliente.startswith(('pbkdf2:', 'scrypt:'))
+                    else senha_hash_cliente == senha
+                ):
+                    session['marketing_user_id'] = f"cliente_{cliente['id']}"
+                    session['marketing_user_nome'] = cliente.get('name', email)
+                    session['marketing_user_perfil'] = 'cliente'
+                    session['marketing_client_id'] = cliente['id']
+                    session['marketing_html_permitidos'] = cliente.get('html_permitidos', [])
+                    session.permanent = True
+                    return redirect('/marketing/hub')
 
             flash('E-mail ou senha incorretos.', 'error')
 
@@ -2732,12 +2728,11 @@ def admin_clientes():
 def admin_clientes_create():
     data = request.json or {}
     html_permitidos = json.dumps(data.get('html_permitidos', []))
-    senha_hash = generate_password_hash(data.get('senha')) if data.get('senha') else ''
     db_query(
-        """INSERT INTO clients (name, email, whatsapp, company_name, status, html_permitidos, senha_hash)
-           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+        """INSERT INTO clients (name, email, whatsapp, company_name, status, html_permitidos)
+           VALUES (%s, %s, %s, %s, %s, %s)""",
         (data.get('name',''), data.get('email',''), data.get('whatsapp',''),
-         data.get('company_name',''), data.get('status','pendente'), html_permitidos, senha_hash),
+         data.get('company_name',''), data.get('status','pendente'), html_permitidos),
         fetch=None
     )
     return jsonify({"success": True})
@@ -2752,8 +2747,6 @@ def admin_clientes_update(cid):
             campos[k] = data[k]
     if 'html_permitidos' in data:
         campos['html_permitidos'] = json.dumps(data['html_permitidos'])
-    if 'senha' in data and data['senha']:
-        campos['senha_hash'] = generate_password_hash(data['senha'])
     if not campos:
         return jsonify({"error": "Nada para atualizar"}), 400
     set_clause = ', '.join(f"{k} = %s" for k in campos)
