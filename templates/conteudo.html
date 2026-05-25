@@ -485,27 +485,65 @@
     let currentEditCard = null;
     let currentChaves = {};
 
-    function saveKanbanBoard() {
-        const columns = ['col-ideias', 'col-copy', 'col-criacao', 'col-pronto'];
-        const data = {};
-        columns.forEach(colId => {
-            const col = document.getElementById(colId);
-            if (col) data[colId] = col.innerHTML;
-        });
-        localStorage.setItem('wl_kanban_board', JSON.stringify(data));
+    function saveKanbanBoard() { /* persistência migrada para API */ }
+
+    const COL_STATUS = {
+        'col-ideias': 'backlog',
+        'col-copy': 'copy',
+        'col-criacao': 'pronto_render',
+        'col-pronto': 'pronto'
+    };
+    const STATUS_COL = Object.fromEntries(Object.entries(COL_STATUS).map(([c,s])=>[s,c]));
+
+    function criarCardDOM(c) {
+        const cardId = 'card_' + c.id;
+        const card = document.createElement('div');
+        card.className = 'k-card';
+        card.id = cardId;
+        card.setAttribute('data-db-id', c.id);
+        card.setAttribute('data-chaves', JSON.stringify(c.chaves || {}));
+        card.setAttribute('data-copy', c.copy || '');
+        card.setAttribute('data-template', c.template_id || '');
+        card.setAttribute('data-template-name', c.template_name || '');
+        card.innerHTML = `
+            <div class="card-actions">
+                <div class="action-icon" onclick="dispararCard('${cardId}', 'whatsapp')" title="Disparar no WhatsApp">
+                    <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                </div>
+                <div class="action-icon" onclick="dispararCard('${cardId}', 'email')" title="Disparar no E-mail">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div class="action-icon" onclick="enviarParaCriacao('${cardId}')" title="Criar Arte">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="action-icon" onclick="abrirEdicao('${cardId}')" title="Editar Variáveis"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></div>
+                <div class="action-icon danger" onclick="excluirCard('${cardId}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
+            </div>
+            <div class="k-card-header"><span class="k-card-type">${c.tipo || ''}</span></div>
+            <div class="k-card-title">${c.titulo || ''}</div>
+            <div class="k-card-copy">${c.copy || ''}</div>
+            <div class="k-card-integration"><svg style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> ${c.template_name || ''} mapeado</div>
+            ${c.thumb_url ? `<img class="card-render-thumb" src="${c.thumb_url}" style="width:100%;border-radius:4px;margin-top:8px;border:1px solid var(--border);">` : ''}
+            ${c.status_kanban === 'pronto_render' || c.status_kanban === 'pronto' ? '<span class="badge-pronto" style="font-size:9px;font-weight:700;color:#10b981;margin-top:4px;display:block;">✓ Arte criada</span>' : ''}
+        `;
+        return { cardId, card };
     }
 
-    function loadKanbanBoard() {
-        const saved = localStorage.getItem('wl_kanban_board');
-        if (saved) {
-            try {
-                const data = JSON.parse(saved);
-                for (const [colId, html] of Object.entries(data)) {
-                    const col = document.getElementById(colId);
-                    if (col) col.innerHTML = html;
+    async function loadKanbanBoard() {
+        try {
+            const res = await fetch('/api/kanban');
+            const json = await res.json();
+            if (!json.success) return;
+            json.cards.forEach(c => {
+                const colId = STATUS_COL[c.status_kanban] || 'col-ideias';
+                const col = document.getElementById(colId);
+                if (col) {
+                    const { card } = criarCardDOM(c);
+                    col.appendChild(card);
                 }
-            } catch(e) {}
-        }
+            });
+            atualizarContadores();
+        } catch(e) { console.error('[loadKanbanBoard]', e); }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -515,69 +553,20 @@
             document.getElementById('mainSidebar').classList.add('collapsed-horiz');
         }
 
+        // Retorno do criacao.html: atualiza status e thumb via API
         const cardDoneRaw = localStorage.getItem('wl_card_done');
         if (cardDoneRaw) {
             try {
                 const { cardId, status, thumb } = JSON.parse(cardDoneRaw);
-                const card = document.getElementById(cardId);
-                if (card && status === 'pronto_render') {
-                    const colCriacao = document.getElementById('col-criacao');
-                    if (colCriacao) colCriacao.appendChild(card);
-
-                    const existingBadge = card.querySelector('.badge-pronto');
-                    if (!existingBadge) {
-                        const badge = document.createElement('span');
-                        badge.className = 'badge-pronto';
-                        badge.style.cssText = 'font-size:9px;font-weight:700;color:#10b981;margin-top:4px;display:block;';
-                        badge.textContent = '✓ Arte criada';
-                        card.appendChild(badge);
-                    }
-
-                    if (thumb && !card.querySelector('.card-render-thumb')) {
-                        const img = document.createElement('img');
-                        img.className = 'card-render-thumb';
-                        img.src = thumb;
-                        img.style.cssText = 'width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid var(--border);';
-                        card.insertBefore(img, card.querySelector('.k-card-title'));
-                    }
-
-                    atualizarContadores();
-                } else if (card && status === 'pronto') {
-                    const colPronto = document.getElementById('col-pronto');
-                    if (colPronto) colPronto.appendChild(card);
-                    
-                    const existing = card.querySelector('.badge-pronto');
-                    if (!existing) {
-                        const badge = document.createElement('span');
-                        badge.className = 'badge-pronto';
-                        badge.style.cssText = 'font-size:9px;font-weight:700;color:#10b981;margin-top:4px;display:block;';
-                        badge.textContent = '✓ Arte criada';
-                        card.appendChild(badge);
-                    }
-                    
-                    if (thumb && !card.querySelector('.card-render-thumb')) {
-                        const img = document.createElement('img');
-                        img.className = 'card-render-thumb';
-                        img.src = thumb;
-                        img.style.cssText = 'width: 100%; border-radius: 4px; margin-top: 8px; border: 1px solid var(--border);';
-                        card.insertBefore(img, card.querySelector('.k-card-title'));
-                    }
-
-                    const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-                    if (!prontos.find(p => p.id === cardId)) {
-                        prontos.push({
-                            id: cardId,
-                            titulo: card.querySelector('.k-card-title')?.innerText || '',
-                            tipo: card.querySelector('.k-card-type')?.innerText || '',
-                            templateName: card.getAttribute('data-template-name') || '',
-                            copy: card.getAttribute('data-copy') || '',
-                            chaves: JSON.parse(card.getAttribute('data-chaves') || '{}'),
-                            thumb: thumb || ''
-                        });
-                        localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos));
-                    }
-                    
-                    atualizarContadores();
+                // cardId aqui é o data-db-id guardado pelo criacao.html
+                if (cardId && status) {
+                    const body = { status_kanban: status };
+                    if (thumb) body.thumb_url = thumb;
+                    fetch(`/api/kanban/${cardId}`, {
+                        method: 'PATCH',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(body)
+                    }).catch(e => console.error('[card_done PATCH]', e));
                 }
             } catch(e) {}
             localStorage.removeItem('wl_card_done');
@@ -606,24 +595,15 @@
                 onEnd: function(evt) {
                     atualizarContadores();
                     const cardEl = evt.item;
-                    const cardId = cardEl.id;
-                    if (evt.to.id === 'col-pronto') {
-                        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-                        if (!prontos.find(p => p.id === cardId)) {
-                            prontos.push({
-                                id: cardId,
-                                titulo: cardEl.querySelector('.k-card-title')?.innerText || '',
-                                tipo: cardEl.querySelector('.k-card-type')?.innerText || '',
-                                templateName: cardEl.getAttribute('data-template-name') || '',
-                                copy: cardEl.getAttribute('data-copy') || '',
-                                chaves: JSON.parse(cardEl.getAttribute('data-chaves') || '{}'),
-                                thumb: cardEl.querySelector('.card-render-thumb')?.src || ''
-                            });
-                            localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos));
-                        }
-                    } else if (evt.from.id === 'col-pronto' && evt.to.id !== 'col-pronto') {
-                        const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-                        localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos.filter(p => p.id !== cardId)));
+                    const dbId = cardEl.getAttribute('data-db-id');
+                    const novaCol = evt.to.closest('.kanban-col')?.id || evt.to.id;
+                    const novoStatus = COL_STATUS[novaCol] || 'backlog';
+                    if (dbId) {
+                        fetch(`/api/kanban/${dbId}`, {
+                            method: 'PATCH',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ status_kanban: novoStatus })
+                        }).catch(e => console.error('[sortable PATCH]', e));
                     }
                 } 
             });
@@ -1285,7 +1265,7 @@
         }
     }
 
-    function adicionarAoKanban() {
+    async function adicionarAoKanban() {
         const titulo = document.getElementById('draftTitle').value.trim();
         const tipo = document.getElementById('draftType').value;
         const copy = document.getElementById('draftCopy').value.trim();
@@ -1380,6 +1360,28 @@
             document.getElementById('col-ideias').appendChild(card);
         }
 
+        // Salva cada card criado na API
+        const todosCards = document.querySelectorAll('#col-ideias .k-card:not([data-db-id])');
+        for (const card of todosCards) {
+            try {
+                const res = await fetch('/api/kanban', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        titulo: card.querySelector('.k-card-title')?.innerText || '',
+                        tipo: card.querySelector('.k-card-type')?.innerText || '',
+                        copy: card.getAttribute('data-copy') || '',
+                        template_id: card.getAttribute('data-template') || '',
+                        template_name: card.getAttribute('data-template-name') || '',
+                        chaves: JSON.parse(card.getAttribute('data-chaves') || '{}'),
+                        status_kanban: 'backlog'
+                    })
+                });
+                const json = await res.json();
+                if (json.success && json.id) card.setAttribute('data-db-id', json.id);
+            } catch(e) { console.error('[adicionarAoKanban POST]', e); }
+        }
+
         atualizarContadores();
 
         document.getElementById('draftTitle').value = '';
@@ -1423,13 +1425,14 @@
         window.location.href = '/criacao';
     }
 
-    function excluirCard(id) {
+    async function excluirCard(id) {
         if(confirm('Excluir este card?')) {
-            document.getElementById(id).remove();
-            
-            const prontos = JSON.parse(localStorage.getItem('wl_kanban_prontos') || '[]');
-            localStorage.setItem('wl_kanban_prontos', JSON.stringify(prontos.filter(p => p.id !== id)));
-
+            const el = document.getElementById(id);
+            const dbId = el ? el.getAttribute('data-db-id') : null;
+            if (dbId) {
+                try { await fetch(`/api/kanban/${dbId}`, { method: 'DELETE' }); } catch(e) {}
+            }
+            if (el) el.remove();
             atualizarContadores();
         }
     }
