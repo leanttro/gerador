@@ -31,6 +31,52 @@ try:
 except ImportError:
     imgkit = None
 
+# ─────────────────────────────────────────────
+# BANCO DE DADOS (PostgreSQL direto, sem Directus)
+# ─────────────────────────────────────────────
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    DB_URL = os.environ.get(
+        "DATABASE_URL",
+        "postgresql://leanttro:Fin%402021@213.199.56.207:3432/leanttro"
+    )
+
+    def get_db():
+        """Retorna conexão com o banco. Use com 'with get_db() as conn'."""
+        import urllib.parse as _up
+        parsed = _up.urlparse(DB_URL)
+        return psycopg2.connect(
+            host=parsed.hostname,
+            port=parsed.port,
+            dbname=parsed.path.lstrip('/'),
+            user=parsed.username,
+            password=_up.unquote(parsed.password),
+            cursor_factory=RealDictCursor,
+            connect_timeout=7
+        )
+
+    def db_query(sql, params=None, fetch='all'):
+        """Executa query e retorna resultado. fetch='all'|'one'|None."""
+        conn = get_db()
+        try:
+            cur = conn.cursor()
+            cur.execute(sql, params or ())
+            if fetch == 'all':
+                return cur.fetchall()
+            elif fetch == 'one':
+                return cur.fetchone()
+            else:
+                conn.commit()
+                return cur.rowcount
+        finally:
+            conn.close()
+
+    print("[DB] Conexão PostgreSQL configurada (sem Directus)")
+except ImportError:
+    print("[DB] psycopg2 não instalado — rode: pip install psycopg2-binary")
+    def db_query(*a, **kw): return None
+
 try:
     import weasyprint
 except ImportError:
@@ -2584,29 +2630,26 @@ def marketing_login():
             return render_template('login_marketing.html')
 
         try:
-            url = f"{DIRECTUS_URL}/items/usuarios_marketing?filter[email][_eq]={email}&filter[ativo][_eq]=true"
-            r = requests.get(url, headers=get_headers(), timeout=7)
-            data = r.json().get('data', [])
+            # ── AUTH DIRETO NO BANCO — sem Directus ──────────────────────
+            usuario = db_query(
+                "SELECT * FROM usuarios_marketing WHERE email = %s AND ativo = true LIMIT 1",
+                (email,), fetch='one'
+            )
 
-            if data:
-                usuario = data[0]
+            if usuario:
                 senha_salva = usuario.get('senha_hash', '')
                 senha_ok = False
 
-                # Verifica se já é hash werkzeug (começa com pbkdf2, scrypt, etc.)
                 if senha_salva.startswith('pbkdf2:') or senha_salva.startswith('scrypt:'):
                     senha_ok = check_password_hash(senha_salva, senha)
                 else:
-                    # Ainda é texto puro — compara direto
+                    # Senha em texto puro — compara e já converte pra hash
                     senha_ok = (senha_salva == senha)
                     if senha_ok:
-                        # Aproveita e já salva como hash pra próxima vez
                         novo_hash = generate_password_hash(senha)
-                        requests.patch(
-                            f"{DIRECTUS_URL}/items/usuarios_marketing/{usuario['id']}",
-                            headers=get_headers(),
-                            json={'senha_hash': novo_hash},
-                            timeout=7
+                        db_query(
+                            "UPDATE usuarios_marketing SET senha_hash = %s WHERE id = %s",
+                            (novo_hash, usuario['id']), fetch=None
                         )
 
                 if senha_ok:
