@@ -713,6 +713,7 @@
       <div class="form-row"><label class="form-label">E-mail</label><input class="form-input" id="c-email" type="email" placeholder="email@exemplo.com"></div>
       <div class="form-row"><label class="form-label">WhatsApp</label><input class="form-input" id="c-whats" placeholder="11999999999"></div>
       <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c-empresa" placeholder="Nome da empresa"></div>
+      <div class="form-row"><label class="form-label">Senha <span style="color:var(--text-muted);font-size:11px;">(deixe em branco para não alterar)</span></label><input class="form-input" id="c-senha" type="password" placeholder="Senha de acesso"></div>
       <div class="form-row">
         <label class="form-label">Status</label>
         <select class="form-select" id="c-status">
@@ -901,6 +902,7 @@ async function openNovoCliente() {
   document.getElementById('c-whats').value = '';
   document.getElementById('c-empresa').value = '';
   document.getElementById('c-status').value = 'pendente';
+  document.getElementById('c-senha').value = '';
   await carregarHtmlsDisponiveis();
   renderHtmlsCheckboxes([]);
   openModal('modal-cliente');
@@ -908,7 +910,8 @@ async function openNovoCliente() {
 
 async function editCliente(id) {
   const r = await api('/api/admin/clientes');
-  const c = (r.data||[]).find(x => x.id === id);
+  const lista = Array.isArray(r) ? r : (r.data || []);
+  const c = lista.find(x => x.id === id);
   if (!c) return;
   document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
   document.getElementById('c-id').value = c.id;
@@ -917,6 +920,7 @@ async function editCliente(id) {
   document.getElementById('c-whats').value = c.whatsapp || '';
   document.getElementById('c-empresa').value = c.company_name || '';
   document.getElementById('c-status').value = c.status || 'pendente';
+  document.getElementById('c-senha').value = '';
   await carregarHtmlsDisponiveis();
   renderHtmlsCheckboxes(c.html_permitidos || []);
   openModal('modal-cliente');
@@ -1024,6 +1028,8 @@ async function salvarCliente() {
     status: document.getElementById('c-status').value,
     html_permitidos: getHtmlsSelecionados(),
   };
+  const senha = document.getElementById('c-senha').value;
+  if (senha) body.senha = senha;
   let r;
   if (id) {
     r = await api(`/api/admin/clientes/${id}`, { method:'PATCH', body: JSON.stringify(body) });
