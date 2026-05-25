@@ -2617,6 +2617,27 @@ def marketing_login():
                     session.permanent = True
                     return redirect('/marketing/hub')
 
+                if not senha_ok:
+                    # Tenta autenticar como cliente
+                    cliente = db_query(
+                        "SELECT * FROM clients WHERE email = %s LIMIT 1",
+                        (email,), fetch='one'
+                    )
+                    if cliente:
+                        senha_hash_cliente = cliente.get('senha_hash', '')
+                        if senha_hash_cliente and (
+                            check_password_hash(senha_hash_cliente, senha)
+                            if senha_hash_cliente.startswith(('pbkdf2:', 'scrypt:'))
+                            else senha_hash_cliente == senha
+                        ):
+                            session['marketing_user_id'] = f"cliente_{cliente['id']}"
+                            session['marketing_user_nome'] = cliente.get('name', email)
+                            session['marketing_user_perfil'] = 'cliente'
+                            session['marketing_client_id'] = cliente['id']
+                            session['marketing_html_permitidos'] = cliente.get('html_permitidos', [])
+                            session.permanent = True
+                            return redirect('/marketing/hub')
+
             flash('E-mail ou senha incorretos.', 'error')
 
         except Exception as e:
