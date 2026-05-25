@@ -2653,64 +2653,229 @@ def marketing_hub():
 # def marketing_prospeccao():
 #     return render_template('prospeccao.html')
 # ─────────────────────────────────────────────
-# PAINEL ADMIN — rotas e API de dados
+# PAINEL ADMIN (Leanttro) — rotas e API
 # ─────────────────────────────────────────────
+
+def admin_required(f):
+    """Só deixa passar quem tem perfil 'admin'."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('marketing_user_id'):
+            return jsonify({"error": "Não autenticado"}), 401
+        if session.get('marketing_user_perfil') != 'admin':
+            return jsonify({"error": "Acesso restrito a administradores"}), 403
+        return f(*args, **kwargs)
+    return decorated
+
 
 @app.route('/admin')
 @login_marketing_required
 def admin_painel():
-    return render_template('painel_admin.html',
+    return render_template(
+        'painel_admin.html',
         usuario_nome=session.get('marketing_user_nome', ''),
         usuario_perfil=session.get('marketing_user_perfil', '')
     )
 
+
+# ── USUÁRIOS ──────────────────────────────────
+
 @app.route('/api/admin/usuarios', methods=['GET'])
-@login_marketing_required
+@admin_required
 def admin_usuarios():
-    rows = db_query("SELECT id, nome, email, perfil, ativo, created_at FROM usuarios_marketing ORDER BY created_at DESC") or []
-    return jsonify([dict(r) for r in rows])
+    rows = db_query(
+        "SELECT id, nome, email, perfil, ativo, created_at "
+        "FROM usuarios_marketing ORDER BY created_at DESC"
+    ) or []
+    data = [dict(r) for r in rows]
+    return jsonify({"total": len(data), "data": data})
+
+
+@app.route('/api/admin/usuarios', methods=['POST'])
+@admin_required
+def admin_usuario_criar():
+    body = request.json or {}
+    nome   = (body.get('nome') or '').strip()
+    email  = (body.get('email') or '').strip().lower()
+    senha  = (body.get('senha') or '').strip()
+    perfil = body.get('perfil', 'operador')
+
+    if not nome or not email or not senha:
+        return jsonify({"success": False, "error": "Nome, e-mail e senha são obrigatórios"}), 400
+    if len(senha) < 8:
+        return jsonify({"success": False, "error": "Senha deve ter ao menos 8 caracteres"}), 400
+    if perfil not in ('admin', 'operador'):
+        return jsonify({"success": False, "error": "Perfil inválido"}), 400
+
+    existente = db_query(
+        "SELECT id FROM usuarios_marketing WHERE email = %s LIMIT 1",
+        (email,), fetch='one'
+    )
+    if existente:
+        return jsonify({"success": False, "error": "E-mail já cadastrado"}), 409
+
+    db_query(
+        "INSERT INTO usuarios_marketing (nome, email, senha_hash, perfil, ativo) "
+        "VALUES (%s, %s, %s, %s, true)",
+        (nome, email, generate_password_hash(senha), perfil), fetch=None
+    )
+    return jsonify({"success": True})
+
 
 @app.route('/api/admin/usuarios/<int:uid>', methods=['POST'])
-@login_marketing_required
+@admin_required
 def admin_usuario_update(uid):
     data = request.json or {}
     campos = {k: v for k, v in data.items() if k in ('nome', 'email', 'perfil', 'ativo')}
     if not campos:
-        return jsonify({"error": "Nada para atualizar"}), 400
+        return jsonify({"success": False, "error": "Nada para atualizar"}), 400
     set_clause = ', '.join(f"{k} = %s" for k in campos)
-    db_query(f"UPDATE usuarios_marketing SET {set_clause} WHERE id = %s",
-             list(campos.values()) + [uid], fetch=None)
+    db_query(
+        f"UPDATE usuarios_marketing SET {set_clause} WHERE id = %s",
+        list(campos.values()) + [uid], fetch=None
+    )
     return jsonify({"success": True})
 
+
+@app.route('/api/admin/usuarios/<int:uid>', methods=['DELETE'])
+@admin_required
+def admin_usuario_deletar(uid):
+    if uid == session.get('marketing_user_id'):
+        return jsonify({"success": False, "error": "Você não pode excluir sua própria conta"}), 400
+    db_query("DELETE FROM usuarios_marketing WHERE id = %s", (uid,), fetch=None)
+    return jsonify({"success": True})
+
+
+# ── CLIENTES ──────────────────────────────────
+
 @app.route('/api/admin/clientes', methods=['GET'])
-@login_marketing_required
+@admin_required
 def admin_clientes():
-    rows = db_query("SELECT id, name, email, whatsapp, company_name, status, temperatura, nicho_loja, created_at FROM clients ORDER BY created_at DESC") or []
-    return jsonify([dict(r) for r in rows])
+    limit = request.args.get('limit', type=int)
+    sql = ("SELECT id, name, email, whatsapp, company_name, status, "
+           "temperatura, nicho_loja, created_at FROM clients ORDER BY created_at DESC")
+    if limit:
+        sql += f" LIMIT {limit}"
+    rows = db_query(sql) or []
+    data = [dict(r) for r in rows]
+    total_row = db_query("SELECT COUNT(*) AS n FROM clients", fetch='one')
+    total = total_row['n'] if total_row else len(data)
+    return jsonify({"total": total, "data": data})
+
+
+@app.route('/api/admin/clientes', methods=['POST'])
+@admin_required
+def admin_cliente_criar():
+    body = request.json or {}
+    nome  = (body.get('name') or '').strip()
+    email = (body.get('email') or '').strip().lower()
+    if not nome or not email:
+        return jsonify({"success": False, "error": "Nome e e-mail são obrigatórios"}), 400
+    db_query(
+        "INSERT INTO clients (name, email, whatsapp, company_name, status) "
+        "VALUES (%s, %s, %s, %s, %s)",
+        (nome, email,
+         (body.get('whatsapp') or '').strip(),
+         (body.get('company_name') or '').strip(),
+         body.get('status', 'pendente')),
+        fetch=None
+    )
+    return jsonify({"success": True})
+
+
+@app.route('/api/admin/clientes/<int:cid>', methods=['POST'])
+@admin_required
+def admin_cliente_update(cid):
+    body = request.json or {}
+    campos = {k: v for k, v in body.items() if k in ('name', 'email', 'whatsapp', 'company_name', 'status')}
+    if not campos:
+        return jsonify({"success": False, "error": "Nada para atualizar"}), 400
+    set_clause = ', '.join(f"{k} = %s" for k in campos)
+    db_query(f"UPDATE clients SET {set_clause} WHERE id = %s",
+             list(campos.values()) + [cid], fetch=None)
+    return jsonify({"success": True})
+
+
+@app.route('/api/admin/clientes/<int:cid>', methods=['DELETE'])
+@admin_required
+def admin_cliente_deletar(cid):
+    db_query("DELETE FROM clients WHERE id = %s", (cid,), fetch=None)
+    return jsonify({"success": True})
+
+
+# ── LEADS ─────────────────────────────────────
 
 @app.route('/api/admin/leads', methods=['GET'])
-@login_marketing_required
+@admin_required
 def admin_leads():
-    rows = db_query("SELECT * FROM leads_comercial ORDER BY id DESC LIMIT 200") or []
-    return jsonify([dict(r) for r in rows])
+    limit = request.args.get('limit', type=int)
+    sql = "SELECT * FROM leads_comercial ORDER BY id DESC"
+    sql += f" LIMIT {limit}" if limit else " LIMIT 200"
+    rows = db_query(sql) or []
+    data = [dict(r) for r in rows]
+    total_row = db_query("SELECT COUNT(*) AS n FROM leads_comercial", fetch='one')
+    total = total_row['n'] if total_row else len(data)
+    return jsonify({"total": total, "data": data})
 
-@app.route('/api/admin/goals', methods=['GET'])
-@login_marketing_required
-def admin_goals():
-    rows = db_query("SELECT * FROM goals ORDER BY id DESC") or []
-    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/admin/leads/<int:lid>', methods=['DELETE'])
+@admin_required
+def admin_lead_deletar(lid):
+    db_query("DELETE FROM leads_comercial WHERE id = %s", (lid,), fetch=None)
+    return jsonify({"success": True})
+
+
+# ── ORÇAMENTOS ────────────────────────────────
 
 @app.route('/api/admin/orcamentos', methods=['GET'])
-@login_marketing_required
+@admin_required
 def admin_orcamentos():
-    rows = db_query("SELECT * FROM mt_orcamentos ORDER BY id DESC LIMIT 200") or []
-    return jsonify([dict(r) for r in rows])
+    limit = request.args.get('limit', type=int)
+    sql = "SELECT * FROM mt_orcamentos ORDER BY id DESC"
+    sql += f" LIMIT {limit}" if limit else " LIMIT 200"
+    rows = db_query(sql) or []
+    data = [dict(r) for r in rows]
+    total_row = db_query("SELECT COUNT(*) AS n FROM mt_orcamentos", fetch='one')
+    total = total_row['n'] if total_row else len(data)
+    return jsonify({"total": total, "data": data})
+
+
+@app.route('/api/admin/orcamentos/<int:oid>', methods=['DELETE'])
+@admin_required
+def admin_orcamento_deletar(oid):
+    db_query("DELETE FROM mt_orcamentos WHERE id = %s", (oid,), fetch=None)
+    return jsonify({"success": True})
+
+
+# ── METAS ─────────────────────────────────────
+
+@app.route('/api/admin/metas', methods=['GET'])
+@admin_required
+def admin_metas():
+    rows = db_query("SELECT * FROM goals ORDER BY id DESC") or []
+    data = [dict(r) for r in rows]
+    return jsonify({"total": len(data), "data": data})
+
+
+# ── ENVIOS ────────────────────────────────────
+
+@app.route('/api/admin/envios', methods=['GET'])
+@admin_required
+def admin_envios():
+    limit = request.args.get('limit', type=int)
+    sql = "SELECT * FROM historico_envios ORDER BY id DESC"
+    sql += f" LIMIT {limit}" if limit else " LIMIT 200"
+    rows = db_query(sql) or []
+    data = [dict(r) for r in rows]
+    total_row = db_query("SELECT COUNT(*) AS n FROM historico_envios", fetch='one')
+    total = total_row['n'] if total_row else len(data)
+    return jsonify({"total": total, "data": data})
+
 
 @app.route('/api/admin/historico_envios', methods=['GET'])
-@login_marketing_required
+@admin_required
 def admin_historico_envios():
-    rows = db_query("SELECT * FROM historico_envios ORDER BY id DESC LIMIT 200") or []
-    return jsonify([dict(r) for r in rows])
+    return admin_envios()
 
 # ─────────────────────────────────────────────
 # INICIALIZAÇÃO
