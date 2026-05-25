@@ -550,6 +550,10 @@
     </button>
 
     <div class="nav-section">Sistema</div>
+    <button class="nav-item" onclick="showSection('acessos', this)">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Acessos
+    </button>
     <button class="nav-item" onclick="showSection('usuarios', this)">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Usuários
@@ -610,13 +614,13 @@
           <span class="card-title">Clientes</span>
           <div style="display:flex;gap:8px;align-items:center">
             <input class="search-input" type="text" placeholder="Buscar cliente..." oninput="filterTable('clientes-body', this.value)">
-            <button class="btn btn-primary btn-sm" onclick="openModal('modal-cliente')">+ Novo</button>
+            <button class="btn btn-primary btn-sm" onclick="openNovoCliente()">+ Novo</button>
           </div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Status</th><th>Cadastro</th><th>Ações</th></tr></thead>
-            <tbody id="clientes-body"><tr><td colspan="6"><div class="loading"><div class="spinner"></div>Carregando...</div></td></tr></tbody>
+            <thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Status</th><th>HTMLs Liberados</th><th>Cadastro</th><th>Ações</th></tr></thead>
+            <tbody id="clientes-body"><tr><td colspan="7"><div class="loading"><div class="spinner"></div>Carregando...</div></td></tr></tbody>
           </table>
         </div>
       </div>
@@ -700,10 +704,11 @@
 <div class="modal-overlay" id="modal-cliente">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Novo Cliente</span>
+      <span class="modal-title" id="modal-cliente-title">Novo Cliente</span>
       <button class="modal-close" onclick="closeModal('modal-cliente')">×</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="c-id">
       <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c-nome" placeholder="Nome completo"></div>
       <div class="form-row"><label class="form-label">E-mail</label><input class="form-input" id="c-email" type="email" placeholder="email@exemplo.com"></div>
       <div class="form-row"><label class="form-label">WhatsApp</label><input class="form-input" id="c-whats" placeholder="11999999999"></div>
@@ -715,6 +720,12 @@
           <option value="ativo">Ativo</option>
           <option value="inativo">Inativo</option>
         </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">HTMLs com Acesso</label>
+        <div id="c-htmls-lista" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:7px;padding:10px;background:var(--surface2);">
+          <span style="color:var(--text-muted);font-size:12px;">Carregando HTMLs...</span>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -822,22 +833,92 @@ async function loadDashboard() {
 }
 
 // ── CLIENTES ──────────────────────────────────
+let htmlsDisponiveis = [];
+
+async function carregarHtmlsDisponiveis() {
+  if (htmlsDisponiveis.length) return htmlsDisponiveis;
+  try {
+    const r = await api('/api/admin/htmls-disponiveis');
+    htmlsDisponiveis = r.htmls || [];
+  } catch(e) { htmlsDisponiveis = []; }
+  return htmlsDisponiveis;
+}
+
+function renderHtmlsCheckboxes(selecionados = []) {
+  const lista = document.getElementById('c-htmls-lista');
+  if (!htmlsDisponiveis.length) {
+    lista.innerHTML = '<span style="color:var(--text-muted);font-size:12px;">Nenhum HTML encontrado na pasta html_templates.</span>';
+    return;
+  }
+  lista.innerHTML = htmlsDisponiveis.map(h => `
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+      <input type="checkbox" value="${h.id}" ${selecionados.includes(h.id)?'checked':''} style="accent-color:var(--accent);width:15px;height:15px;">
+      <span>${h.nome}</span>
+      <a href="${h.url}" target="_blank" style="margin-left:auto;color:var(--accent);font-size:11px;text-decoration:none;opacity:.7" title="Pré-visualizar">↗</a>
+    </label>`).join('');
+}
+
+function getHtmlsSelecionados() {
+  return [...document.querySelectorAll('#c-htmls-lista input[type=checkbox]:checked')].map(cb => cb.value);
+}
+
 async function loadClientes() {
   const body = document.getElementById('clientes-body');
   const r = await api('/api/admin/clientes');
-  if (!r.data || !r.data.length) { body.innerHTML = '<tr><td colspan="6"><div class="empty">Nenhum cliente</div></td></tr>'; return; }
-  body.innerHTML = r.data.map(c => `
+  await carregarHtmlsDisponiveis();
+  if (!r.data || !r.data.length) { body.innerHTML = '<tr><td colspan="7"><div class="empty">Nenhum cliente</div></td></tr>'; return; }
+  body.innerHTML = r.data.map(c => {
+    const htmls = c.html_permitidos || [];
+    const htmlBadges = htmls.length
+      ? htmls.map(h => {
+          const info = htmlsDisponiveis.find(x => x.id === h);
+          const nome = info ? info.nome : h.replace('.html','');
+          return `<a href="${info?info.url:'#'}" target="_blank" style="display:inline-block;background:var(--accent-light);color:var(--accent);font-size:10px;padding:2px 7px;border-radius:10px;text-decoration:none;margin:1px">${nome}</a>`;
+        }).join('')
+      : '<span style="color:var(--text-muted);font-size:11px;">—</span>';
+    return `
     <tr>
       <td><strong>${c.name||'—'}</strong>${c.company_name?`<br><small style="color:var(--text-muted)">${c.company_name}</small>`:''}</td>
       <td>${c.email||'—'}</td>
       <td class="mono">${c.whatsapp||'—'}</td>
       <td>${statusBadge(c.status)}</td>
+      <td style="max-width:200px">${htmlBadges}</td>
       <td class="mono">${fmtDate(c.created_at)}</td>
       <td><div class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="editCliente(${c.id})">Editar</button>
         <button class="btn btn-danger btn-sm" onclick="deletar('clientes',${c.id},'clientes-body',loadClientes)">Del</button>
       </div></td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
+}
+
+async function openNovoCliente() {
+  document.getElementById('modal-cliente-title').textContent = 'Novo Cliente';
+  document.getElementById('c-id').value = '';
+  document.getElementById('c-nome').value = '';
+  document.getElementById('c-email').value = '';
+  document.getElementById('c-whats').value = '';
+  document.getElementById('c-empresa').value = '';
+  document.getElementById('c-status').value = 'pendente';
+  await carregarHtmlsDisponiveis();
+  renderHtmlsCheckboxes([]);
+  openModal('modal-cliente');
+}
+
+async function editCliente(id) {
+  const r = await api('/api/admin/clientes');
+  const c = (r.data||[]).find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-cliente-title').textContent = 'Editar Cliente';
+  document.getElementById('c-id').value = c.id;
+  document.getElementById('c-nome').value = c.name || '';
+  document.getElementById('c-email').value = c.email || '';
+  document.getElementById('c-whats').value = c.whatsapp || '';
+  document.getElementById('c-empresa').value = c.company_name || '';
+  document.getElementById('c-status').value = c.status || 'pendente';
+  await carregarHtmlsDisponiveis();
+  renderHtmlsCheckboxes(c.html_permitidos || []);
+  openModal('modal-cliente');
 }
 
 // ── LEADS ─────────────────────────────────────
@@ -933,14 +1014,21 @@ async function loadUsuarios() {
 
 // ── SALVAR ────────────────────────────────────
 async function salvarCliente() {
+  const id = document.getElementById('c-id').value;
   const body = {
     name: document.getElementById('c-nome').value,
     email: document.getElementById('c-email').value,
     whatsapp: document.getElementById('c-whats').value,
     company_name: document.getElementById('c-empresa').value,
     status: document.getElementById('c-status').value,
+    html_permitidos: getHtmlsSelecionados(),
   };
-  const r = await api('/api/admin/clientes', { method:'POST', body: JSON.stringify(body) });
+  let r;
+  if (id) {
+    r = await api(`/api/admin/clientes/${id}`, { method:'PATCH', body: JSON.stringify(body) });
+  } else {
+    r = await api('/api/admin/clientes', { method:'POST', body: JSON.stringify(body) });
+  }
   if (r.success) { closeModal('modal-cliente'); toast('Cliente salvo!'); loaded.clientes=false; loadClientes(); }
   else toast('Erro: ' + (r.error||'desconhecido'), true);
 }
