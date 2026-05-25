@@ -37,10 +37,9 @@ except ImportError:
 try:
     import psycopg2
     from psycopg2.extras import RealDictCursor
-    DB_URL = os.environ.get(
-        "DATABASE_URL",
-        "postgresql://leanttro:Fin%402021@213.199.56.207:3432/leanttro"
-    )
+    DB_URL = os.environ.get("DATABASE_URL")
+    if not DB_URL:
+        raise RuntimeError("DATABASE_URL não definida. Configure a env var no Dokploy.")
 
     def get_db():
         """Retorna conexão com o banco. Use com 'with get_db() as conn'."""
@@ -94,7 +93,9 @@ MAX_FILE_SIZE_MB = 20
 MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "marketing-os-chave-fixa-troque-em-producao")
+app.secret_key = os.environ.get("SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError("SECRET_KEY não definida. Configure a env var no Dokploy.")
 
 limiter = Limiter(
     get_remote_address,
@@ -227,11 +228,7 @@ def index():
 @app.route('/home')
 @login_marketing_required
 def home():
-    return render_template('home.html',
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", "")
-    )
+    return render_template('home.html')
 @app.route('/conteudo')
 @login_marketing_required
 def conteudo():
@@ -245,21 +242,14 @@ def criacao():
 @app.route('/prospeccao')
 @login_marketing_required
 def prospeccao():
-    return render_template('prospeccao.html', 
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", ""),
+    return render_template('prospeccao.html',
         serper_api_key=os.environ.get("SERPER_API_KEY", "")
     )
 
 @app.route('/whatsapp')
 @login_marketing_required
 def whatsapp():
-    return render_template('whatsapp.html',
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", "")
-    )
+    return render_template('whatsapp.html')
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
@@ -1519,11 +1509,7 @@ def wpp_generate_copy():
 @app.route('/email')
 @login_marketing_required
 def email_page():
-    return render_template('email.html',
-        directus_url=os.environ.get("DIRECTUS_URL", ""),
-        directus_token=os.environ.get("DIRECTUS_TOKEN", ""),
-        directus_table=os.environ.get("DIRECTUS_TABLE", "")
-    )
+    return render_template('email.html')
 
 
 # ─────────────────────────────────────────────
@@ -2078,11 +2064,7 @@ def email_generate_copy():
 @app.route('/calendario')
 @login_marketing_required
 def calendario():
-    return render_template('calendario.html',
-        directus_url=DIRECTUS_URL,
-        directus_token=DIRECTUS_TOKEN,
-        directus_table=DIRECTUS_TABLE,
-    )
+    return render_template('calendario.html')
 
 
 # ─────────────────────────────────────────────
@@ -2110,48 +2092,27 @@ def goals_progresso():
         if tipo == 'posts':
             data_inicio = f"{ano}-{mes_str:>02}-01"
             data_fim    = f"{ano}-{mes_str:>02}-31"
-            url = (
-                f"{DIRECTUS_URL}/items/content_cards"
-                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
-                f"&filter[status_kanban][_in]=pronto,publicado"
-                f"&filter[data_publicacao][_between]={data_inicio},{data_fim}"
-                f"&aggregate[count]=id"
+            row = db_query(
+                """SELECT COUNT(*) as cnt FROM "Posts"
+                   WHERE status_kanban IN ('pronto','publicado')
+                   AND data_publicacao BETWEEN %s AND %s""",
+                (data_inicio, data_fim), fetch='one'
             )
-            res  = requests.get(url, headers=hdrs, timeout=10)
-            data = res.json()
-            valor = data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0
+            valor = int((row or {}).get('cnt', 0) or 0)
 
         elif tipo == 'disparos':
-            url = (
-                f"{DIRECTUS_URL}/items/campaigns"
-                f"?filter[workspace_id][_eq]={DIRECTUS_TABLE}"
-                f"&aggregate[sum]=enviados"
+            row = db_query(
+                "SELECT COUNT(*) as cnt FROM historico_envios WHERE status ILIKE 'enviado%'",
+                fetch='one'
             )
-            try:
-                res  = requests.get(url, headers=hdrs, timeout=10)
-                data = res.json()
-                directus_enviados = int(data.get('data', [{}])[0].get('sum', {}).get('enviados', 0) or 0)
-            except Exception:
-                directus_enviados = 0
-
-            url_email = f"{DIRECTUS_URL}/items/email_history?filter[workspace_id][_eq]={DIRECTUS_TABLE}&limit=-1"
-            try:
-                res_e = requests.get(url_email, headers=hdrs, timeout=10)
-                data_e = res_e.json().get('data', [])
-                email_enviados = sum(1 for h in data_e if h.get('status', '').startswith('enviado'))
-            except Exception:
-                email_enviados = 0
-
-            valor = email_enviados + directus_enviados
+            valor = int((row or {}).get('cnt', 0) or 0)
 
         elif tipo == 'leads':
-            url = f"{DIRECTUS_URL}/items/contacts?filter[workspace_id][_eq]={DIRECTUS_TABLE}&aggregate[count]=id"
-            try:
-                res  = requests.get(url, headers=hdrs, timeout=10)
-                data = res.json()
-                valor = int(data.get('data', [{}])[0].get('count', {}).get('id', 0) or 0)
-            except Exception:
-                valor = 0
+            row = db_query(
+                "SELECT COUNT(*) as cnt FROM leads_comercial",
+                fetch='one'
+            )
+            valor = int((row or {}).get('cnt', 0) or 0)
 
         else:
             valor = 0
@@ -2231,16 +2192,12 @@ def _get_creds(workspace_id: str):
 @app.route('/metricas')
 @login_marketing_required
 def metricas():
-    return render_template('metricas.html',
-        directus_url   = DIRECTUS_URL,
-        directus_token = DIRECTUS_TOKEN,
-        directus_table = DIRECTUS_TABLE,
-    )
+    return render_template('metricas.html')
 
 
 @app.route('/api/metricas/status', methods=['GET'])
 def metricas_status():
-    workspace_id = DIRECTUS_TABLE
+    workspace_id = session.get('marketing_user_id', 'default')
     creds = _get_creds(workspace_id)
     tokens = _load_tokens()
     tok = tokens.get(workspace_id, {})
@@ -2695,6 +2652,66 @@ def marketing_hub():
 # @login_marketing_required
 # def marketing_prospeccao():
 #     return render_template('prospeccao.html')
+# ─────────────────────────────────────────────
+# PAINEL ADMIN — rotas e API de dados
+# ─────────────────────────────────────────────
+
+@app.route('/admin')
+@login_marketing_required
+def admin_painel():
+    return render_template('painel_admin.html',
+        usuario_nome=session.get('marketing_user_nome', ''),
+        usuario_perfil=session.get('marketing_user_perfil', '')
+    )
+
+@app.route('/api/admin/usuarios', methods=['GET'])
+@login_marketing_required
+def admin_usuarios():
+    rows = db_query("SELECT id, nome, email, perfil, ativo, created_at FROM usuarios_marketing ORDER BY created_at DESC") or []
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/admin/usuarios/<int:uid>', methods=['POST'])
+@login_marketing_required
+def admin_usuario_update(uid):
+    data = request.json or {}
+    campos = {k: v for k, v in data.items() if k in ('nome', 'email', 'perfil', 'ativo')}
+    if not campos:
+        return jsonify({"error": "Nada para atualizar"}), 400
+    set_clause = ', '.join(f"{k} = %s" for k in campos)
+    db_query(f"UPDATE usuarios_marketing SET {set_clause} WHERE id = %s",
+             list(campos.values()) + [uid], fetch=None)
+    return jsonify({"success": True})
+
+@app.route('/api/admin/clientes', methods=['GET'])
+@login_marketing_required
+def admin_clientes():
+    rows = db_query("SELECT id, name, email, whatsapp, company_name, status, temperatura, nicho_loja, created_at FROM clients ORDER BY created_at DESC") or []
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/admin/leads', methods=['GET'])
+@login_marketing_required
+def admin_leads():
+    rows = db_query("SELECT * FROM leads_comercial ORDER BY id DESC LIMIT 200") or []
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/admin/goals', methods=['GET'])
+@login_marketing_required
+def admin_goals():
+    rows = db_query("SELECT * FROM goals ORDER BY id DESC") or []
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/admin/orcamentos', methods=['GET'])
+@login_marketing_required
+def admin_orcamentos():
+    rows = db_query("SELECT * FROM mt_orcamentos ORDER BY id DESC LIMIT 200") or []
+    return jsonify([dict(r) for r in rows])
+
+@app.route('/api/admin/historico_envios', methods=['GET'])
+@login_marketing_required
+def admin_historico_envios():
+    rows = db_query("SELECT * FROM historico_envios ORDER BY id DESC LIMIT 200") or []
+    return jsonify([dict(r) for r in rows])
+
 # ─────────────────────────────────────────────
 # INICIALIZAÇÃO
 # ─────────────────────────────────────────────
