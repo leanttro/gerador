@@ -2753,6 +2753,21 @@ def admin_htmls_disponiveis():
         print(f"[admin] Erro ao listar HTMLs: {e}")
     return jsonify({"success": True, "htmls": htmls})
 
+@app.route('/api/admin/paginas-disponiveis', methods=['GET'])
+@login_marketing_required
+def admin_paginas_disponiveis():
+    """Lista todos os HTMLs disponíveis na pasta templates (páginas do sistema)."""
+    paginas = []
+    try:
+        if os.path.exists(TEMPLATES_FOLDER):
+            for fname in sorted(os.listdir(TEMPLATES_FOLDER)):
+                if fname.endswith('.html'):
+                    clean_name = fname.replace('.html', '').replace('_', ' ').title()
+                    paginas.append({"id": fname, "nome": clean_name})
+    except Exception as e:
+        print(f"[admin] Erro ao listar páginas: {e}")
+    return jsonify({"success": True, "htmls": paginas})
+
 @app.route('/api/admin/leads', methods=['GET'])
 @login_marketing_required
 def admin_leads():
