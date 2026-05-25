@@ -229,6 +229,13 @@ def login_marketing_required(f):
     return decorated
 
 
+def get_current_client_id():
+    """Retorna o client_id (INTEGER) se o usuário logado for cliente, ou None para equipe interna."""
+    if session.get('marketing_user_perfil') == 'cliente':
+        return session.get('marketing_client_id')
+    return None
+
+
 # ─────────────────────────────────────────────
 # ROTAS PRINCIPAIS
 # ─────────────────────────────────────────────
@@ -2824,6 +2831,166 @@ def admin_orcamentos():
 def admin_historico_envios():
     rows = db_query("SELECT * FROM historico_envios ORDER BY id DESC LIMIT 200") or []
     return jsonify([dict(r) for r in rows])
+
+# ─────────────────────────────────────────────
+# API ME — usuário logado
+# ─────────────────────────────────────────────
+
+@app.route('/api/me', methods=['GET'])
+@login_marketing_required
+def api_me():
+    return jsonify({
+        "success": True,
+        "id": session.get('marketing_user_id'),
+        "nome": session.get('marketing_user_nome'),
+        "perfil": session.get('marketing_user_perfil'),
+        "client_id": get_current_client_id(),
+    })
+
+
+# ─────────────────────────────────────────────
+# KANBAN PERSISTENTE — CRUD por cliente
+# ─────────────────────────────────────────────
+
+@app.route('/api/kanban', methods=['GET'])
+@login_marketing_required
+def kanban_list():
+    """Retorna todos os cards. Filtra por client_id se for cliente; retorna tudo para equipe interna."""
+    try:
+        client_id = get_current_client_id()
+        if client_id is not None:
+            rows = db_query(
+                "SELECT * FROM mt_posts_kanban WHERE client_id = %s ORDER BY criado_em DESC",
+                (client_id,), fetch='all'
+            ) or []
+        else:
+            rows = db_query(
+                "SELECT * FROM mt_posts_kanban ORDER BY criado_em DESC",
+                fetch='all'
+            ) or []
+
+        cards = []
+        for row in rows:
+            card = dict(row)
+            # chaves já vem como dict pelo RealDictCursor+JSONB; garante dict mesmo assim
+            if isinstance(card.get('chaves'), str):
+                try:
+                    card['chaves'] = json.loads(card['chaves'])
+                except Exception:
+                    card['chaves'] = {}
+            cards.append(card)
+
+        return jsonify({"success": True, "cards": cards})
+    except Exception as e:
+        print(f"[kanban_list] Erro: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/kanban', methods=['POST'])
+@login_marketing_required
+def kanban_create():
+    """Cria um novo card no kanban."""
+    try:
+        data = request.json or {}
+        client_id = get_current_client_id()  # pode ser None para equipe interna
+
+        titulo        = data.get('titulo', '')
+        tipo          = data.get('tipo', '')
+        copy          = data.get('copy', '')
+        template_id   = data.get('template_id')
+        template_name = data.get('template_name', '')
+        chaves        = data.get('chaves', {})
+        status_kanban = data.get('status_kanban', 'backlog')
+
+        row = db_query(
+            """INSERT INTO mt_posts_kanban
+               (client_id, titulo, tipo, copy, template_id, template_name, chaves, status_kanban)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+               RETURNING id""",
+            (client_id, titulo, tipo, copy, template_id, template_name,
+             json.dumps(chaves), status_kanban),
+            fetch='one'
+        )
+
+        novo_id = row['id'] if row else None
+        return jsonify({"success": True, "id": novo_id})
+    except Exception as e:
+        print(f"[kanban_create] Erro: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/kanban/<int:card_id>', methods=['PATCH'])
+@login_marketing_required
+def kanban_update(card_id):
+    """Atualiza campos de um card existente. Clientes só podem editar seus próprios cards."""
+    try:
+        client_id = get_current_client_id()
+
+        # Verificação de propriedade para clientes
+        if client_id is not None:
+            card = db_query(
+                "SELECT client_id FROM mt_posts_kanban WHERE id = %s",
+                (card_id,), fetch='one'
+            )
+            if not card or card['client_id'] != client_id:
+                return jsonify({"success": False, "error": "Acesso negado"}), 403
+
+        data = request.json or {}
+        campos_permitidos = ('titulo', 'tipo', 'copy', 'template_id', 'template_name',
+                             'chaves', 'thumb_url', 'status_kanban')
+
+        campos = {}
+        for k in campos_permitidos:
+            if k in data:
+                if k == 'chaves':
+                    campos[k] = json.dumps(data[k])
+                else:
+                    campos[k] = data[k]
+
+        if not campos:
+            return jsonify({"error": "Nada para atualizar"}), 400
+
+        set_clause = ', '.join(f"{k} = %s" for k in campos)
+        set_clause += ', atualizado_em = NOW()'
+
+        db_query(
+            f"UPDATE mt_posts_kanban SET {set_clause} WHERE id = %s",
+            list(campos.values()) + [card_id],
+            fetch=None
+        )
+
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"[kanban_update] Erro: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/kanban/<int:card_id>', methods=['DELETE'])
+@login_marketing_required
+def kanban_delete(card_id):
+    """Exclui um card. Clientes só podem excluir seus próprios cards."""
+    try:
+        client_id = get_current_client_id()
+
+        # Verificação de propriedade para clientes
+        if client_id is not None:
+            card = db_query(
+                "SELECT client_id FROM mt_posts_kanban WHERE id = %s",
+                (card_id,), fetch='one'
+            )
+            if not card or card['client_id'] != client_id:
+                return jsonify({"success": False, "error": "Acesso negado"}), 403
+
+        db_query(
+            "DELETE FROM mt_posts_kanban WHERE id = %s",
+            (card_id,), fetch=None
+        )
+
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"[kanban_delete] Erro: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ─────────────────────────────────────────────
 # INICIALIZAÇÃO
