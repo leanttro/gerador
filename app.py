@@ -87,6 +87,7 @@ except ImportError:
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 HTML_TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'html_templates')
+TEMPLATES_FOLDER = os.path.join(BASE_DIR, 'templates')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'mp4', 'webm', 'svg', 'avif'}
 MAX_FILE_SIZE_MB = 20
