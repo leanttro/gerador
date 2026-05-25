@@ -866,8 +866,9 @@ async function loadClientes() {
   const body = document.getElementById('clientes-body');
   const r = await api('/api/admin/clientes');
   await carregarHtmlsDisponiveis();
-  if (!r.data || !r.data.length) { body.innerHTML = '<tr><td colspan="7"><div class="empty">Nenhum cliente</div></td></tr>'; return; }
-  body.innerHTML = r.data.map(c => {
+  const clientes = Array.isArray(r) ? r : (r.data || []);
+  if (!clientes.length) { body.innerHTML = '<tr><td colspan="7"><div class="empty">Nenhum cliente</div></td></tr>'; return; }
+  body.innerHTML = clientes.map(c => {
     const htmls = c.html_permitidos || [];
     const htmlBadges = htmls.length
       ? htmls.map(h => {
