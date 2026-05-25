@@ -1325,8 +1325,8 @@ async function salvarNoKanban() {
     }
 
     if (!state.pendingCardId) {
-        // Sem card associado: apenas salva o HTML localmente e avisa
-        showToast('info', 'Salvo localmente', 'Nenhum card associado. Use "Baixar HTML" para exportar.');
+        // Sem card associado: apenas avisa
+        showToast('info', 'Sem card associado', 'Nenhum card associado. Use "Baixar HTML" para exportar.');
         return;
     }
 
@@ -1334,25 +1334,44 @@ async function salvarNoKanban() {
     try {
         const canvas = await getCanvasFromIframe();
         canvas.toBlob(async (blob) => {
-            const fd = new FormData();
-            fd.append('file', blob, 'thumb_' + Date.now() + '.png');
-            
+            // 1. Faz upload da thumbnail
             let thumbUrl = '';
             try {
-                const res = await fetch('/api/upload', { method: 'POST', body: fd });
-                const data = await res.json();
-                if(data.success) thumbUrl = data.url;
+                const fd = new FormData();
+                fd.append('file', blob, 'thumb_' + Date.now() + '.png');
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: fd });
+                const uploadData = await uploadRes.json();
+                if (uploadData.success) thumbUrl = uploadData.url;
             } catch(e) {
                 console.error('Erro no upload da thumbnail', e);
             }
 
-            localStorage.setItem('wl_card_done', JSON.stringify({
-                cardId: state.pendingCardId,
-                status: 'pronto_render',
-                thumb: thumbUrl
-            }));
+            // 2. Atualiza o card no banco via PATCH
+            try {
+                const patchRes = await fetch(`/api/kanban/${state.pendingCardId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        thumb_url: thumbUrl,
+                        status_kanban: 'pronto_render'
+                    })
+                });
+                const patchData = await patchRes.json();
+                if (!patchData.success) {
+                    console.error('Erro ao atualizar card no kanban:', patchData);
+                    showToast('error', 'Erro', 'Falha ao salvar card no banco.');
+                    setLoading(false);
+                    return;
+                }
+            } catch(e) {
+                console.error('Erro no PATCH do kanban:', e);
+                showToast('error', 'Erro', 'Falha ao salvar card no banco.');
+                setLoading(false);
+                return;
+            }
+
+            // 3. Limpa contexto inter-página e redireciona
             localStorage.removeItem('wl_pending_creation');
-            
             setLoading(false);
             showToast('success', 'Salvo com Foto!', 'Card pronto. Voltando para o Conteúdo...');
             setTimeout(() => { window.location.href = '/conteudo'; }, 1600);
