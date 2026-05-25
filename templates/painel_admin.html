@@ -838,7 +838,7 @@ let htmlsDisponiveis = [];
 async function carregarHtmlsDisponiveis() {
   if (htmlsDisponiveis.length) return htmlsDisponiveis;
   try {
-    const r = await api('/api/admin/htmls-disponiveis');
+    const r = await api('/api/admin/paginas-disponiveis');
     htmlsDisponiveis = r.htmls || [];
   } catch(e) { htmlsDisponiveis = []; }
   return htmlsDisponiveis;
