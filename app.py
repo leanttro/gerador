@@ -72,6 +72,10 @@ try:
             conn.close()
 
     print("[DB] Conexão PostgreSQL configurada (sem Directus)")
+    try:
+        db_query("ALTER TABLE clients ADD COLUMN IF NOT EXISTS senha_hash TEXT DEFAULT ''", fetch=None)
+    except Exception as _e:
+        print(f"[DB] ALTER TABLE clients: {_e}")
 except ImportError:
     print("[DB] psycopg2 não instalado — rode: pip install psycopg2-binary")
     def db_query(*a, **kw): return None
@@ -2728,11 +2732,12 @@ def admin_clientes():
 def admin_clientes_create():
     data = request.json or {}
     html_permitidos = json.dumps(data.get('html_permitidos', []))
+    senha_hash = generate_password_hash(data.get('senha')) if data.get('senha') else ''
     db_query(
-        """INSERT INTO clients (name, email, whatsapp, company_name, status, html_permitidos)
-           VALUES (%s, %s, %s, %s, %s, %s)""",
+        """INSERT INTO clients (name, email, whatsapp, company_name, status, html_permitidos, senha_hash)
+           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
         (data.get('name',''), data.get('email',''), data.get('whatsapp',''),
-         data.get('company_name',''), data.get('status','pendente'), html_permitidos),
+         data.get('company_name',''), data.get('status','pendente'), html_permitidos, senha_hash),
         fetch=None
     )
     return jsonify({"success": True})
@@ -2747,6 +2752,8 @@ def admin_clientes_update(cid):
             campos[k] = data[k]
     if 'html_permitidos' in data:
         campos['html_permitidos'] = json.dumps(data['html_permitidos'])
+    if 'senha' in data and data['senha']:
+        campos['senha_hash'] = generate_password_hash(data['senha'])
     if not campos:
         return jsonify({"error": "Nada para atualizar"}), 400
     set_clause = ', '.join(f"{k} = %s" for k in campos)
