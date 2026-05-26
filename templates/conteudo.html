@@ -189,6 +189,14 @@
 
     .sortable-ghost { opacity: 0.4; background: var(--bg-body); border: 2px dashed var(--text-muted); }
 
+    /* Carrossel pages layout */
+    .carousel-page-row { display: flex; align-items: center; gap: 6px; }
+    .carousel-page-num { font-size: 10px; font-weight: 700; color: var(--text-muted); white-space: nowrap; width: 32px; flex-shrink: 0; }
+    .carousel-page-row .input-control { flex: 1; padding: 7px 10px; font-size: 12px; }
+    .carousel-page-remove { flex-shrink: 0; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; color: var(--text-muted); transition: all var(--transition); padding: 0; }
+    .carousel-page-remove:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,0.06); }
+    .carousel-page-remove svg { width: 12px; height: 12px; stroke: currentColor; stroke-width: 2.5; fill: none; }
+
     /* Modal de Edição */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); z-index: 100; display: none; align-items: center; justify-content: center; }
     .modal-overlay.active { display: flex; }
@@ -317,18 +325,8 @@
                     <svg class="panel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </div>
                 <div class="panel-body">
-                    <div class="input-group">
-                        <label>Título / Instrução Base</label>
-                        <input type="text" id="draftTitle" class="input-control" placeholder="Ex: 5 motivos para ter um CRM">
-                    </div>
 
-                    <div class="input-group">
-                        <label>Template (Opcional)</label>
-                        <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
-                            <option value="">✨ Deixar a IA escolher o melhor</option>
-                        </select>
-                    </div>
-
+                    <!-- PASSO 1: Formato -->
                     <div class="row-2">
                         <div class="input-group">
                             <label>Formato</label>
@@ -348,8 +346,36 @@
                         </div>
                     </div>
 
+                    <!-- PASSO 2: Template -->
+                    <div class="input-group" id="singleTemplateWrap">
+                        <label>Template</label>
+                        <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
+                            <option value="">✨ Deixar a IA escolher o melhor</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" id="carouselTemplateWrap" style="background: var(--bg-body); padding:12px; border-radius:var(--radius); border: 1px solid var(--border); display:none;">
+                        <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span style="font-size:12px; font-weight:500; color:var(--text-muted);">Páginas do Carrossel</span>
+                            <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:11px; width:auto;" onclick="addCarouselPage()">+ Página</button>
+                        </label>
+                        <div id="carouselPagesContainer" style="display:flex; flex-direction:column; gap:6px;"></div>
+                    </div>
+
+                    <!-- PASSO 3: Nicho + Assunto -->
                     <div class="input-group">
-                        <label>Cores da Marca (Salvas)</label>
+                        <label>Nicho / Contexto do Cliente <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="nicheCreation" class="input-control" placeholder="Ex: clínica de estética, SaaS B2B, academia de ginástica...">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Título / Assunto do Post <span style="color:var(--danger)">*</span></label>
+                        <input type="text" id="draftTitle" class="input-control" placeholder="Ex: 5 motivos para ter um CRM">
+                    </div>
+
+                    <!-- Cores e Logo -->
+                    <div class="input-group">
+                        <label>Cores da Marca</label>
                         <div style="display:flex; gap:8px; margin-bottom:4px; align-items:center;">
                             <input type="color" id="brandColorFundo" title="Fundo (Ex: Preto)" value="#18181b" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
                             <input type="color" id="brandColorTexto" title="Texto (Ex: Branco)" value="#ffffff" style="width:32px; height:32px; border:1px solid var(--border); border-radius:4px; padding:0; cursor:pointer;" onchange="saveBrandColors(); onTemplateChange();">
@@ -361,23 +387,7 @@
                         </div>
                     </div>
 
-                    <div class="input-group" id="singleTemplateWrap" style="display:none;">
-                        <label>Template (Opcional)</label>
-                        <select id="draftTemplate" class="input-control" onchange="onTemplateChange()">
-                            <option value="">✨ Deixar a IA escolher o melhor</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group" id="carouselTemplateWrap" style="background: var(--bg-body); padding:12px; border-radius:var(--radius); border: 1px solid var(--border);">
-                        <label style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            Páginas do Carrossel
-                            <button type="button" class="btn btn-secondary" style="padding:4px 8px; font-size:10px;" onclick="addCarouselPage()">+ Página</button>
-                        </label>
-                        <div id="carouselPagesContainer" style="display:flex; flex-direction:column; gap:8px;">
-                            </div>
-                    </div>
-
-                    <div class="input-group mt-6">
+                    <div class="input-group">
                         <label>Logo da Empresa</label>
                         <div class="upload-btn-wrap">
                             <button class="upload-btn" onclick="document.getElementById('logoInput').click()" id="btnUploadLogo">Fazer Upload</button>
@@ -387,11 +397,13 @@
                         <input type="hidden" id="logoUrl" value="">
                     </div>
 
+                    <!-- PASSO 4: Gerar -->
                     <button class="ai-btn" onclick="gerarComIA()" id="btnIA">
                         <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                        Gerar Copy + Chaves Visuais
+                        Gerar Copy + Preencher Chaves
                     </button>
 
+                    <!-- Resultado -->
                     <div class="input-group">
                         <label>Legenda para a Rede Social</label>
                         <textarea id="draftCopy" class="input-control" placeholder="A IA vai escrever a legenda aqui..."></textarea>
@@ -721,47 +733,40 @@
     function addCarouselPage() {
         const container = document.getElementById('carouselPagesContainer');
         const pageCount = container.children.length + 1;
+
         const pageDiv = document.createElement('div');
-        pageDiv.style.display = 'flex';
-        pageDiv.style.gap = '8px';
-        pageDiv.style.alignItems = 'center';
-        
+        pageDiv.className = 'carousel-page-row';
+
+        const numLabel = document.createElement('span');
+        numLabel.className = 'carousel-page-num';
+        numLabel.innerText = 'Pág ' + pageCount;
+
         const select = document.createElement('select');
         select.className = 'input-control carousel-template-select';
-        select.style.flex = '1';
-        select.style.padding = '8px';
-        select.style.fontSize = '12px';
         select.onchange = onTemplateChange;
-        
-        select.innerHTML = '<option value="">✨ IA Escolhe o Template (Pág ' + pageCount + ')</option>';
+        select.innerHTML = '<option value="">✨ IA escolhe</option>';
         window.appTemplates.forEach(t => {
             select.innerHTML += `<option value="${t.id}">${t.name}</option>`;
         });
-        
-        const label = document.createElement('span');
-        label.style.fontSize = '11px';
-        label.style.fontWeight = '700';
-        label.style.color = 'var(--text-muted)';
-        label.style.width = '35px';
-        label.innerText = 'Pág ' + pageCount;
-        
+
         const removeBtn = document.createElement('button');
-        removeBtn.className = 'btn btn-secondary';
-        removeBtn.style.padding = '6px';
-        removeBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        removeBtn.className = 'carousel-page-remove';
+        removeBtn.type = 'button';
+        removeBtn.title = 'Remover página';
+        removeBtn.innerHTML = '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
         removeBtn.onclick = function() {
-            if(container.children.length > 1) {
+            if (container.children.length > 1) {
                 pageDiv.remove();
                 Array.from(container.children).forEach((child, idx) => {
-                    child.querySelector('span').innerText = 'Pág ' + (idx + 1);
+                    child.querySelector('.carousel-page-num').innerText = 'Pág ' + (idx + 1);
                 });
                 onTemplateChange();
             } else {
                 alert('O carrossel precisa de pelo menos 1 página.');
             }
         };
-        
-        pageDiv.appendChild(label);
+
+        pageDiv.appendChild(numLabel);
         pageDiv.appendChild(select);
         pageDiv.appendChild(removeBtn);
         container.appendChild(pageDiv);
@@ -1110,6 +1115,7 @@
 
     async function gerarComIA() {
         const titulo = document.getElementById('draftTitle').value.trim();
+        const nicho  = document.getElementById('nicheCreation').value.trim();
         const copyPre = document.getElementById('draftCopy').value.trim();
         const tipo = document.getElementById('draftType').value;
         const tema = document.getElementById('draftTheme').value;
@@ -1121,10 +1127,20 @@
         const bAcc = document.getElementById('brandColorDestaque').value;
         const bSec = document.getElementById('brandColorSec').value;
 
-        if (!titulo) { alert('Preencha o título base primeiro.'); return; }
+        if (!nicho) { alert('Preencha o Nicho / Contexto do Cliente primeiro.'); document.getElementById('nicheCreation').focus(); return; }
+        if (!titulo) { alert('Preencha o Título / Assunto do Post.'); document.getElementById('draftTitle').focus(); return; }
+
+        // Validação: para não-carrossel, verificar se template foi selecionado ou avisar
+        if (tipo !== 'Carrossel') {
+            const tplId = document.getElementById('draftTemplate').value;
+            if (!tplId && window.appTemplates.length > 0) {
+                const ok = confirm('Nenhum template selecionado. A IA vai escolher o melhor disponível. Deseja continuar?');
+                if (!ok) return;
+            }
+        }
 
         const btn = document.getElementById('btnIA');
-        btn.innerText = 'Processando...'; btn.disabled = true;
+        btn.innerText = 'Gerando...'; btn.disabled = true;
 
         let templatesResumo = "";
         let exigenciaCarrossel = "";
@@ -1141,13 +1157,13 @@
                     const t = window.appTemplates.find(x => x.id === sel.value);
                     const m = t.html.match(/CHAVE_[A-Z_]+/g);
                     const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
-                    pagesStr.push(`Página ${i+1} [${role}]: ID ${t.id} (${t.name}) - Chaves: ${chaves}`);
+                    pagesStr.push(`Página ${i+1} [${role}]: ID ${t.id} (${t.name}) - Chaves OBRIGATÓRIAS: ${chaves}`);
                 } else {
                     pagesStr.push(`Página ${i+1} [${role}]: ESCOLHA O MELHOR TEMPLATE VISUALMENTE DENTRE OS DISPONÍVEIS`);
                 }
             });
             exigenciaCarrossel = "ESTE É UM CARROSSEL. Estrutura exigida:\n" + pagesStr.join('\n') + 
-                                 "\n\nATENÇÃO: Mapeie as chaves para CADA página prefixando com [P1], [P2], etc. (Ex: '[P1] CHAVE_TITULO': '...', '[P2] CHAVE_TITULO': '...'). Crie o conteúdo focando na função específica de cada página (Capa, Conteúdo, CTA).";
+                                 "\n\nATENÇÃO: Mapeie as chaves para CADA página prefixando com [P1], [P2], etc. (Ex: '[P1] CHAVE_TITULO': '...', '[P2] CHAVE_TITULO': '...'). Preencha TODAS as chaves listadas acima com conteúdo real e específico para o nicho informado.";
             
             templatesResumo = window.appTemplates.map(t => {
                 const m = t.html.match(/CHAVE_[A-Z_]+/g);
@@ -1160,49 +1176,52 @@
                 const t = window.appTemplates.find(x => x.id === tplId);
                 const m = t.html.match(/CHAVE_[A-Z_]+/g);
                 const chaves = m ? [...new Set(m)].join(', ') : 'Nenhuma';
-                templatesResumo = `- ID: ${t.id} | Nome: ${t.name} | Variáveis Necessárias: ${chaves}`;
-                exigenciaCarrossel = 'ATENÇÃO: O usuário EXIGIU o uso deste template específico. Você DEVE usar o ID acima e seu nome exato.';
+                templatesResumo = `- ID: ${t.id} | Nome: ${t.name} | Variáveis OBRIGATÓRIAS: ${chaves}`;
+                exigenciaCarrossel = `O usuário EXIGIU este template. PREENCHA TODAS as chaves acima com conteúdo real e específico para o nicho "${nicho}".`;
             } else {
                 templatesResumo = window.appTemplates.map(t => {
                     const m = t.html.match(/CHAVE_[A-Z_]+/g);
                     return `- ID: ${t.id} | Nome: ${t.name} | Variáveis: ${m ? [...new Set(m)].join(', ') : 'Nenhuma'}`;
                 }).join('\n');
-                exigenciaCarrossel = 'Escolha o melhor template visualmente.';
+                exigenciaCarrossel = `Escolha o template visualmente mais adequado para o nicho "${nicho}" e preencha TODAS as suas chaves.`;
             }
         }
 
         const promptCompleto = `Atue como Diretor de Arte e Copywriter Senior da Leanttro Tecnologia.
-        Formato: ${tipo}. Título base: "${titulo}". Contexto de copy: "${copyPre}". Tema Visual: ${tema}. Logo URL: ${logo || 'Sem logo'}.
-        
-        REGRAS ABSOLUTAS:
-        1. CONTEÚDO REAL E DENSO: CRIE o conteúdo de fato! NÃO repita apenas o título nas chaves do template. Se o post é sobre dicas, liste dicas ricas e detalhadas. Se for um carrossel, crie uma narrativa (Problema > Desenvolvimento > Solução > Chamada para Ação).
-        
-        2. TEMPLATES DA BIBLIOTECA:
-        ${templatesResumo}
-        
-        Diretriz de Escolha:
-        ${exigenciaCarrossel}
-        
-        3. CORES E IDENTIDADE:
-        ${isUseBrand ? `O usuário EXIGIU usar as cores da marca: Fundo: ${bBg}, Texto: ${bText}, Destaque: ${bAcc}, Secundária: ${bSec}. UTILIZE EXATAMENTE ESTES HEX CODES se as variáveis de cor (CHAVE_COR_FUNDO, etc.) existirem no template.` : `Gere uma paleta de cores HEX real (CHAVE_COR_FUNDO, etc.) focada no Tema Visual (${tema}).`}
-        Apenas insira a URL do logo na variável CHAVE_LOGO.
 
-        ATENÇÃO CRÍTICA PARA O JSON: 
-        - Retorne APENAS um JSON estrito, sem formatação markdown (NÃO inclua \`\`\`json).
-        - NUNCA use quebras de linha reais (Enter) dentro das strings do JSON. Se precisar de parágrafos no texto, escreva literalmente os caracteres "\\n" (com duas barras invertidas).
-        - NÃO use aspas duplas não escapadas dentro dos textos. Prefira aspas simples.
-        - Feche corretamente todas as chaves e colchetes do JSON.
+NICHO/CONTEXTO DO CLIENTE: ${nicho} — todo conteúdo deve ser específico para este nicho, com linguagem, exemplos e referências do setor. Nunca gere conteúdo genérico.
 
-        Formato exigido:
-        {
-            "copy": "Texto persuasivo e humano da legenda para o Instagram...",
-            "template_id": "ID do template (se carrossel, separe com vírgulas: id1,id2)",
-            "template_nome": "Nome do template (se carrossel: Capa + Dica + Dica...)",
-            "motivo": "Justificativa visual",
-            "chaves": {
-                "CHAVE_XXX": "Valor longo e real criado por você..."
-            }
-        }`;
+Formato: ${tipo}. Título base: "${titulo}". Contexto adicional: "${copyPre}". Tema Visual: ${tema}. Logo URL: ${logo || 'Sem logo'}.
+        
+REGRAS ABSOLUTAS:
+1. CONTEÚDO REAL E DENSO PARA O NICHO: CRIE o conteúdo de fato voltado para "${nicho}"! NÃO repita apenas o título nas chaves. Cada chave deve ter um valor único, relevante e específico para o nicho. Se o post é sobre dicas, liste dicas ricas do setor. Se for carrossel, crie uma narrativa (Problema > Desenvolvimento > Solução > CTA) com vocabulário do nicho.
+
+2. TEMPLATES DA BIBLIOTECA:
+${templatesResumo}
+
+Diretriz de Escolha e Preenchimento:
+${exigenciaCarrossel}
+
+3. CORES E IDENTIDADE:
+${isUseBrand ? `O usuário EXIGIU usar as cores da marca: Fundo: ${bBg}, Texto: ${bText}, Destaque: ${bAcc}, Secundária: ${bSec}. UTILIZE EXATAMENTE ESTES HEX CODES nas variáveis de cor (CHAVE_COR_FUNDO, etc.).` : `Gere uma paleta de cores HEX real (CHAVE_COR_FUNDO, etc.) focada no Tema Visual (${tema}) e adequada ao nicho ${nicho}.`}
+Apenas insira a URL do logo na variável CHAVE_LOGO.
+
+ATENÇÃO CRÍTICA PARA O JSON: 
+- Retorne APENAS um JSON estrito, sem formatação markdown (NÃO inclua \`\`\`json).
+- NUNCA use quebras de linha reais (Enter) dentro das strings do JSON. Use "\\n" se precisar.
+- NÃO use aspas duplas não escapadas dentro dos textos. Prefira aspas simples.
+- Feche corretamente todas as chaves e colchetes do JSON.
+
+Formato exigido:
+{
+    "copy": "Texto persuasivo e humano da legenda para o Instagram, específico para ${nicho}...",
+    "template_id": "ID do template (se carrossel, separe com vírgulas: id1,id2)",
+    "template_nome": "Nome do template",
+    "motivo": "Justificativa visual e de conteúdo para o nicho ${nicho}",
+    "chaves": {
+        "CHAVE_XXX": "Valor real, denso e específico para ${nicho}..."
+    }
+}`;
 
         try {
             const res = await fetch('/api/sugestao-texto', {
@@ -1232,7 +1251,7 @@
             console.error('Erro no Parse do JSON:', e);
         }
 
-        btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Gerar Copy + Chaves Visuais';
+        btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Gerar Copy + Preencher Chaves';
         btn.disabled = false;
     }
 
