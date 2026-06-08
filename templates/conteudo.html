@@ -508,7 +508,7 @@
     const STATUS_COL = Object.fromEntries(Object.entries(COL_STATUS).map(([c,s])=>[s,c]));
 
     function criarCardDOM(c) {
-        const cardId = String(c.id);
+        const cardId = 'card_' + c.id;
         const card = document.createElement('div');
         card.className = 'k-card';
         card.id = cardId;
@@ -1313,8 +1313,7 @@ Formato exigido:
                     }
                 }
                 
-                const cardId = String(Date.now()) + '_' + i;
-                const cardId = String(Date.now());
+                const cardId = 'card_' + Date.now() + '_' + i;
                 const card = document.createElement('div');
                 card.className = 'k-card';
                 card.id = cardId;
@@ -1346,7 +1345,7 @@ Formato exigido:
                 document.getElementById('col-ideias').appendChild(card);
             }
         } else {
-            const cardId = String(Date.now());
+            const cardId = 'card_' + Date.now();
             const card = document.createElement('div');
             card.className = 'k-card';
             card.id = cardId;
@@ -1398,7 +1397,10 @@ Formato exigido:
                     })
                 });
                 const json = await res.json();
-                if (json.success && json.id) card.setAttribute('data-db-id', json.id);
+                if (json.success && json.id) {
+                    card.setAttribute('data-db-id', json.id);
+                    card.id = String(json.id);
+                }
             } catch(e) { console.error('[adicionarAoKanban POST]', e); }
         }
 
