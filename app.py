@@ -2932,7 +2932,7 @@ def kanban_create():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route('/api/kanban/<int:card_id>', methods=['PATCH'])
+@app.route('/api/kanban/<path:card_id>', methods=['PATCH'])
 @login_marketing_required
 def kanban_update(card_id):
     """Atualiza campos de um card existente. Clientes só podem editar seus próprios cards."""
