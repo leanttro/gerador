@@ -1529,7 +1529,7 @@ async function salvarSelecionadosCRM() {
         };
 
         try {
-            const res = await fetch(`${CONFIG.DIRECTUS_URL}/items/${CONFIG.DIRECTUS_TABLE}`, { method:'POST', headers, body: JSON.stringify(payload) });
+            const res = await fetch('/api/crm/contacts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
             if (res.ok) salvos++;
         } catch(e){}
     }
