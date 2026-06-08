@@ -262,7 +262,10 @@ def criacao():
 @login_marketing_required
 def prospeccao():
     return render_template('prospeccao.html',
-        serper_api_key=os.environ.get("SERPER_API_KEY", "")
+        serper_api_key=os.environ.get("SERPER_API_KEY", ""),
+        directus_url="",
+        directus_table="contacts",
+        directus_token=""
     )
 
 @app.route('/whatsapp')
