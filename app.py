@@ -2935,6 +2935,7 @@ def kanban_create():
 @app.route('/api/kanban/<path:card_id>', methods=['PATCH'])
 @login_marketing_required
 def kanban_update(card_id):
+    card_id = int(str(card_id).replace('card_', '').split('_')[0]) if not str(card_id).isdigit() else int(card_id)
     """Atualiza campos de um card existente. Clientes só podem editar seus próprios cards."""
     try:
         client_id = get_current_client_id()
