@@ -2978,7 +2978,7 @@ def kanban_update(card_id):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route('/api/kanban/<int:card_id>', methods=['DELETE'])
+@app.route('/api/kanban/<path:card_id>', methods=['DELETE'])
 @login_marketing_required
 def kanban_delete(card_id):
     """Exclui um card. Clientes só podem excluir seus próprios cards."""
