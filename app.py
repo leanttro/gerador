@@ -2709,7 +2709,20 @@ def admin_painel():
 def admin_usuarios():
     rows = db_query("SELECT id, nome, email, perfil, ativo, created_at FROM usuarios_marketing ORDER BY created_at DESC") or []
     return jsonify([dict(r) for r in rows])
-
+@app.route('/api/admin/usuarios', methods=['POST'])
+@login_marketing_required
+def admin_usuario_create():
+    data = request.json or {}
+    senha = data.get('senha', '')
+    if not senha:
+        return jsonify({"error": "Senha obrigatória"}), 400
+    senha_hash = generate_password_hash(senha)
+    db_query(
+        "INSERT INTO usuarios_marketing (nome, email, senha_hash, perfil, ativo) VALUES (%s, %s, %s, %s, %s)",
+        (data.get('nome',''), data.get('email',''), senha_hash, data.get('perfil','operador'), data.get('ativo', True)),
+        fetch=None
+    )
+    return jsonify({"success": True})
 @app.route('/api/admin/usuarios/<int:uid>', methods=['POST'])
 @login_marketing_required
 def admin_usuario_update(uid):
