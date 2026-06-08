@@ -508,7 +508,7 @@
     const STATUS_COL = Object.fromEntries(Object.entries(COL_STATUS).map(([c,s])=>[s,c]));
 
     function criarCardDOM(c) {
-        const cardId = 'card_' + c.id;
+        const cardId = String(c.id);
         const card = document.createElement('div');
         card.className = 'k-card';
         card.id = cardId;
@@ -1313,7 +1313,8 @@ Formato exigido:
                     }
                 }
                 
-                const cardId = 'card_' + Date.now() + '_' + i;
+                const cardId = String(Date.now()) + '_' + i;
+                const cardId = String(Date.now());
                 const card = document.createElement('div');
                 card.className = 'k-card';
                 card.id = cardId;
@@ -1345,7 +1346,7 @@ Formato exigido:
                 document.getElementById('col-ideias').appendChild(card);
             }
         } else {
-            const cardId = 'card_' + Date.now();
+            const cardId = String(Date.now());
             const card = document.createElement('div');
             card.className = 'k-card';
             card.id = cardId;
